@@ -6,5 +6,13 @@ namespace praktik.Models
         public string CrewName { get; set; }
         public int? BrigadierId { get; set; }
         public User Brigadier { get; set; }
+
+        public Task Task
+        {
+            get => default;
+            set
+            {
+            }
+        }
     }
 }

@@ -188,6 +188,12 @@
                             <TextBlock Text="Журнал" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
+                    <ListBoxItem x:Name="MaterialRequestsMenuItem">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PackageVariant" Width="24" Height="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="Заявки на материалы" Margin="16,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
             </DockPanel>
         </materialDesign:DrawerHost.LeftDrawerContent>

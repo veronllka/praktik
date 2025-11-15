@@ -6,5 +6,21 @@ namespace praktik.Models
         public string Username { get; set; }
         public string Password { get; set; }
         public string Role { get; set; } // Admin, Dispatcher, Brigadier
+
+        public Crew Crew
+        {
+            get => default;
+            set
+            {
+            }
+        }
+
+        public TaskReport TaskReport
+        {
+            get => default;
+            set
+            {
+            }
+        }
     }
 }

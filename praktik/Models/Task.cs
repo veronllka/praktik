@@ -13,6 +13,7 @@ namespace praktik.Models
         public DateTime EndDate { get; set; }
         public int PriorityId { get; set; }
         public int TaskStatusId { get; set; }
+        public int? LabelId { get; set; } // Для меток задач (например, "Ожидание МТС")
         public int CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
@@ -22,5 +23,13 @@ namespace praktik.Models
         public Priority Priority { get; set; }
         public TaskStatus TaskStatus { get; set; }
         public User Creator { get; set; }
+
+        public TaskReport TaskReport
+        {
+            get => default;
+            set
+            {
+            }
+        }
     }
 }

@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="praktik.Models.Crew">
+    <Position X="1" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAABAAAAAQAAAAAAIAAAAEAAAAAAAAI=</HashCode>
+      <FileName>Models\Crew.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Task" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="praktik.Models.Priority">
+    <Position X="1.5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAABAEAAAAAAAAAEAAAAAAAAA=</HashCode>
+      <FileName>Models\Priority.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Task" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="praktik.Models.Role">
+    <Position X="1" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAIAAAAAAAAAAAAAAAAAAAAAAAAAAEAAEAAAAAA=</HashCode>
+      <FileName>Models\Role.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="User" />
+      <Property Name="Task" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="praktik.Models.Task">
+    <Position X="6" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAAAAEAAgiEAEACAACAAkAAhQAAAAEAAAAEAAAAM=</HashCode>
+      <FileName>Models\Task.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="TaskReport" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="praktik.Models.TaskReport">
+    <Position X="8.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABBAAAgABAACAACAAAAAAAAAgAAAAAAEAAAAIgAAA=</HashCode>
+      <FileName>Models\TaskReport.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="praktik.Models.TaskStatus">
+    <Position X="8" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAAAAAAAAAAABAAAAAAEAAAAAAAAA=</HashCode>
+      <FileName>Models\TaskStatus.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Task" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="praktik.Models.User">
+    <Position X="3.75" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAEQAACAgAAAAQAAACAAAAAAAAAAA=</HashCode>
+      <FileName>Models\User.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Crew" />
+      <Property Name="TaskReport" />
+    </ShowAsAssociation>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

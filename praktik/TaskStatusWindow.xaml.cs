@@ -19,11 +19,9 @@ namespace praktik
 
         private void LoadData()
         {
-            txtTaskInfo.Text = $"Задача: {task.Title}\nТекущий статус: {task.TaskStatus?.TaskStatusName ?? "Не указан"}";
+            txtTaskInfo.Text = $"Задача: {task.Title}\nТекущий статус: {task.TaskStatus.TaskStatusName}";
             cbStatuses.ItemsSource = db.GetTaskStatuses();
-            // Выбираем статус по ID, так как объекты разные
-            var statuses = db.GetTaskStatuses();
-            cbStatuses.SelectedItem = statuses.FirstOrDefault(s => s.TaskStatusId == task.TaskStatusId);
+            cbStatuses.SelectedItem = task.TaskStatus;
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
@@ -37,28 +35,11 @@ namespace praktik
             try
             {
                 var newStatus = cbStatuses.SelectedItem as TaskStatus;
-                if (newStatus == null)
-                {
-                    MessageBox.Show("Ошибка при получении выбранного статуса");
-                    return;
-                }
-
-                // Проверяем, что пользователь авторизован
-                if (LoginWindow.CurrentUser == null)
-                {
-                    MessageBox.Show("Ошибка авторизации пользователя");
-                    return;
-                }
 
                 // Обновляем статус задачи
-                db.UpdateTaskStatus(
-                    task.TaskId, 
-                    newStatus.TaskStatusId, 
-                    LoginWindow.CurrentUser.UserId,
-                    string.IsNullOrWhiteSpace(txtComment.Text) ? "Статус изменен" : txtComment.Text
-                );
+                db.UpdateTaskStatus(task.TaskId, newStatus.TaskStatusId, LoginWindow.CurrentUser.UserId,
+                    string.IsNullOrWhiteSpace(txtComment.Text) ? "Статус изменен" : txtComment.Text);
 
-                MessageBox.Show("Статус задачи успешно обновлен");
                 DialogResult = true;
                 Close();
             }

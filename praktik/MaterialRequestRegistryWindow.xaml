@@ -1,0 +1,125 @@
+<Window x:Class="praktik.MaterialRequestRegistryWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Реестр заявок на материалы" Height="800" Width="1400" WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <materialDesign:Card Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Margin="16">
+                <TextBlock Text="Фильтры" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="200"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="cbStatusFilter" Grid.Column="0" 
+                             materialDesign:HintAssist.Hint="Статус"
+                             Margin="0,0,8,0" SelectionChanged="Filter_Changed">
+                        <ComboBoxItem Content="Все" IsSelected="True"/>
+                        <ComboBoxItem Content="Отправлена" Tag="Submitted"/>
+                        <ComboBoxItem Content="Согласована" Tag="Approved"/>
+                        <ComboBoxItem Content="Отклонена" Tag="Rejected"/>
+                        <ComboBoxItem Content="Выдана" Tag="Issued"/>
+                        <ComboBoxItem Content="Доставлена" Tag="Delivered"/>
+                        <ComboBoxItem Content="Закрыта" Tag="Closed"/>
+                    </ComboBox>
+                    <ComboBox x:Name="cbSiteFilter" Grid.Column="1" 
+                             materialDesign:HintAssist.Hint="Объект"
+                             DisplayMemberPath="SiteName" Margin="0,0,8,0" SelectionChanged="Filter_Changed"/>
+                    <ComboBox x:Name="cbCrewFilter" Grid.Column="2" 
+                             materialDesign:HintAssist.Hint="Бригада"
+                             DisplayMemberPath="CrewName" Margin="0,0,8,0" SelectionChanged="Filter_Changed"/>
+                    <DatePicker x:Name="dpRequiredDateFilter" Grid.Column="3" 
+                              materialDesign:HintAssist.Hint="Требуется к (от)"
+                              Margin="0,0,8,0" SelectedDateChanged="Filter_Changed"/>
+                    <Button x:Name="btnResetFilter" Grid.Column="4" Content="Сбросить" 
+                           Click="btnResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <DataGrid x:Name="dgRequests" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" 
+                 SelectionChanged="dgRequests_SelectionChanged" Margin="0,0,0,16">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding RequestId}" Width="60"/>
+                <DataGridTextColumn Header="Задача" Binding="{Binding TaskTitle}" Width="*"/>
+                <DataGridTextColumn Header="Объект" Binding="{Binding SiteName}" Width="150"/>
+                <DataGridTextColumn Header="Бригада" Binding="{Binding CrewName}" Width="150"/>
+                <DataGridTextColumn Header="Статус" Binding="{Binding StatusDisplay}" Width="120"/>
+                <DataGridTextColumn Header="Требуется к" Binding="{Binding RequiredDateDisplay}" Width="120"/>
+                <DataGridTextColumn Header="Создана" Binding="{Binding CreatedAtDisplay}" Width="130"/>
+                <DataGridTextColumn Header="Позиций" Binding="{Binding ItemsCount}" Width="80"/>
+                <DataGridTemplateColumn Header="Индикатор" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="{Binding IndicatorColor}" Padding="4" CornerRadius="2">
+                                <TextBlock Text="{Binding IndicatorText}" Foreground="White" FontWeight="Bold" 
+                                          HorizontalAlignment="Center" FontSize="10"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <materialDesign:Card Grid.Row="2">
+            <Grid Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                    <TextBlock x:Name="txtSelectedRequestInfo" Text="Выберите заявку для просмотра деталей" 
+                              TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <DataGrid x:Name="dgRequestItems" AutoGenerateColumns="False" IsReadOnly="True" 
+                             MaxHeight="150" Visibility="Collapsed">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Материал" Binding="{Binding Material.Name}" Width="*"/>
+                            <DataGridTextColumn Header="Ед. изм." Binding="{Binding Material.Unit}" Width="80"/>
+                            <DataGridTextColumn Header="Количество" Binding="{Binding Qty}" Width="100"/>
+                            <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Vertical">
+                    <Button x:Name="btnApprove" Content="Согласовать" 
+                           Click="btnApprove_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Margin="0,0,0,8" Width="150"/>
+                    <Button x:Name="btnReject" Content="Отклонить" 
+                           Click="btnReject_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Margin="0,0,0,8" Width="150"/>
+                    <Button x:Name="btnIssue" Content="Отметить выдачу" 
+                           Click="btnIssue_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Margin="0,0,0,8" Width="150"/>
+                    <Button x:Name="btnDeliver" Content="Отметить доставку" 
+                           Click="btnDeliver_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Margin="0,0,0,8" Width="150"/>
+                    <Button x:Name="btnClose" Content="Закрыть заявку" 
+                           Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Margin="0,0,0,8" Width="150"/>
+                    <Button x:Name="btnEdit" Content="Редактировать" 
+                           Click="btnEdit_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Margin="0,0,0,8" Width="150"/>
+                    <Button x:Name="btnExport" Content="Экспорт" 
+                           Click="btnExport_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Width="150"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+    </Grid>
+</Window>
+

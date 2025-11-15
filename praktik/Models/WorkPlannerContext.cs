@@ -175,7 +175,7 @@ namespace praktik.Models
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    SELECT t.TaskId, t.SiteId, t.CrewId, t.Title, t.Description, t.StartDate, t.EndDate, t.PriorityId, t.StatusId,
+                    SELECT t.TaskId, t.SiteId, t.CrewId, t.Title, t.Description, t.StartDate, t.EndDate, t.PriorityId, t.StatusId, t.LabelId,
                            s.SiteName, c.CrewName, p.PriorityName, ts.StatusName AS TaskStatusName
                     FROM Tasks t
                     LEFT JOIN Sites s ON t.SiteId = s.SiteId
@@ -197,6 +197,7 @@ namespace praktik.Models
                             EndDate = (DateTime)reader["EndDate"],
                             PriorityId = Convert.ToInt32(reader["PriorityId"]),
                             TaskStatusId = Convert.ToInt32(reader["StatusId"]),
+                            LabelId = reader["LabelId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["LabelId"]) : null,
                             Site = new Site { SiteName = reader["SiteName"] as string ?? string.Empty },
                             Crew = reader["CrewName"] != DBNull.Value ? new Crew { CrewName = reader["CrewName"] as string } : null,
                             Priority = new Priority { PriorityName = reader["PriorityName"] as string ?? string.Empty },
@@ -503,6 +504,414 @@ namespace praktik.Models
                 }
             }
             return reports;
+        }
+
+        // ========== Методы для работы с заявками на материалы ==========
+
+        // Получение каталога материалов
+        public List<MaterialCatalog> GetMaterialCatalog(bool activeOnly = true)
+        {
+            var materials = new List<MaterialCatalog>();
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var sql = "SELECT MaterialId, Name, Unit, Code, IsActive, CreatedAt FROM MaterialCatalog";
+                if (activeOnly)
+                    sql += " WHERE IsActive = 1";
+                sql += " ORDER BY Name";
+                
+                var command = new SqlCommand(sql, connection);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        materials.Add(new MaterialCatalog
+                        {
+                            MaterialId = Convert.ToInt32(reader["MaterialId"]),
+                            Name = reader["Name"] as string ?? string.Empty,
+                            Unit = reader["Unit"] as string,
+                            Code = reader["Code"] as string,
+                            IsActive = Convert.ToBoolean(reader["IsActive"]),
+                            CreatedAt = (DateTime)reader["CreatedAt"]
+                        });
+                    }
+                }
+            }
+            return materials;
+        }
+
+        // Получение заявок на материалы
+        public List<MaterialRequest> GetMaterialRequests(int? taskId = null, string status = null)
+        {
+            var requests = new List<MaterialRequest>();
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var sql = @"
+                    SELECT mr.RequestId, mr.TaskId, mr.CreatedByUserId, mr.CreatedAt, mr.RequiredDate, mr.Status, mr.Comment,
+                           t.Title as TaskTitle, t.SiteId, t.CrewId,
+                           s.SiteName, c.CrewName,
+                           u.LoginName as CreatedByName
+                    FROM MaterialRequests mr
+                    LEFT JOIN Tasks t ON mr.TaskId = t.TaskId
+                    LEFT JOIN Sites s ON t.SiteId = s.SiteId
+                    LEFT JOIN Crews c ON t.CrewId = c.CrewId
+                    LEFT JOIN Users u ON mr.CreatedByUserId = u.UserId
+                    WHERE 1=1";
+                
+                if (taskId.HasValue)
+                    sql += " AND mr.TaskId = @taskId";
+                if (!string.IsNullOrEmpty(status))
+                    sql += " AND mr.Status = @status";
+                
+                sql += " ORDER BY mr.CreatedAt DESC";
+                
+                var command = new SqlCommand(sql, connection);
+                if (taskId.HasValue)
+                    command.Parameters.AddWithValue("@taskId", taskId.Value);
+                if (!string.IsNullOrEmpty(status))
+                    command.Parameters.AddWithValue("@status", status);
+                
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var request = new MaterialRequest
+                        {
+                            RequestId = Convert.ToInt32(reader["RequestId"]),
+                            TaskId = Convert.ToInt32(reader["TaskId"]),
+                            CreatedByUserId = Convert.ToInt32(reader["CreatedByUserId"]),
+                            CreatedAt = (DateTime)reader["CreatedAt"],
+                            RequiredDate = reader["RequiredDate"] != DBNull.Value ? (DateTime?)reader["RequiredDate"] : null,
+                            Status = reader["Status"] as string ?? string.Empty,
+                            Comment = reader["Comment"] as string,
+                            Task = new Task 
+                            { 
+                                TaskId = Convert.ToInt32(reader["TaskId"]), 
+                                Title = reader["TaskTitle"] as string,
+                                SiteId = reader["SiteId"] != DBNull.Value ? Convert.ToInt32(reader["SiteId"]) : 0,
+                                CrewId = reader["CrewId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["CrewId"]) : null,
+                                Site = reader["SiteName"] != DBNull.Value ? new Site { SiteName = reader["SiteName"] as string } : null,
+                                Crew = reader["CrewName"] != DBNull.Value ? new Crew { CrewName = reader["CrewName"] as string } : null
+                            },
+                            CreatedByUser = new User { UserId = Convert.ToInt32(reader["CreatedByUserId"]), Username = reader["CreatedByName"] as string }
+                        };
+                        
+                        // Загружаем позиции заявки
+                        request.Items = GetMaterialRequestItems(request.RequestId);
+                        requests.Add(request);
+                    }
+                }
+            }
+            return requests;
+        }
+
+        // Получение позиций заявки
+        public List<MaterialRequestItem> GetMaterialRequestItems(int requestId)
+        {
+            var items = new List<MaterialRequestItem>();
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+                    SELECT mri.RequestItemId, mri.RequestId, mri.MaterialId, mri.Qty, mri.Comment,
+                           mc.Name as MaterialName, mc.Unit as MaterialUnit
+                    FROM MaterialRequestItems mri
+                    LEFT JOIN MaterialCatalog mc ON mri.MaterialId = mc.MaterialId
+                    WHERE mri.RequestId = @requestId
+                    ORDER BY mri.RequestItemId", connection);
+                command.Parameters.AddWithValue("@requestId", requestId);
+                
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        items.Add(new MaterialRequestItem
+                        {
+                            RequestItemId = Convert.ToInt32(reader["RequestItemId"]),
+                            RequestId = Convert.ToInt32(reader["RequestId"]),
+                            MaterialId = Convert.ToInt32(reader["MaterialId"]),
+                            Qty = Convert.ToDecimal(reader["Qty"]),
+                            Comment = reader["Comment"] as string,
+                            Material = new MaterialCatalog 
+                            { 
+                                MaterialId = Convert.ToInt32(reader["MaterialId"]),
+                                Name = reader["MaterialName"] as string ?? string.Empty,
+                                Unit = reader["MaterialUnit"] as string
+                            }
+                        });
+                    }
+                }
+            }
+            return items;
+        }
+
+        // Создание заявки на материалы
+        public int CreateMaterialRequest(MaterialRequest request)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Создаем заявку
+                        var command = new SqlCommand(@"
+                            INSERT INTO MaterialRequests (TaskId, CreatedByUserId, CreatedAt, RequiredDate, Status, Comment)
+                            OUTPUT INSERTED.RequestId
+                            VALUES (@taskId, @createdBy, @createdAt, @requiredDate, @status, @comment)", connection, transaction);
+                        command.Parameters.AddWithValue("@taskId", request.TaskId);
+                        command.Parameters.AddWithValue("@createdBy", request.CreatedByUserId);
+                        command.Parameters.AddWithValue("@createdAt", DateTime.UtcNow);
+                        command.Parameters.AddWithValue("@requiredDate", (object)request.RequiredDate ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@status", request.Status);
+                        command.Parameters.AddWithValue("@comment", (object)request.Comment ?? DBNull.Value);
+                        
+                        var requestId = (int)command.ExecuteScalar();
+                        
+                        // Добавляем позиции
+                        foreach (var item in request.Items)
+                        {
+                            var itemCommand = new SqlCommand(@"
+                                INSERT INTO MaterialRequestItems (RequestId, MaterialId, Qty, Comment)
+                                VALUES (@requestId, @materialId, @qty, @comment)", connection, transaction);
+                            itemCommand.Parameters.AddWithValue("@requestId", requestId);
+                            itemCommand.Parameters.AddWithValue("@materialId", item.MaterialId);
+                            itemCommand.Parameters.AddWithValue("@qty", item.Qty);
+                            itemCommand.Parameters.AddWithValue("@comment", (object)item.Comment ?? DBNull.Value);
+                            itemCommand.ExecuteNonQuery();
+                        }
+                        
+                        // Логируем создание
+                        LogMaterialRequestStatusChange(requestId, null, request.Status, request.CreatedByUserId, "Создан черновик заявки", connection, transaction);
+                        
+                        // Создаем служебную запись в TaskReports
+                        AddServiceTaskReport(request.TaskId, request.CreatedByUserId, "Создан черновик заявки на материалы", connection, transaction);
+                        
+                        transaction.Commit();
+                        return requestId;
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        // Обновление заявки на материалы
+        public void UpdateMaterialRequest(MaterialRequest request)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Обновляем заявку
+                        var command = new SqlCommand(@"
+                            UPDATE MaterialRequests 
+                            SET RequiredDate = @requiredDate, Status = @status, Comment = @comment
+                            WHERE RequestId = @requestId", connection, transaction);
+                        command.Parameters.AddWithValue("@requestId", request.RequestId);
+                        command.Parameters.AddWithValue("@requiredDate", (object)request.RequiredDate ?? DBNull.Value);
+                        command.Parameters.AddWithValue("@status", request.Status);
+                        command.Parameters.AddWithValue("@comment", (object)request.Comment ?? DBNull.Value);
+                        command.ExecuteNonQuery();
+                        
+                        // Удаляем старые позиции
+                        var deleteCommand = new SqlCommand("DELETE FROM MaterialRequestItems WHERE RequestId = @requestId", connection, transaction);
+                        deleteCommand.Parameters.AddWithValue("@requestId", request.RequestId);
+                        deleteCommand.ExecuteNonQuery();
+                        
+                        // Добавляем новые позиции
+                        foreach (var item in request.Items)
+                        {
+                            var itemCommand = new SqlCommand(@"
+                                INSERT INTO MaterialRequestItems (RequestId, MaterialId, Qty, Comment)
+                                VALUES (@requestId, @materialId, @qty, @comment)", connection, transaction);
+                            itemCommand.Parameters.AddWithValue("@requestId", request.RequestId);
+                            itemCommand.Parameters.AddWithValue("@materialId", item.MaterialId);
+                            itemCommand.Parameters.AddWithValue("@qty", item.Qty);
+                            itemCommand.Parameters.AddWithValue("@comment", (object)item.Comment ?? DBNull.Value);
+                            itemCommand.ExecuteNonQuery();
+                        }
+                        
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        // Изменение статуса заявки
+        public void ChangeMaterialRequestStatus(int requestId, string newStatus, int userId, string comment = null)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Получаем текущий статус и TaskId
+                        var getCommand = new SqlCommand("SELECT Status, TaskId FROM MaterialRequests WHERE RequestId = @requestId", connection, transaction);
+                        getCommand.Parameters.AddWithValue("@requestId", requestId);
+                        string oldStatus = null;
+                        int taskId = 0;
+                        using (var reader = getCommand.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                oldStatus = reader["Status"] as string;
+                                taskId = Convert.ToInt32(reader["TaskId"]);
+                            }
+                        }
+                        
+                        // Обновляем статус
+                        var updateCommand = new SqlCommand("UPDATE MaterialRequests SET Status = @status WHERE RequestId = @requestId", connection, transaction);
+                        updateCommand.Parameters.AddWithValue("@status", newStatus);
+                        updateCommand.Parameters.AddWithValue("@requestId", requestId);
+                        updateCommand.ExecuteNonQuery();
+                        
+                        // Логируем изменение статуса
+                        LogMaterialRequestStatusChange(requestId, oldStatus, newStatus, userId, comment, connection, transaction);
+                        
+                        // Создаем служебную запись в TaskReports
+                        string reportText = GetStatusChangeReportText(oldStatus, newStatus, comment);
+                        AddServiceTaskReport(taskId, userId, reportText, connection, transaction);
+                        
+                        // Обновляем метку задачи "Ожидание МТС"
+                        UpdateTaskLabelForMaterialRequest(taskId, newStatus, connection, transaction);
+                        
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        // Логирование изменения статуса заявки
+        private void LogMaterialRequestStatusChange(int requestId, string oldStatus, string newStatus, int userId, string comment, SqlConnection connection, SqlTransaction transaction)
+        {
+            var command = new SqlCommand(@"
+                INSERT INTO MaterialRequestStatusLog (RequestId, OldStatus, NewStatus, ChangedByUserId, ChangedAt, Comment)
+                VALUES (@requestId, @oldStatus, @newStatus, @userId, @changedAt, @comment)", connection, transaction);
+            command.Parameters.AddWithValue("@requestId", requestId);
+            command.Parameters.AddWithValue("@oldStatus", (object)oldStatus ?? DBNull.Value);
+            command.Parameters.AddWithValue("@newStatus", newStatus);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@changedAt", DateTime.UtcNow);
+            command.Parameters.AddWithValue("@comment", (object)comment ?? DBNull.Value);
+            command.ExecuteNonQuery();
+        }
+
+        // Создание служебной записи в TaskReports
+        private void AddServiceTaskReport(int taskId, int userId, string text, SqlConnection connection, SqlTransaction transaction)
+        {
+            var command = new SqlCommand(@"
+                INSERT INTO TaskReports (TaskId, ReportedByUserId, ReportedAt, ReportText, ProgressPercent)
+                VALUES (@taskId, @userId, @reportedAt, @text, @progress)", connection, transaction);
+            command.Parameters.AddWithValue("@taskId", taskId);
+            command.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("@reportedAt", DateTime.UtcNow);
+            command.Parameters.AddWithValue("@text", text);
+            command.Parameters.AddWithValue("@progress", DBNull.Value);
+            command.ExecuteNonQuery();
+        }
+
+        // Получение текста для отчета при изменении статуса
+        private string GetStatusChangeReportText(string oldStatus, string newStatus, string comment)
+        {
+            switch (newStatus)
+            {
+                case "Submitted":
+                    return "Заявка отправлена на согласование";
+                case "Approved":
+                    return "Заявка согласована";
+                case "Rejected":
+                    return $"Заявка отклонена: {comment ?? "без указания причины"}";
+                case "Issued":
+                    return "Материалы выданы";
+                case "Delivered":
+                    return $"Доставлено: {comment ?? ""}";
+                case "Closed":
+                    return "Заявка закрыта";
+                default:
+                    return $"Статус заявки изменен: {newStatus}";
+            }
+        }
+
+        // Обновление метки задачи "Ожидание МТС"
+        private void UpdateTaskLabelForMaterialRequest(int taskId, string requestStatus, SqlConnection connection, System.Data.SqlClient.SqlTransaction transaction)
+        {
+            // Получаем ID метки "Ожидание МТС"
+            var labelCommand = new SqlCommand("SELECT LabelId FROM TaskLabels WHERE Code = 'await_mts'", connection, transaction);
+            var labelIdObj = labelCommand.ExecuteScalar();
+            
+            if (labelIdObj == null || labelIdObj == DBNull.Value)
+                return; // Метка не найдена
+            
+            int labelId = Convert.ToInt32(labelIdObj);
+            
+            // Если статус "Delivered" или "Closed" - снимаем метку, иначе ставим
+            var updateCommand = new SqlCommand("UPDATE Tasks SET LabelId = @labelId WHERE TaskId = @taskId", connection, transaction);
+            if (requestStatus == "Delivered" || requestStatus == "Closed")
+            {
+                updateCommand.Parameters.AddWithValue("@labelId", DBNull.Value);
+            }
+            else if (requestStatus == "Submitted" || requestStatus == "Approved" || requestStatus == "Issued")
+            {
+                updateCommand.Parameters.AddWithValue("@labelId", labelId);
+            }
+            else
+            {
+                return; // Не меняем метку для других статусов
+            }
+            updateCommand.Parameters.AddWithValue("@taskId", taskId);
+            updateCommand.ExecuteNonQuery();
+        }
+
+        // Получение ID метки задачи по коду
+        public int? GetTaskLabelIdByCode(string code)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand("SELECT LabelId FROM TaskLabels WHERE Code = @code", connection);
+                command.Parameters.AddWithValue("@code", code);
+                var result = command.ExecuteScalar();
+                return result != null && result != DBNull.Value ? (int?)Convert.ToInt32(result) : null;
+            }
+        }
+
+        // Добавление документа выдачи/доставки
+        public void AddMaterialDeliveryDoc(int requestId, string eventType, string docNumber = null, string note = null)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+                    INSERT INTO MaterialDeliveryDocs (RequestId, Event, EventAt, DocNumber, Note)
+                    VALUES (@requestId, @event, @eventAt, @docNumber, @note)", connection);
+                command.Parameters.AddWithValue("@requestId", requestId);
+                command.Parameters.AddWithValue("@event", eventType);
+                command.Parameters.AddWithValue("@eventAt", DateTime.UtcNow);
+                command.Parameters.AddWithValue("@docNumber", (object)docNumber ?? DBNull.Value);
+                command.Parameters.AddWithValue("@note", (object)note ?? DBNull.Value);
+                command.ExecuteNonQuery();
+            }
         }
     }
 }

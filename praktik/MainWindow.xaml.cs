@@ -66,6 +66,8 @@ namespace praktik
                     ((ListBoxItem)NavigationListBox.Items[3]).Visibility = Visibility.Visible;  
                     ((ListBoxItem)NavigationListBox.Items[4]).Visibility = Visibility.Visible;  
                     ((ListBoxItem)NavigationListBox.Items[5]).Visibility = Visibility.Visible;  
+                    ((ListBoxItem)NavigationListBox.Items[6]).Visibility = Visibility.Visible;  
+                    MaterialRequestsMenuItem.Visibility = Visibility.Visible;
                      SetHelpSectionsVisibility(true, true, true, true, true, true, false);
                     break;
                     
@@ -199,6 +201,13 @@ namespace praktik
                     JournalContent.Visibility = Visibility.Visible;
                     PageTitle.Text = "Журнал отчётов";
                     LoadTaskReports();
+                    break;
+                case 7:
+                    // Открываем окно реестра заявок
+                    var registryWindow = new MaterialRequestRegistryWindow();
+                    registryWindow.ShowDialog();
+                    // Сбрасываем выбор, чтобы не было проблем
+                    NavigationListBox.SelectedIndex = -1;
                     break;
             }
         }

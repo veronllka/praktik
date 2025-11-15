@@ -101,6 +101,18 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="MaterialRequestEditWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MaterialRequestRegistryWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MaterialRequestActionWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -125,6 +137,18 @@
       <DependentUpon>RegisterWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MaterialRequestEditWindow.xaml.cs">
+      <DependentUpon>MaterialRequestEditWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MaterialRequestRegistryWindow.xaml.cs">
+      <DependentUpon>MaterialRequestRegistryWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MaterialRequestActionWindow.xaml.cs">
+      <DependentUpon>MaterialRequestActionWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Models\WorkPlannerContext.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="Models\Site.cs" />
@@ -135,6 +159,11 @@
     <Compile Include="Models\TaskReport.cs" />
     <Compile Include="Models\Role.cs" />
     <Compile Include="Models\Logger.cs" />
+    <Compile Include="Models\MaterialCatalog.cs" />
+    <Compile Include="Models\MaterialRequest.cs" />
+    <Compile Include="Models\MaterialRequestItem.cs" />
+    <Compile Include="Models\MaterialRequestStatusLog.cs" />
+    <Compile Include="Models\MaterialDeliveryDoc.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -154,6 +183,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="ClassDiagram1.cd" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
