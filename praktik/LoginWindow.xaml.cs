@@ -59,6 +59,15 @@ namespace praktik
             }
         }
 
+        private void RegisterLink_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var registerWindow = new RegisterWindow();
+            if (registerWindow.ShowDialog() == true)
+            {
+                txtError.Text = "Пользователь успешно зарегистрирован";
+            }
+        }
+
         private void InputField_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
