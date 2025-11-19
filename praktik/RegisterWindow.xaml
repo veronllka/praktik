@@ -4,270 +4,329 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:praktik"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
-        Title="Регистрация пользователя" Height="650" Width="450" WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource MaterialDesignPaper}">
+        Title="Регистрация пользователя" Height="700" Width="420" 
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Window.Resources>
+        <!-- Стили для кнопок -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#4A5568"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                BorderBrush="{TemplateBinding BorderBrush}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#40000000" Direction="270" ShadowDepth="2" BlurRadius="4" Opacity="0.3"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#5A6578"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#3A4558"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#4A5568"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                BorderBrush="{TemplateBinding BorderBrush}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F7FAFC"/>
+                    <Setter Property="BorderBrush" Value="#CBD5E0"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="#EDF2F7"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Стиль для текстовых полей -->
+        <Style x:Key="ModernTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#F7FAFC"/>
+            <Setter Property="Foreground" Value="#2D3748"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                        Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#718096"/>
+                    <Setter Property="Background" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#CBD5E0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <Style x:Key="ModernPasswordBoxStyle" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#F7FAFC"/>
+            <Setter Property="Foreground" Value="#2D3748"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                        Margin="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#718096"/>
+                    <Setter Property="Background" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#CBD5E0"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        
+        <!-- Стиль для ComboBox -->
+        <Style x:Key="ModernComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="#F7FAFC"/>
+            <Setter Property="Foreground" Value="#2D3748"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#718096"/>
+                    <Setter Property="Background" Value="White"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="#CBD5E0"/>
+                </Trigger>
+            </Style.Triggers>
+            <Style.Resources>
+                <Style TargetType="ComboBoxItem">
+                    <Setter Property="Padding" Value="16,12"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="Foreground" Value="#2D3748"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#F7FAFC"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#EDF2F7"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Style.Resources>
+        </Style>
+    </Window.Resources>
+    
     <Grid>
+        <!-- Фоновый градиент в нейтральных тонах -->
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#9C27B0" Offset="0"/>
-                <GradientStop Color="#7B1FA2" Offset="1"/>
+                <GradientStop Color="#F7FAFC" Offset="0"/>
+                <GradientStop Color="#EDF2F7" Offset="1"/>
             </LinearGradientBrush>
         </Grid.Background>
         
-        <!-- Анимированные элементы строительства -->
-        <Canvas>
-            <!-- Здание в процессе строительства -->
-            <Rectangle Width="120" Height="200" Fill="#FFECEFF1" Stroke="#FF616161" StrokeThickness="2" 
-                     Canvas.Left="30" Canvas.Bottom="50"/>
+        <!-- Декоративные элементы -->
+        <Grid>
+            <!-- Мягкие круги на фоне -->
+            <Ellipse Width="300" Height="300" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-100,-100,0,0" Opacity="0.3">
+                <Ellipse.Fill>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#CBD5E0" Offset="0"/>
+                        <GradientStop Color="#00CBD5E0" Offset="1"/>
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
             
-            <!-- Строящиеся этажи -->
-            <Rectangle x:Name="floor1" Width="120" Height="40" Fill="#FFE0E0E0" Stroke="#FF616161" StrokeThickness="1" 
-                     Canvas.Left="30" Canvas.Bottom="50">
-                <Rectangle.RenderTransform>
-                    <ScaleTransform x:Name="floor1Scale" ScaleY="0"/>
-                </Rectangle.RenderTransform>
-                <Rectangle.Triggers>
-                    <EventTrigger RoutedEvent="Rectangle.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="floor1Scale" 
-                                    Storyboard.TargetProperty="ScaleY"
-                                    From="0" To="1" Duration="0:0:2" 
-                                    BeginTime="0:0:0"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Rectangle.Triggers>
-            </Rectangle>
-            
-            <Rectangle x:Name="floor2" Width="120" Height="40" Fill="#FFE0E0E0" Stroke="#FF616161" StrokeThickness="1" 
-                     Canvas.Left="30" Canvas.Bottom="90">
-                <Rectangle.RenderTransform>
-                    <ScaleTransform x:Name="floor2Scale" ScaleY="0"/>
-                </Rectangle.RenderTransform>
-                <Rectangle.Triggers>
-                    <EventTrigger RoutedEvent="Rectangle.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="floor2Scale" 
-                                    Storyboard.TargetProperty="ScaleY"
-                                    From="0" To="1" Duration="0:0:2" 
-                                    BeginTime="0:0:2"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Rectangle.Triggers>
-            </Rectangle>
-            
-            <Rectangle x:Name="floor3" Width="120" Height="40" Fill="#FFE0E0E0" Stroke="#FF616161" StrokeThickness="1" 
-                     Canvas.Left="30" Canvas.Bottom="130">
-                <Rectangle.RenderTransform>
-                    <ScaleTransform x:Name="floor3Scale" ScaleY="0"/>
-                </Rectangle.RenderTransform>
-                <Rectangle.Triggers>
-                    <EventTrigger RoutedEvent="Rectangle.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="floor3Scale" 
-                                    Storyboard.TargetProperty="ScaleY"
-                                    From="0" To="1" Duration="0:0:2" 
-                                    BeginTime="0:0:4"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Rectangle.Triggers>
-            </Rectangle>
-            
-            <!-- Строитель -->
-            <Path Fill="#FFFFB74D" Stroke="#FF616161" StrokeThickness="1" Canvas.Right="50" Canvas.Bottom="100">
-                <Path.Data>
-                    <PathGeometry>
-                        <!-- Тело строителя -->
-                        <PathFigure StartPoint="0,0">
-                            <LineSegment Point="0,30"/>
-                            <LineSegment Point="20,30"/>
-                            <LineSegment Point="20,0"/>
-                            <LineSegment Point="0,0"/>
-                        </PathFigure>
-                    </PathGeometry>
-                </Path.Data>
-            </Path>
-            
-            <!-- Голова строителя с каской -->
-            <Ellipse Width="24" Height="24" Fill="#FFFFB74D" Stroke="#FF616161" StrokeThickness="1" 
-                   Canvas.Right="48" Canvas.Bottom="130"/>
-            <Path Fill="#FFFFEB3B" Stroke="#FF616161" StrokeThickness="1" Canvas.Right="48" Canvas.Bottom="140">
-                <Path.Data>
-                    <PathGeometry>
-                        <PathFigure StartPoint="0,0">
-                            <ArcSegment Point="24,0" Size="12,5"/>
-                            <LineSegment Point="24,10"/>
-                            <ArcSegment Point="0,10" Size="12,5" SweepDirection="Counterclockwise"/>
-                            <LineSegment Point="0,0"/>
-                        </PathFigure>
-                    </PathGeometry>
-                </Path.Data>
-                <Path.RenderTransform>
-                    <TranslateTransform x:Name="helmetTranslation" X="0" Y="0"/>
-                </Path.RenderTransform>
-                <Path.Triggers>
-                    <EventTrigger RoutedEvent="Path.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="helmetTranslation" 
-                                    Storyboard.TargetProperty="Y"
-                                    From="-2" To="2" Duration="0:0:1" 
-                                    AutoReverse="True" RepeatBehavior="Forever"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Path.Triggers>
-            </Path>
-            
-            <!-- Рука с инструментом -->
-            <Path Fill="#FFFFB74D" Stroke="#FF616161" StrokeThickness="1" Canvas.Right="30" Canvas.Bottom="120">
-                <Path.Data>
-                    <PathGeometry>
-                        <PathFigure StartPoint="0,0">
-                            <LineSegment Point="30,10"/>
-                        </PathFigure>
-                    </PathGeometry>
-                </Path.Data>
-                <Path.RenderTransform>
-                    <RotateTransform x:Name="armRotation" Angle="0" CenterX="0" CenterY="0"/>
-                </Path.RenderTransform>
-                <Path.Triggers>
-                    <EventTrigger RoutedEvent="Path.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="armRotation" 
-                                    Storyboard.TargetProperty="Angle"
-                                    From="-10" To="20" Duration="0:0:0.5" 
-                                    AutoReverse="True" RepeatBehavior="Forever"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Path.Triggers>
-            </Path>
-            
-            <!-- Молоток -->
-            <Path Fill="#FF9E9E9E" Stroke="#FF616161" StrokeThickness="1" Canvas.Right="0" Canvas.Bottom="130">
-                <Path.Data>
-                    <PathGeometry>
-                        <PathFigure StartPoint="0,0">
-                            <LineSegment Point="15,0"/>
-                            <LineSegment Point="15,10"/>
-                            <LineSegment Point="0,10"/>
-                            <LineSegment Point="0,0"/>
-                        </PathFigure>
-                    </PathGeometry>
-                </Path.Data>
-                <Path.RenderTransform>
-                    <TransformGroup>
-                        <RotateTransform x:Name="hammerRotation" Angle="0" CenterX="0" CenterY="5"/>
-                        <TranslateTransform x:Name="hammerTranslation" X="0" Y="0"/>
-                    </TransformGroup>
-                </Path.RenderTransform>
-                <Path.Triggers>
-                    <EventTrigger RoutedEvent="Path.Loaded">
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="hammerRotation" 
-                                    Storyboard.TargetProperty="Angle"
-                                    From="-10" To="20" Duration="0:0:0.5" 
-                                    AutoReverse="True" RepeatBehavior="Forever"/>
-                                <DoubleAnimation 
-                                    Storyboard.TargetName="hammerTranslation" 
-                                    Storyboard.TargetProperty="Y"
-                                    From="-2" To="2" Duration="0:0:0.5" 
-                                    AutoReverse="True" RepeatBehavior="Forever"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger>
-                </Path.Triggers>
-            </Path>
-        </Canvas>
+            <Ellipse Width="250" Height="250" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-80,-80" Opacity="0.25">
+                <Ellipse.Fill>
+                    <RadialGradientBrush>
+                        <GradientStop Color="#A0AEC0" Offset="0"/>
+                        <GradientStop Color="#00A0AEC0" Offset="1"/>
+                    </RadialGradientBrush>
+                </Ellipse.Fill>
+            </Ellipse>
+        </Grid>
         
-        <materialDesign:Card Style="{StaticResource CardStyle}" Width="380" Height="580" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <StackPanel>
-                <materialDesign:PackIcon Kind="AccountHardHat" Width="48" Height="48" 
-                                       Foreground="{DynamicResource PrimaryHueMidBrush}" 
-                                       HorizontalAlignment="Center" Margin="0,16,0,0">
-                    <materialDesign:PackIcon.RenderTransform>
-                        <RotateTransform x:Name="iconRotation" Angle="0" CenterX="24" CenterY="24"/>
-                    </materialDesign:PackIcon.RenderTransform>
-                    <materialDesign:PackIcon.Triggers>
-                        <EventTrigger RoutedEvent="materialDesign:PackIcon.Loaded">
-                            <BeginStoryboard>
-                                <Storyboard>
-                                    <DoubleAnimation 
-                                        Storyboard.TargetName="iconRotation" 
-                                        Storyboard.TargetProperty="Angle"
-                                        From="-5" To="5" Duration="0:0:1" 
-                                        AutoReverse="True" RepeatBehavior="Forever"/>
-                                </Storyboard>
-                            </BeginStoryboard>
-                        </EventTrigger>
-                    </materialDesign:PackIcon.Triggers>
-                </materialDesign:PackIcon>
-                
-                <TextBlock Text="Регистрация" 
-                          Style="{StaticResource HeaderTextStyle}" 
-                          HorizontalAlignment="Center" 
-                          Margin="0,16,0,24"/>
-                
-                <TextBox x:Name="txtUsername" 
-                        materialDesign:HintAssist.Hint="Логин"
-                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                        Margin="0,0,0,16"
-                        KeyDown="InputField_KeyDown"/>
-                
-                <PasswordBox x:Name="txtPassword" 
-                            materialDesign:HintAssist.Hint="Пароль"
-                            Style="{StaticResource MaterialDesignFloatingHintPasswordBox}"
-                            Margin="0,0,0,16"
-                            KeyDown="InputField_KeyDown"/>
-                
-                <TextBox x:Name="txtFullName" 
-                        materialDesign:HintAssist.Hint="Полное имя"
-                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                        Margin="0,0,0,16"
-                        KeyDown="InputField_KeyDown"/>
-                
-                <ComboBox x:Name="cbRoles" 
-                         materialDesign:HintAssist.Hint="Роль"
-                         Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-                         DisplayMemberPath="RoleName"
-                         Margin="0,0,0,24"/>
-                
-                <Button x:Name="btnRegister" 
-                       Content="ЗАРЕГИСТРИРОВАТЬ" 
-                       Click="btnRegister_Click" 
-                       Style="{StaticResource MaterialDesignRaisedButton}"
-                       Height="40" 
-                       Margin="0,0,0,20"/>
-                
-                <Button x:Name="btnCancel" 
-                       Content="ОТМЕНА" 
-                       Click="btnCancel_Click" 
-                       Style="{StaticResource MaterialDesignOutlinedButton}"
-                       Height="40" 
-                       Margin="0,0,0,20"/>
-                
-                <TextBlock x:Name="txtError" 
-                          Foreground="{DynamicResource ValidationErrorBrush}" 
-                          HorizontalAlignment="Center"
-                          TextWrapping="Wrap"/>
-            </StackPanel>
-        </materialDesign:Card>
+        <!-- Основная карточка -->
+        <Border Width="380" Height="620" 
+                VerticalAlignment="Center" 
+                HorizontalAlignment="Center"
+                Background="White"
+                CornerRadius="12"
+                BorderThickness="1"
+                BorderBrush="#E2E8F0">
+            <Border.Effect>
+                <DropShadowEffect Color="#40000000" Direction="270" ShadowDepth="8" BlurRadius="20" Opacity="0.15"/>
+            </Border.Effect>
+            
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Margin="40,40,40,40">
+                    <!-- Иконка и заголовок -->
+                    <Grid Margin="0,0,0,30">
+                        <Ellipse Width="70" Height="70" HorizontalAlignment="Center" Margin="0,0,0,15">
+                            <Ellipse.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="#E2E8F0" Offset="0"/>
+                                    <GradientStop Color="#CBD5E0" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <TextBlock Text="👷" FontSize="35" HorizontalAlignment="Center" Margin="0,0,0,15"/>
+                    </Grid>
+                    
+                    <TextBlock Text="Регистрация" 
+                              HorizontalAlignment="Center" 
+                              FontSize="22"
+                              FontWeight="SemiBold"
+                              Foreground="#2D3748"
+                              Margin="0,0,0,6"/>
+                    
+                    <TextBlock Text="Создайте новый аккаунт" 
+                              HorizontalAlignment="Center" 
+                              FontSize="13"
+                              Foreground="#718096"
+                              Margin="0,0,0,30"/>
+                    
+                    <!-- Поле логина -->
+                    <StackPanel Margin="0,0,0,18">
+                        <TextBlock Text="Логин" 
+                                  FontSize="12" 
+                                  FontWeight="SemiBold"
+                                  Foreground="#4A5568"
+                                  Margin="0,0,0,8"/>
+                        <TextBox x:Name="txtUsername" 
+                                Style="{StaticResource ModernTextBoxStyle}"
+                                Height="45"
+                                KeyDown="InputField_KeyDown"/>
+                    </StackPanel>
+                    
+                    <!-- Поле пароля -->
+                    <StackPanel Margin="0,0,0,18">
+                        <TextBlock Text="Пароль" 
+                                  FontSize="12" 
+                                  FontWeight="SemiBold"
+                                  Foreground="#4A5568"
+                                  Margin="0,0,0,8"/>
+                        <PasswordBox x:Name="txtPassword" 
+                                    Style="{StaticResource ModernPasswordBoxStyle}"
+                                    Height="45"
+                                    KeyDown="InputField_KeyDown"/>
+                    </StackPanel>
+                    
+                    <!-- Поле полного имени -->
+                    <StackPanel Margin="0,0,0,18">
+                        <TextBlock Text="Полное имя" 
+                                  FontSize="12" 
+                                  FontWeight="SemiBold"
+                                  Foreground="#4A5568"
+                                  Margin="0,0,0,8"/>
+                        <TextBox x:Name="txtFullName" 
+                                Style="{StaticResource ModernTextBoxStyle}"
+                                Height="45"
+                                KeyDown="InputField_KeyDown"/>
+                    </StackPanel>
+                    
+                    <!-- Поле выбора роли -->
+                    <StackPanel Margin="0,0,0,24">
+                        <TextBlock Text="Роль" 
+                                  FontSize="12" 
+                                  FontWeight="SemiBold"
+                                  Foreground="#4A5568"
+                                  Margin="0,0,0,8"/>
+                        <ComboBox x:Name="cbRoles" 
+                                 Style="{StaticResource ModernComboBoxStyle}"
+                                 DisplayMemberPath="RoleName"
+                                 Height="45"/>
+                    </StackPanel>
+                    
+                    <!-- Кнопка регистрации -->
+                    <Button x:Name="btnRegister" 
+                           Content="Зарегистрироваться" 
+                           Click="btnRegister_Click" 
+                           Style="{StaticResource PrimaryButtonStyle}"
+                           Height="45"
+                           Margin="0,0,0,12"/>
+                    
+                    <!-- Кнопка отмены -->
+                    <Button x:Name="btnCancel" 
+                           Content="Отмена" 
+                           Click="btnCancel_Click" 
+                           Style="{StaticResource SecondaryButtonStyle}"
+                           Height="45"
+                           Margin="0,0,0,16"/>
+                    
+                    <!-- Сообщение об ошибке -->
+                    <TextBlock x:Name="txtError" 
+                              Foreground="#E53E3E" 
+                              HorizontalAlignment="Center"
+                              TextWrapping="Wrap"
+                              FontSize="13"
+                              TextAlignment="Center"
+                              MinHeight="20"
+                              Margin="0,0,0,10"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
     </Grid>
 </Window>
