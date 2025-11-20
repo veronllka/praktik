@@ -3,30 +3,83 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Действие с заявкой" Height="250" Width="400" WindowStartupLocation="CenterScreen">
-    <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <TextBlock x:Name="txtTitle" Grid.Row="0" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"/>
-
-        <TextBlock x:Name="lblDocNumber" Grid.Row="1" Text="Номер документа:" Margin="0,0,0,5"/>
-        <TextBox x:Name="txtDocNumber" Grid.Row="2" Margin="0,0,0,16"/>
-
-        <TextBlock x:Name="lblNote" Grid.Row="3" Text="Примечание:" Margin="0,0,0,5"/>
-        <TextBox x:Name="txtNote" Grid.Row="4" TextWrapping="Wrap" AcceptsReturn="True" Height="60" Margin="0,0,0,16"/>
-
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="btnOk" Content="OK" Click="btnOk_Click" Width="80" Margin="0,0,8,0"/>
-            <Button x:Name="btnCancel" Content="Отмена" Click="btnCancel_Click" Width="80"/>
+        Title="Действие с заявкой" Height="320" Width="450" WindowStartupLocation="CenterScreen" 
+        ResizeMode="NoResize">
+    <DockPanel Margin="16">
+        <!-- Кнопки внизу -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button x:Name="btnOk" Content="Подтвердить" Click="btnOk_Click" 
+                    Width="140" Height="40" Margin="0,0,8,0" 
+                    Background="#7B1FA2" Foreground="White" 
+                    BorderThickness="0" FontSize="14" FontWeight="Medium"
+                    Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4" 
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="#7B1FA2"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#6A1B9A"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#5A0F8A"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button x:Name="btnCancel" Content="Отмена" Click="btnCancel_Click" 
+                    Width="140" Height="40"
+                    Background="Transparent" Foreground="#7B1FA2" 
+                    BorderThickness="1" BorderBrush="#7B1FA2" FontSize="14" FontWeight="Medium"
+                    Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4" 
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F3E5F5"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#E1BEE7"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
         </StackPanel>
-    </Grid>
+
+        <!-- Основной контент -->
+        <StackPanel>
+            <TextBlock x:Name="txtTitle" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"/>
+
+            <TextBlock x:Name="lblDocNumber" Text="Номер документа:" Margin="0,0,0,5"/>
+            <TextBox x:Name="txtDocNumber" Margin="0,0,0,16" Height="30"/>
+
+            <TextBlock x:Name="lblNote" Text="Примечание:" Margin="0,0,0,5"/>
+            <TextBox x:Name="txtNote" TextWrapping="Wrap" AcceptsReturn="True" Height="60" Margin="0,0,0,0"/>
+        </StackPanel>
+    </DockPanel>
 </Window>
 

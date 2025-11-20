@@ -309,6 +309,19 @@ namespace praktik
             }
         }
 
+        private void btnAddRequest_Click(object sender, RoutedEventArgs e)
+        {
+            var taskSelectionWindow = new TaskSelectionWindow();
+            if (taskSelectionWindow.ShowDialog() == true && taskSelectionWindow.SelectedTask != null)
+            {
+                var window = new MaterialRequestEditWindow(taskSelectionWindow.SelectedTask.TaskId);
+                if (window.ShowDialog() == true)
+                {
+                    LoadRequests();
+                }
+            }
+        }
+
         private void btnExport_Click(object sender, RoutedEventArgs e)
         {
             var saveDialog = new SaveFileDialog

@@ -23,6 +23,7 @@
                         <ColumnDefinition Width="200"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <ComboBox x:Name="cbStatusFilter" Grid.Column="0" 
                              materialDesign:HintAssist.Hint="Статус"
@@ -45,7 +46,10 @@
                               materialDesign:HintAssist.Hint="Требуется к (от)"
                               Margin="0,0,8,0" SelectedDateChanged="Filter_Changed"/>
                     <Button x:Name="btnResetFilter" Grid.Column="4" Content="Сбросить" 
-                           Click="btnResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                           Click="btnResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Margin="0,0,8,0"/>
+                    <Button x:Name="btnAddRequest" Grid.Column="5" Content="Добавить заявку" 
+                           Click="btnAddRequest_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
                 </Grid>
             </StackPanel>
         </materialDesign:Card>

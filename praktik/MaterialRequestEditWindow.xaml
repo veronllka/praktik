@@ -49,10 +49,10 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="*"/>
-                <DataGridTemplateColumn Header="Действия" Width="100">
+                <DataGridTemplateColumn Header="Действия" Width="120" MinWidth="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="Удалить" Click="btnDeleteItem_Click" Style="{StaticResource MaterialDesignFlatButton}"/>
+                            <Button Content="Удалить" Click="btnDeleteItem_Click" Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
