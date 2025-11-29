@@ -9,17 +9,14 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- MahApps.Metro ресурсы -->
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
                 
-                <!-- Сохраняем Material Design для совместимости -->
                 <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Purple" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 
                 <ResourceDictionary>
-                    <!-- Современные стили карточек -->
                     <Style x:Key="ModernCardStyle" TargetType="Border">
                         <Setter Property="Margin" Value="8"/>
                         <Setter Property="Padding" Value="16"/>
@@ -34,7 +31,6 @@
                         </Setter>
                     </Style>
                     
-                    <!-- Современные стили текста -->
                     <Style x:Key="ModernHeaderTextStyle" TargetType="TextBlock">
                         <Setter Property="FontSize" Value="22"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -51,7 +47,6 @@
                         <Setter Property="FontFamily" Value="Segoe UI"/>
                     </Style>
                     
-                    <!-- Современные стили кнопок -->
                     <Style x:Key="ModernButtonStyle" TargetType="Button">
                         <Setter Property="Padding" Value="16,8"/>
                         <Setter Property="Background" Value="#5C6BC0"/>
@@ -115,7 +110,6 @@
                         </Style.Triggers>
                     </Style>
                     
-                    <!-- Сохраняем совместимость со старыми стилями -->
                     <Style x:Key="CardStyle" TargetType="materialDesign:Card">
                         <Setter Property="Margin" Value="8"/>
                         <Setter Property="Padding" Value="16"/>

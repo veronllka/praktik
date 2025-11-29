@@ -103,7 +103,6 @@ namespace praktik
                     break;
                     
                 case "Бригадир":
-                    // Бригадир имеет доступ только к задачам и календарю
                     ((ListBoxItem)NavigationListBox.Items[3]).Visibility = Visibility.Visible;  
                     ((ListBoxItem)NavigationListBox.Items[4]).Visibility = Visibility.Visible;  
                     
@@ -113,13 +112,12 @@ namespace praktik
                 btnAddCrew.IsEnabled = false;
                 btnUpdateCrew.IsEnabled = false;
                 btnDeleteCrew.IsEnabled = false;
-                    btnAddTask.IsEnabled = false; // Бригадир не может создавать задачи
-                    btnDeleteTask.IsEnabled = false; // Бригадир не может удалять задачи
+                    btnAddTask.IsEnabled = false;
+                    btnDeleteTask.IsEnabled = false;
                      SetHelpSectionsVisibility(false, false, false, true, true, false, false);
                     break;
             }
             
-            // Автоматически выбираем первый доступный пункт меню
             foreach (ListBoxItem item in NavigationListBox.Items)
             {
                 if (item.Visibility == Visibility.Visible)
@@ -130,7 +128,6 @@ namespace praktik
             }
         }
 
-        // Управление видимостью разделов справки по ролям
         private void SetHelpSectionsVisibility(
             bool home,
             bool sites,
@@ -140,7 +137,6 @@ namespace praktik
             bool reports,
             bool journal)
         {
-            // null-условные операторы на случай изменений XAML
             HelpHomeExpander.Visibility = home ? Visibility.Visible : Visibility.Collapsed;
             HelpSitesExpander.Visibility = sites ? Visibility.Visible : Visibility.Collapsed;
             HelpCrewsExpander.Visibility = crews ? Visibility.Visible : Visibility.Collapsed;
@@ -182,12 +178,10 @@ namespace praktik
             ActiveCrewsCount.Text = crews.Count.ToString();
         }
 
-        // Навигация
         private void NavigationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (NavigationListBox.SelectedIndex < 0) return;
 
-            // Скрываем все страницы
             DashboardContent.Visibility = Visibility.Collapsed;
             SitesContent.Visibility = Visibility.Collapsed;
             CrewsContent.Visibility = Visibility.Collapsed;
@@ -196,7 +190,6 @@ namespace praktik
             ReportsContent.Visibility = Visibility.Collapsed;
             JournalContent.Visibility = Visibility.Collapsed;
 
-            // Показываем выбранную
             switch (NavigationListBox.SelectedIndex)
             {
                 case 0:
@@ -234,10 +227,8 @@ namespace praktik
                     LoadTaskReports();
                     break;
                 case 7:
-                    // Открываем окно реестра заявок
                     var registryWindow = new MaterialRequestRegistryWindow();
                     registryWindow.ShowDialog();
-                    // Сбрасываем выбор, чтобы не было проблем
                     NavigationListBox.SelectedIndex = -1;
                     break;
             }
@@ -310,7 +301,6 @@ namespace praktik
             selectedSite = null;
         }
 
-        // Меню
         private void MenuExit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
@@ -329,7 +319,6 @@ namespace praktik
             HelpButton.IsChecked = false;
         }
 
-        // Управление бригадами
         private void LoadCrews()
         {
             try
@@ -338,7 +327,6 @@ namespace praktik
                 dgCrews.ItemsSource = crews;
                 cbBrigadiers.ItemsSource = db.GetUsers().Where(u => u.Role == "Бригадир").ToList();
                 
-                // Убираем сообщение "Страница в разработке" если оно есть
                 var children = CrewsContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -449,7 +437,6 @@ namespace praktik
             selectedCrew = null;
         }
 
-        // Управление задачами
         private void LoadTasks()
         {
             try
@@ -457,7 +444,6 @@ namespace praktik
                 var tasks = db.GetTasks();
                 dgTasks.ItemsSource = tasks;
                 
-                // Убираем сообщение "Страница в разработке" если оно есть
                 var children = TasksContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -584,7 +570,6 @@ namespace praktik
 
         private void btnPrintTask_Click(object sender, RoutedEventArgs e)
         {
-            // Проверяем, выбраны ли задачи
             var selectedTasks = dgTasks.SelectedItems.Cast<Models.Task>().ToList();
             
             if (selectedTasks.Count == 0)
@@ -597,7 +582,6 @@ namespace praktik
                 selectedTasks = new List<Models.Task> { selectedTask };
             }
 
-            // Печатаем выбранные задачи
             int printedCount = 0;
             foreach (var task in selectedTasks)
             {
@@ -614,7 +598,6 @@ namespace praktik
             }
         }
 
-        // Календарь
         private void LoadCalendar()
         {
             try
@@ -622,7 +605,6 @@ namespace praktik
                 TaskCalendar.SelectedDate = DateTime.Today;
                 LoadTasksForDate(DateTime.Today);
                 
-                // Убираем сообщение "Страница в разработке" если оно есть
                 var children = CalendarContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -687,12 +669,10 @@ namespace praktik
             dgCalendarTasks.ItemsSource = tasks;
         }
 
-        // Отчёты
         private void btnTasksBySite_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Устанавливаем текущий тип отчета
                 UpdateCurrentReportType("tasks_by_site");
                 
             var tasks = db.GetTasks();
@@ -711,7 +691,6 @@ namespace praktik
                 ReportTitle.Text = "Отчёт: Задачи по объектам";
             dgReports.ItemsSource = report;
                 
-                // Убираем сообщение "Страница в разработке" если оно есть
                 var children = ReportsContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -732,7 +711,6 @@ namespace praktik
         {
             try
             {
-                // Устанавливаем текущий тип отчета
                 UpdateCurrentReportType("tasks_by_crew");
                 
             var tasks = db.GetTasks();
@@ -752,7 +730,6 @@ namespace praktik
                 ReportTitle.Text = "Отчёт: Выполнение по бригадам";
             dgReports.ItemsSource = report;
                 
-                // Убираем сообщение "Страница в разработке" если оно есть
                 var children = ReportsContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -773,7 +750,6 @@ namespace praktik
         {
             try
             {
-                // Устанавливаем текущий тип отчета
                 UpdateCurrentReportType("overdue_tasks");
                 
             var tasks = db.GetTasks();
@@ -793,7 +769,6 @@ namespace praktik
                 ReportTitle.Text = "Отчёт: Просроченные задачи";
             dgReports.ItemsSource = overdueTasks;
                 
-                // Убираем сообщение "Страница в разработке" если оно есть
                 var children = ReportsContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -810,17 +785,14 @@ namespace praktik
             }
         }
 
-        // Получение пути к папке отчетов
         private string GetReportsFolderPath()
         {
             string folderPath = @"C:\Users\User\Desktop\";
             
             try
             {
-                // Проверяем, существует ли папка
                 if (!Directory.Exists(folderPath))
                 {
-                    // Если не существует, используем рабочий стол
                     folderPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
                 }
                 
@@ -833,10 +805,8 @@ namespace praktik
             }
         }
         
-        // Переменная для хранения текущего типа отчета
         private string currentReportType = "tasks";
 
-        // Метод для обновления текущего типа отчета
         private void UpdateCurrentReportType(string reportType)
         {
             currentReportType = reportType;
@@ -849,7 +819,6 @@ namespace praktik
                 var lines = new List<string>();
                 string reportName = "tasks";
                 
-                // Определение, какой отчет сейчас отображается
                 switch (currentReportType)
                 {
                     case "tasks":
@@ -980,7 +949,6 @@ namespace praktik
                 var lines = new List<string>();
                 string reportName = "tasks";
                 
-                // Определяем, какой отчет сейчас отображается
                 switch (currentReportType)
                 {
                     case "tasks":
@@ -1112,7 +1080,6 @@ namespace praktik
                 string reportName = "tasks";
                 string reportTitle = "ОТЧЁТ ПО ЗАДАЧАМ";
                 
-                // Определяем, какой отчет сейчас отображается
                 switch (currentReportType)
                 {
                     case "tasks":

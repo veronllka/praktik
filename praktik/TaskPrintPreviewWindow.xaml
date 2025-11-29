@@ -14,29 +14,24 @@
         <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="20">
             <Border BorderBrush="#CCCCCC" BorderThickness="1" Background="White" Padding="30" x:Name="PrintContent">
                 <StackPanel>
-                    <!-- Заголовок -->
                     <TextBlock x:Name="txtTitle" FontSize="20" FontWeight="Bold" TextAlignment="Center" Margin="0,0,0,20"/>
                     
-                    <!-- Объект -->
                     <StackPanel Margin="0,0,0,15">
                         <TextBlock Text="Объект:" FontWeight="SemiBold" FontSize="12" Foreground="#666666"/>
                         <TextBlock x:Name="txtSite" FontSize="14" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <!-- Бригада и бригадир -->
                     <StackPanel Margin="0,0,0,15">
                         <TextBlock Text="Бригада:" FontWeight="SemiBold" FontSize="12" Foreground="#666666"/>
                         <TextBlock x:Name="txtCrew" FontSize="14" Margin="0,2,0,0"/>
                         <TextBlock x:Name="txtBrigadier" FontSize="12" Foreground="#666666" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <!-- Период выполнения -->
                     <StackPanel Margin="0,0,0,15">
                         <TextBlock Text="Период выполнения:" FontWeight="SemiBold" FontSize="12" Foreground="#666666"/>
                         <TextBlock x:Name="txtPeriod" FontSize="14" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <!-- Приоритет и статус -->
                     <Grid Margin="0,0,0,15">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -52,7 +47,6 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Прогресс и комментарий -->
                     <StackPanel x:Name="pnlProgress" Margin="0,0,0,15" Visibility="Collapsed">
                         <TextBlock Text="Последний прогресс:" FontWeight="SemiBold" FontSize="12" Foreground="#666666"/>
                         <TextBlock x:Name="txtProgress" FontSize="14" Margin="0,2,0,5"/>
@@ -60,14 +54,12 @@
                         <TextBlock x:Name="txtComment" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <!-- QR-код -->
                     <StackPanel x:Name="pnlQR" Margin="0,20,0,15" HorizontalAlignment="Center">
                         <TextBlock Text="Отсканируйте QR-код для быстрого доступа к задаче" 
                                    FontSize="10" Foreground="#666666" TextAlignment="Center" Margin="0,0,0,10"/>
                         <Image x:Name="imgQRCode" Width="150" Height="150" Stretch="Uniform"/>
                     </StackPanel>
 
-                    <!-- Подвал -->
                     <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,10,0,0">
                         <StackPanel>
                             <TextBlock x:Name="txtPrintDate" FontSize="10" Foreground="#999999" TextAlignment="Right"/>
@@ -78,7 +70,6 @@
             </Border>
         </ScrollViewer>
 
-        <!-- Кнопки -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,10">
             <CheckBox x:Name="chkIncludeQR" Content="Включить QR-код" IsChecked="True" VerticalAlignment="Center" Margin="0,0,20,0" Checked="chkIncludeQR_CheckedChanged" Unchecked="chkIncludeQR_CheckedChanged"/>
             <Button Content="Печать" Click="btnPrint_Click" Width="100" Margin="0,0,10,0"/>

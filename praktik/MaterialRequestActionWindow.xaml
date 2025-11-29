@@ -8,7 +8,6 @@
         Title="Действие с заявкой" Height="320" Width="450" WindowStartupLocation="CenterScreen" 
         ResizeMode="NoResize">
     <DockPanel Margin="16">
-        <!-- Кнопки внизу -->
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button x:Name="btnOk" Content="Подтвердить" Click="btnOk_Click" 
                     Width="140" Height="40" Margin="0,0,8,0" 
@@ -70,7 +69,6 @@
             </Button>
         </StackPanel>
 
-        <!-- Основной контент -->
         <StackPanel>
             <TextBlock x:Name="txtTitle" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"/>
 

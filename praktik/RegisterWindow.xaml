@@ -9,7 +9,6 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Window.Resources>
-        <!-- Стили для кнопок -->
         <Style x:Key="PrimaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#4A5568"/>
             <Setter Property="Foreground" Value="White"/>
@@ -77,7 +76,6 @@
             </Style.Triggers>
         </Style>
         
-        <!-- Стиль для текстовых полей -->
         <Style x:Key="ModernTextBoxStyle" TargetType="TextBox">
             <Setter Property="Background" Value="#F7FAFC"/>
             <Setter Property="Foreground" Value="#2D3748"/>
@@ -141,7 +139,6 @@
             </Style.Triggers>
         </Style>
         
-        <!-- Стиль для ComboBox -->
         <Style x:Key="ModernComboBoxStyle" TargetType="ComboBox">
             <Setter Property="Background" Value="#F7FAFC"/>
             <Setter Property="Foreground" Value="#2D3748"/>
@@ -178,7 +175,6 @@
     </Window.Resources>
     
     <Grid>
-        <!-- Фоновый градиент в нейтральных тонах -->
         <Grid.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#F7FAFC" Offset="0"/>
@@ -186,9 +182,7 @@
             </LinearGradientBrush>
         </Grid.Background>
         
-        <!-- Декоративные элементы -->
         <Grid>
-            <!-- Мягкие круги на фоне -->
             <Ellipse Width="300" Height="300" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-100,-100,0,0" Opacity="0.3">
                 <Ellipse.Fill>
                     <RadialGradientBrush>
@@ -208,7 +202,6 @@
             </Ellipse>
         </Grid>
         
-        <!-- Основная карточка -->
         <Border Width="380" Height="620" 
                 VerticalAlignment="Center" 
                 HorizontalAlignment="Center"
@@ -222,7 +215,6 @@
             
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="40,40,40,40">
-                    <!-- Иконка и заголовок -->
                     <Grid Margin="0,0,0,30">
                         <Ellipse Width="70" Height="70" HorizontalAlignment="Center" Margin="0,0,0,15">
                             <Ellipse.Fill>
@@ -248,7 +240,6 @@
                               Foreground="#718096"
                               Margin="0,0,0,30"/>
                     
-                    <!-- Поле логина -->
                     <StackPanel Margin="0,0,0,18">
                         <TextBlock Text="Логин" 
                                   FontSize="12" 
@@ -261,7 +252,6 @@
                                 KeyDown="InputField_KeyDown"/>
                     </StackPanel>
                     
-                    <!-- Поле пароля -->
                     <StackPanel Margin="0,0,0,18">
                         <TextBlock Text="Пароль" 
                                   FontSize="12" 
@@ -274,7 +264,6 @@
                                     KeyDown="InputField_KeyDown"/>
                     </StackPanel>
                     
-                    <!-- Поле полного имени -->
                     <StackPanel Margin="0,0,0,18">
                         <TextBlock Text="Полное имя" 
                                   FontSize="12" 
@@ -287,7 +276,6 @@
                                 KeyDown="InputField_KeyDown"/>
                     </StackPanel>
                     
-                    <!-- Поле выбора роли -->
                     <StackPanel Margin="0,0,0,24">
                         <TextBlock Text="Роль" 
                                   FontSize="12" 
@@ -300,7 +288,6 @@
                                  Height="45"/>
                     </StackPanel>
                     
-                    <!-- Кнопка регистрации -->
                     <Button x:Name="btnRegister" 
                            Content="Зарегистрироваться" 
                            Click="btnRegister_Click" 
@@ -308,7 +295,6 @@
                            Height="45"
                            Margin="0,0,0,12"/>
                     
-                    <!-- Кнопка отмены -->
                     <Button x:Name="btnCancel" 
                            Content="Отмена" 
                            Click="btnCancel_Click" 
@@ -316,7 +302,6 @@
                            Height="45"
                            Margin="0,0,0,16"/>
                     
-                    <!-- Сообщение об ошибке -->
                     <TextBlock x:Name="txtError" 
                               Foreground="#E53E3E" 
                               HorizontalAlignment="Center"

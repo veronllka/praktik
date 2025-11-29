@@ -13,7 +13,6 @@
         </Grid.RowDefinitions>
 
         <TabControl Grid.Row="0" Margin="10">
-            <!-- Вкладка "Основная информация" -->
             <TabItem Header="Основная информация">
                 <ScrollViewer>
                     <StackPanel Margin="10">
@@ -61,7 +60,6 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- Вкладка "Материалы" -->
             <TabItem Header="Материалы">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -70,13 +68,11 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Плашка "Ожидание МТС" -->
                     <Border x:Name="borderAwaitMTS" Grid.Row="0" Background="#FDD835" 
                            Padding="8" Margin="0,0,0,10" CornerRadius="4" Visibility="Collapsed">
                         <TextBlock Text="⏳ Ожидание МТС" FontWeight="Bold" HorizontalAlignment="Center"/>
                     </Border>
 
-                    <!-- Список заявок -->
                     <DataGrid x:Name="dgMaterialRequests" Grid.Row="1" 
                              AutoGenerateColumns="False" IsReadOnly="True" 
                              SelectionChanged="dgMaterialRequests_SelectionChanged" Margin="0,0,0,10">
@@ -88,7 +84,6 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- Кнопки управления заявками -->
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button x:Name="btnNewRequest" Content="Новая заявка" 
                                Click="btnNewRequest_Click" Margin="0,0,8,0" Width="120"/>
@@ -101,7 +96,6 @@
             </TabItem>
         </TabControl>
 
-        <!-- Кнопки сохранения/отмены -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
             <Button x:Name="btnPrint" Content="Печать" Click="btnPrint_Click" Width="100" Margin="0,0,20,0" Visibility="Collapsed"/>
             <Button x:Name="btnSave" Content="Сохранить" Click="btnSave_Click" Width="100" Margin="0,0,20,0"/>

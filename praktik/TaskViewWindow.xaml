@@ -13,7 +13,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Заголовок документа -->
         <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="30,20">
             <StackPanel>
                 <TextBlock Text="НАРЯД-ЗАДАЧА" 
@@ -32,17 +31,14 @@
             </StackPanel>
         </Border>
 
-        <!-- Контент документа -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
             <StackPanel Margin="30,25">
-                <!-- ID задачи -->
                 <TextBlock x:Name="txtTaskId" 
                            FontSize="12" 
                            Foreground="#757575" 
                            Margin="0,0,0,20"
                            HorizontalAlignment="Right"/>
 
-                <!-- Объект -->
                 <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
                         <TextBlock Text="ОБЪЕКТ" 
@@ -58,7 +54,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Бригада и бригадир -->
                 <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
                         <TextBlock Text="БРИГАДА" 
@@ -79,7 +74,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Период выполнения -->
                 <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
                         <TextBlock Text="ПЕРИОД ВЫПОЛНЕНИЯ" 
@@ -93,7 +87,6 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Приоритет и статус -->
                 <Grid Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -126,7 +119,6 @@
                     </Border>
                 </Grid>
 
-                <!-- Прогресс и комментарий -->
                 <StackPanel x:Name="pnlProgress" Visibility="Collapsed" Margin="0,0,0,20">
                     <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
@@ -153,7 +145,6 @@
                     </Border>
                 </StackPanel>
 
-                <!-- Описание -->
                 <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                     <StackPanel>
                         <TextBlock Text="ОПИСАНИЕ" 
@@ -171,7 +162,6 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- Кнопки -->
         <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="30,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Закрыть" 

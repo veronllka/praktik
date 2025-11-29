@@ -67,7 +67,6 @@ namespace praktik
         {
             if (task == null) return;
             
-            // Проверяем, есть ли активные заявки со статусом, требующим метки
             var hasAwaitingRequest = materialRequests.Any(r => 
                 r.Status == "Submitted" || r.Status == "Approved" || r.Status == "Issued");
             
@@ -94,7 +93,6 @@ namespace praktik
             {
                 if (task == null)
                 {
-                    // Создание новой задачи
                     task = new Task
                     {
                         Title = txtTitle.Text,
@@ -113,7 +111,6 @@ namespace praktik
                 }
                 else
                 {
-                    // Обновление существующей задачи
                     task.Title = txtTitle.Text;
                     task.Description = txtDescription.Text;
                     task.StartDate = dpStartDate.SelectedDate.Value;
@@ -168,7 +165,6 @@ namespace praktik
                     return;
                 }
 
-                // Проверяем права на редактирование
                 if (request.Status != "Draft" && LoginWindow.CurrentUser.Role != "Диспетчер")
                 {
                     MessageBox.Show("Редактирование возможно только для черновиков");
@@ -196,7 +192,6 @@ namespace praktik
                 return;
             }
 
-            // Показываем историю заявок через TaskReports
             var reports = db.GetTaskReports(task.TaskId);
             var materialReports = reports.Where(r => 
                 r.ReportText != null && (
@@ -235,7 +230,6 @@ namespace praktik
         }
     }
 
-    // Класс для отображения заявки в DataGrid
     public class MaterialRequestDisplay
     {
         public int RequestId { get; set; }

@@ -83,7 +83,6 @@ namespace praktik.Models
             return null;
         }
 
-        // Методы для работы с объектами
         public List<Site> GetSites()
         {
             var sites = new List<Site>();
@@ -143,7 +142,6 @@ namespace praktik.Models
             }
         }
 
-        // Аналогичные методы для других сущностей...
         public List<Crew> GetCrews()
         {
             var crews = new List<Crew>();
@@ -209,7 +207,6 @@ namespace praktik.Models
             return tasks;
         }
 
-        // Получение задачи по ID с полной информацией
         public Models.Task GetTaskById(int taskId)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -248,9 +245,9 @@ namespace praktik.Models
                             PriorityId = Convert.ToInt32(reader["PriorityId"]),
                             TaskStatusId = Convert.ToInt32(reader["StatusId"]),
                             LabelId = reader["LabelId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["LabelId"]) : null,
-                            CreatedBy = 0, // Поле отсутствует в БД, устанавливаем значение по умолчанию
-                            CreatedAt = DateTime.Now, // Поле отсутствует в БД, устанавливаем текущую дату
-                            UpdatedAt = null, // Поле отсутствует в БД
+                            CreatedBy = 0,
+                            CreatedAt = DateTime.Now,
+                            UpdatedAt = null,
                             Site = new Site 
                             { 
                                 SiteName = reader["SiteName"] as string ?? string.Empty,
@@ -341,7 +338,6 @@ namespace praktik.Models
                     }
                     else
                     {
-                        // Если статус не найден, создаем новый
                         command = new SqlCommand("SELECT MIN(StatusId) FROM TaskStatuses", connection);
                         result = command.ExecuteScalar();
                         return result != null ? Convert.ToInt32(result) : 1;
@@ -351,7 +347,7 @@ namespace praktik.Models
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при получении ID статуса задачи: {ex.Message}");
-                return 1; // Возвращаем 1 как значение по умолчанию
+                return 1;
             }
         }
 
@@ -402,7 +398,6 @@ namespace praktik.Models
             {
                 connection.Open();
 
-                // Обновляем статус задачи
                 var updateCommand = new SqlCommand("UPDATE Tasks SET StatusId = @statusId WHERE TaskId = @taskId", connection);
                 updateCommand.Parameters.AddWithValue("@statusId", statusId);
                 updateCommand.Parameters.AddWithValue("@taskId", taskId);

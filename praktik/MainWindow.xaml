@@ -10,8 +10,6 @@
         Background="{DynamicResource MaterialDesignPaper}">
     <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}"
                       IsRightDrawerOpen="{Binding ElementName=HelpButton, Path=IsChecked}">
-        <!-- Левое меню -->
-        <!-- Правое меню с помощью -->
         <materialDesign:DrawerHost.RightDrawerContent>
             <DockPanel Width="350" Margin="16">
                 <TextBlock Text="Справка по функциям" Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top"/>
@@ -107,19 +105,14 @@
             </DockPanel>
         </materialDesign:DrawerHost.RightDrawerContent>
         
-        <!-- Левое меню -->
         <materialDesign:DrawerHost.LeftDrawerContent>
             <DockPanel MinWidth="220">
-                <!-- Современная анимированная декорация в меню -->
                 <Grid DockPanel.Dock="Bottom" Height="250">
-                    <!-- Фон сцены -->
                     <Rectangle Fill="#F5F7FA" Width="220" Height="250"/>
                     
-                    <!-- Здание -->
                     <Border Width="120" Height="160" Background="#E1F5FE" BorderBrush="#B3E5FC" BorderThickness="1" 
                            CornerRadius="2,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
     <Grid>
-                            <!-- Окна здания (статические) -->
                             <UniformGrid Rows="4" Columns="2" Margin="10">
                                 <Border Margin="5" Background="#1976D2" CornerRadius="2"/>
                                 <Border Margin="5" Background="#64B5F6" CornerRadius="2"/>
@@ -133,10 +126,8 @@
                         </Grid>
                     </Border>
                     
-                    <!-- Солнце -->
                     <Ellipse Width="40" Height="40" Fill="#FFEB3B" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,20,0,0"/>
                     
-                    <!-- Земля -->
                     <Rectangle Fill="#8BC34A" Height="30" VerticalAlignment="Bottom" Width="220"/>
                 </Grid>
                 
@@ -198,9 +189,7 @@
             </DockPanel>
         </materialDesign:DrawerHost.LeftDrawerContent>
 
-        <!-- Основной контент -->
         <DockPanel>
-            <!-- Верхняя панель -->
             <materialDesign:ColorZone Padding="16" materialDesign:ElevationAssist.Elevation="Dp4"
                                     Mode="PrimaryMid" DockPanel.Dock="Top">
                 <DockPanel>
@@ -212,7 +201,6 @@
                              VerticalAlignment="Center" Margin="16,0"/>
                              
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <!-- Информация о пользователе и кнопка выхода рядом с ролью -->
                         <Border Background="#7B1FA2" CornerRadius="4" Margin="0,0,16,0" Padding="8,4">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="White"/>
@@ -249,9 +237,7 @@
                 </DockPanel>
             </materialDesign:ColorZone>
 
-            <!-- Контент страниц -->
             <Grid x:Name="MainContent">
-                <!-- Главная -->
                 <Grid x:Name="DashboardContent" Visibility="Visible">
                     <ScrollViewer>
                         <StackPanel Margin="24">
@@ -299,7 +285,6 @@
                                 </materialDesign:Card>
                             </UniformGrid>
                             
-                            <!-- Последние отчёты -->
                             <materialDesign:Card Style="{StaticResource CardStyle}" Margin="0,16,0,0">
                                 <StackPanel>
                                     <TextBlock Text="Последние отчёты" Style="{StaticResource SubHeaderTextStyle}"/>
@@ -318,7 +303,6 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- Стройплощадки -->
                 <Grid x:Name="SitesContent" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -374,7 +358,6 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <!-- Бригады -->
                 <Grid x:Name="CrewsContent" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -431,7 +414,6 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <!-- Задачи -->
                 <Grid x:Name="TasksContent" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -439,7 +421,6 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Фильтры -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="0">
                         <StackPanel Orientation="Horizontal">
                             <ComboBox x:Name="cbSiteFilter" 
@@ -462,7 +443,6 @@
                     </StackPanel>
                     </materialDesign:Card>
 
-                    <!-- Список задач -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="1">
                         <StackPanel>
                             <TextBlock Text="Задачи" Style="{StaticResource SubHeaderTextStyle}"/>
@@ -481,7 +461,6 @@
                         </StackPanel>
                     </materialDesign:Card>
 
-                    <!-- Управление задачами -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="2">
                                                 <ScrollViewer HorizontalScrollBarVisibility="Auto">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -514,14 +493,12 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <!-- Календарь -->
                 <Grid x:Name="CalendarContent" Visibility="Collapsed">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="300"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Календарь и фильтры -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Column="0">
                         <StackPanel>
                             <TextBlock Text="Календарь задач" Style="{StaticResource SubHeaderTextStyle}"/>
@@ -550,7 +527,6 @@
                         </StackPanel>
                     </materialDesign:Card>
 
-                    <!-- Список задач на выбранную дату -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Column="1">
                         <StackPanel>
                             <TextBlock x:Name="SelectedDateText" Text="Выберите дату" 
@@ -572,14 +548,12 @@
                     </materialDesign:Card>
                 </Grid>
 
-                                <!-- Отчёты -->
                 <Grid x:Name="ReportsContent" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Кнопки отчётов -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="0">
                         <StackPanel>
                             <TextBlock Text="Отчёты и аналитика" Style="{StaticResource SubHeaderTextStyle}"/>
@@ -630,7 +604,6 @@
                         </StackPanel>
                     </materialDesign:Card>
 
-                    <!-- Результаты отчётов -->
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="1">
                         <StackPanel>
                             <TextBlock x:Name="ReportTitle" Text="Выберите тип отчёта" 
@@ -641,7 +614,6 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <!-- Журнал отчётов -->
                 <Grid x:Name="JournalContent" Visibility="Collapsed">
                     <materialDesign:Card Style="{StaticResource CardStyle}">
                         <StackPanel>
