@@ -209,6 +209,77 @@ namespace praktik.Models
             return tasks;
         }
 
+        // Получение задачи по ID с полной информацией
+        public Models.Task GetTaskById(int taskId)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+                    SELECT t.TaskId, t.SiteId, t.CrewId, t.Title, t.Description, t.StartDate, t.EndDate, 
+                           t.PriorityId, t.StatusId, t.LabelId,
+                           s.SiteName, s.Address,
+                           c.CrewName, c.ForemanUserId,
+                           u.LoginName as BrigadierName,
+                           p.PriorityName, 
+                           ts.StatusName AS TaskStatusName
+                    FROM Tasks t
+                    LEFT JOIN Sites s ON t.SiteId = s.SiteId
+                    LEFT JOIN Crews c ON t.CrewId = c.CrewId
+                    LEFT JOIN Users u ON c.ForemanUserId = u.UserId
+                    LEFT JOIN TaskPriorities p ON t.PriorityId = p.PriorityId
+                    LEFT JOIN TaskStatuses ts ON t.StatusId = ts.StatusId
+                    WHERE t.TaskId = @taskId", connection);
+                command.Parameters.AddWithValue("@taskId", taskId);
+                
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        var task = new Models.Task
+                        {
+                            TaskId = Convert.ToInt32(reader["TaskId"]),
+                            SiteId = Convert.ToInt32(reader["SiteId"]),
+                            CrewId = reader["CrewId"] != DBNull.Value ? Convert.ToInt32(reader["CrewId"]) : (int?)null,
+                            Title = reader["Title"] as string,
+                            Description = reader["Description"] as string,
+                            StartDate = (DateTime)reader["StartDate"],
+                            EndDate = (DateTime)reader["EndDate"],
+                            PriorityId = Convert.ToInt32(reader["PriorityId"]),
+                            TaskStatusId = Convert.ToInt32(reader["StatusId"]),
+                            LabelId = reader["LabelId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["LabelId"]) : null,
+                            CreatedBy = 0, // Поле отсутствует в БД, устанавливаем значение по умолчанию
+                            CreatedAt = DateTime.Now, // Поле отсутствует в БД, устанавливаем текущую дату
+                            UpdatedAt = null, // Поле отсутствует в БД
+                            Site = new Site 
+                            { 
+                                SiteName = reader["SiteName"] as string ?? string.Empty,
+                                Address = reader["Address"] as string ?? string.Empty
+                            },
+                            Priority = new Priority { PriorityName = reader["PriorityName"] as string ?? string.Empty },
+                            TaskStatus = new TaskStatus { TaskStatusName = reader["TaskStatusName"] as string ?? string.Empty }
+                        };
+
+                        if (reader["CrewName"] != DBNull.Value)
+                        {
+                            task.Crew = new Crew 
+                            { 
+                                CrewName = reader["CrewName"] as string,
+                                BrigadierId = reader["ForemanUserId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["ForemanUserId"]) : null,
+                                Brigadier = reader["BrigadierName"] != DBNull.Value ? new User 
+                                { 
+                                    Username = reader["BrigadierName"] as string
+                                } : null
+                            };
+                        }
+
+                        return task;
+                    }
+                }
+            }
+            return null;
+        }
+
         public List<Priority> GetPriorities()
         {
             var priorities = new List<Priority>();
@@ -504,6 +575,24 @@ namespace praktik.Models
                 }
             }
             return reports;
+        }
+
+        // Добавление отчёта по задаче
+        public void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+                    INSERT INTO TaskReports (TaskId, ReportedByUserId, ReportedAt, ReportText, ProgressPercent)
+                    VALUES (@taskId, @userId, @reportedAt, @text, @progress)", connection);
+                command.Parameters.AddWithValue("@taskId", taskId);
+                command.Parameters.AddWithValue("@userId", userId);
+                command.Parameters.AddWithValue("@reportedAt", DateTime.UtcNow);
+                command.Parameters.AddWithValue("@text", (object)reportText ?? DBNull.Value);
+                command.Parameters.AddWithValue("@progress", (object)progressPercent ?? DBNull.Value);
+                command.ExecuteNonQuery();
+            }
         }
 
         // ========== Методы для работы с заявками на материалы ==========

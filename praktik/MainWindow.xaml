@@ -1,4 +1,4 @@
-﻿<Window x:Class="praktik.MainWindow"
+<Window x:Class="praktik.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -228,6 +228,15 @@
                             </StackPanel>
                         </Border>
                         
+                        <Button x:Name="btnScanQR" 
+                                ToolTip="Сканировать QR-код"
+                                Margin="0,0,16,0"
+                                Click="btnScanQR_Click"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8">
+                            <materialDesign:PackIcon Kind="QrcodeScan" />
+                        </Button>
                         <ToggleButton x:Name="HelpButton" 
                                     Style="{StaticResource MaterialDesignActionToggleButton}"
                                     ToolTip="Справка по функциям"
@@ -458,7 +467,7 @@
                         <StackPanel>
                             <TextBlock Text="Задачи" Style="{StaticResource SubHeaderTextStyle}"/>
                             <DataGrid x:Name="dgTasks" AutoGenerateColumns="False" IsReadOnly="True" 
-                                    SelectionChanged="dgTasks_SelectionChanged">
+                                    SelectionChanged="dgTasks_SelectionChanged" SelectionMode="Extended">
                         <DataGrid.Columns>
                                     <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="*"/>
                                     <DataGridTextColumn Header="Объект" Binding="{Binding Site.SiteName}" Width="150"/>
@@ -494,7 +503,12 @@
                                 <Button x:Name="btnUpdateStatus" Content="ИЗМЕНИТЬ СТАТУС" 
                                       Click="btnUpdateStatus_Click" 
                                       Width="150"
+                                      Margin="0,0,16,0"
                                       Style="{StaticResource MaterialDesignRaisedButton}"/>
+                                <Button x:Name="btnPrintTask" Content="ПЕЧАТЬ" 
+                                      Click="btnPrintTask_Click" 
+                                      Width="120"
+                                      Style="{StaticResource MaterialDesignOutlinedButton}"/>
                             </StackPanel>
                         </ScrollViewer>
                     </materialDesign:Card>

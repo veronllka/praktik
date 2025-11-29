@@ -23,10 +23,42 @@ namespace praktik
             SetupPermissions();
             UpdateUserInfo();
             LoadDashboard();
-            // Привязываем обработчик выхода программно, чтобы избежать XAML-ошибок
             if (LogoutBtn != null)
             {
                 LogoutBtn.Click += (s, e) => PerformLogout();
+            }
+
+            if (App.TaskIdFromQR.HasValue)
+            {
+                this.Loaded += (s, e) => 
+                {
+                    var taskId = App.TaskIdFromQR.Value;
+                    App.TaskIdFromQR = null;
+                    OpenTaskFromQR(taskId);
+                };
+            }
+        }
+
+        private void OpenTaskFromQR(int taskId)
+        {
+            try
+            {
+                var taskViewWindow = new TaskViewWindow(taskId);
+                taskViewWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при открытии задачи: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btnScanQR_Click(object sender, RoutedEventArgs e)
+        {
+            var qrWindow = new QRCodeScannerWindow();
+            if (qrWindow.ShowDialog() == true && qrWindow.TaskId.HasValue)
+            {
+                var taskViewWindow = new TaskViewWindow(qrWindow.TaskId.Value);
+                taskViewWindow.ShowDialog();
             }
         }
 
@@ -51,7 +83,6 @@ namespace praktik
              switch (role)
             {
                 case "Администратор":
-                    // Администратор имеет полный доступ ко всем функциям
                     foreach (ListBoxItem item in NavigationListBox.Items)
                     {
                         item.Visibility = Visibility.Visible;
@@ -548,6 +579,38 @@ namespace praktik
             if (statusWindow.ShowDialog() == true)
             {
                 LoadTasks();
+            }
+        }
+
+        private void btnPrintTask_Click(object sender, RoutedEventArgs e)
+        {
+            // Проверяем, выбраны ли задачи
+            var selectedTasks = dgTasks.SelectedItems.Cast<Models.Task>().ToList();
+            
+            if (selectedTasks.Count == 0)
+            {
+                if (selectedTask == null)
+                {
+                    MessageBox.Show("Выберите задачу для печати");
+                    return;
+                }
+                selectedTasks = new List<Models.Task> { selectedTask };
+            }
+
+            // Печатаем выбранные задачи
+            int printedCount = 0;
+            foreach (var task in selectedTasks)
+            {
+                var printWindow = new TaskPrintPreviewWindow(task.TaskId);
+                if (printWindow.ShowDialog() == true)
+                {
+                    printedCount++;
+                }
+            }
+
+            if (printedCount > 0)
+            {
+                MessageBox.Show($"Напечатано задач: {printedCount}", "Печать", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

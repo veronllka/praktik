@@ -26,6 +26,7 @@ namespace praktik
                 LoadTaskData();
                 LoadMaterialRequests();
                 CheckAwaitMTSLabel();
+                btnPrint.Visibility = Visibility.Visible;
             }
             else
             {
@@ -219,6 +220,18 @@ namespace praktik
         private void dgMaterialRequests_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             btnEditRequest.IsEnabled = dgMaterialRequests.SelectedItem != null;
+        }
+
+        private void btnPrint_Click(object sender, RoutedEventArgs e)
+        {
+            if (task == null)
+            {
+                MessageBox.Show("Сначала сохраните задачу");
+                return;
+            }
+
+            var printWindow = new TaskPrintPreviewWindow(task.TaskId);
+            printWindow.ShowDialog();
         }
     }
 
