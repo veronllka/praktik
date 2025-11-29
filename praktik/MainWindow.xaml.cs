@@ -598,6 +598,34 @@ namespace praktik
             }
         }
 
+        private void btnQuickNoteInList_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as System.Windows.Controls.Button;
+            if (button?.Tag == null) return;
+
+            var taskId = (int)button.Tag;
+            var task = db.GetTaskById(taskId);
+            
+            if (task == null)
+            {
+                MessageBox.Show("Задача не найдена", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var user = LoginWindow.CurrentUser;
+            if (user == null || (user.Role != "Бригадир" && user.Role != "Диспетчер" && user.Role != "Админ" && user.Role != "Администратор"))
+            {
+                MessageBox.Show("У вас нет прав для добавления заметок", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var quickNoteWindow = new QuickNoteWindow(taskId);
+            if (quickNoteWindow.ShowDialog() == true)
+            {
+                LoadTasks();
+            }
+        }
+
         private void LoadCalendar()
         {
             try

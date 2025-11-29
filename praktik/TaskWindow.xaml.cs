@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using praktik.Models;
 
 namespace praktik
@@ -11,6 +14,7 @@ namespace praktik
         private WorkPlannerContext db = new WorkPlannerContext();
         private Task task;
         private ObservableCollection<MaterialRequestDisplay> materialRequests;
+        private bool hasUnsavedNote = false;
 
         public TaskWindow(Task task = null)
         {
@@ -27,12 +31,16 @@ namespace praktik
                 LoadMaterialRequests();
                 CheckAwaitMTSLabel();
                 btnPrint.Visibility = Visibility.Visible;
+                LoadEvents();
+                CheckQuickNotePermissions();
             }
             else
             {
                 dpStartDate.SelectedDate = DateTime.Now;
                 dpEndDate.SelectedDate = DateTime.Now.AddDays(7);
             }
+
+            this.Closing += TaskWindow_Closing;
         }
 
         private void LoadData()
@@ -228,6 +236,203 @@ namespace praktik
             var printWindow = new TaskPrintPreviewWindow(task.TaskId);
             printWindow.ShowDialog();
         }
+
+        private void CheckQuickNotePermissions()
+        {
+            if (task == null) return;
+
+            var user = LoginWindow.CurrentUser;
+            if (user != null && (user.Role == "Бригадир" || user.Role == "Диспетчер" || user.Role == "Админ" || user.Role == "Администратор"))
+            {
+                btnAddQuickNote.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void LoadEvents()
+        {
+            if (task == null) return;
+
+            var reports = db.GetTaskReports(task.TaskId);
+            var events = new List<EventDisplay>();
+
+            foreach (var report in reports)
+            {
+                events.Add(new EventDisplay
+                {
+                    DisplayText = report.ReportText ?? "Событие",
+                    TimeInfo = $"{report.ReporterName} • {report.ReportedAt:dd.MM.yyyy HH:mm}"
+                });
+            }
+
+            lbEvents.ItemsSource = events;
+        }
+
+        private void btnAddQuickNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (task == null)
+            {
+                MessageBox.Show("Сначала сохраните задачу");
+                return;
+            }
+
+            pnlQuickNote.Visibility = Visibility.Visible;
+            btnAddQuickNote.Visibility = Visibility.Collapsed;
+            txtQuickNote.Focus();
+        }
+
+        private void txtQuickNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            var text = txtQuickNote.Text?.Trim() ?? "";
+            btnSaveNote.IsEnabled = text.Length >= 3 && text.Length <= 200;
+            hasUnsavedNote = !string.IsNullOrWhiteSpace(text);
+        }
+
+        private void txtQuickNote_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter && btnSaveNote.IsEnabled)
+            {
+                btnSaveNote_Click(sender, e);
+                e.Handled = true;
+            }
+            else if (e.Key == System.Windows.Input.Key.Escape)
+            {
+                btnCancelNote_Click(sender, e);
+                e.Handled = true;
+            }
+        }
+
+        private void btnSaveNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (task == null) return;
+
+            var noteText = txtQuickNote.Text?.Trim() ?? "";
+            
+            if (noteText.Length < 3 || noteText.Length > 200)
+            {
+                MessageBox.Show("Заметка должна содержать от 3 до 200 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                db.AddTaskReport(task.TaskId, userId, noteText);
+
+                ShowToast("Заметка добавлена");
+                
+                txtQuickNote.Text = "";
+                pnlQuickNote.Visibility = Visibility.Collapsed;
+                btnAddQuickNote.Visibility = Visibility.Visible;
+                hasUnsavedNote = false;
+
+                LoadEvents();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btnCancelNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (hasUnsavedNote)
+            {
+                var result = MessageBox.Show("Сохранить черновик?", "Несохраненная заметка", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    btnSaveNote_Click(sender, e);
+                    return;
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+            txtQuickNote.Text = "";
+            pnlQuickNote.Visibility = Visibility.Collapsed;
+            btnAddQuickNote.Visibility = Visibility.Visible;
+            hasUnsavedNote = false;
+        }
+
+        private void TaskWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (hasUnsavedNote)
+            {
+                var result = MessageBox.Show("Сохранить черновик заметки?", "Несохраненная заметка", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    if (task != null && btnSaveNote.IsEnabled)
+                    {
+                        btnSaveNote_Click(null, null);
+                    }
+                    else
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+                else if (result == MessageBoxResult.Cancel)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            }
+        }
+
+        private void ShowToast(string message)
+        {
+            var toast = new Window
+            {
+                WindowStyle = WindowStyle.None,
+                AllowsTransparency = true,
+                Background = Brushes.Transparent,
+                ShowInTaskbar = false,
+                Topmost = true,
+                SizeToContent = SizeToContent.WidthAndHeight,
+                ResizeMode = ResizeMode.NoResize
+            };
+
+            var border = new Border
+            {
+                Background = new SolidColorBrush(Color.FromArgb(240, 50, 50, 50)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(20, 15, 20, 15),
+                Margin = new Thickness(10)
+            };
+
+            var textBlock = new TextBlock
+            {
+                Text = message,
+                Foreground = Brushes.White,
+                FontSize = 14
+            };
+
+            border.Child = textBlock;
+            toast.Content = border;
+
+            var screenWidth = SystemParameters.PrimaryScreenWidth;
+            var screenHeight = SystemParameters.PrimaryScreenHeight;
+            toast.Left = screenWidth - 350;
+            toast.Top = 100;
+
+            toast.Show();
+
+            var timer = new System.Windows.Threading.DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(2);
+            timer.Tick += (s, args) =>
+            {
+                timer.Stop();
+                toast.Close();
+            };
+            timer.Start();
+        }
+    }
+
+    public class EventDisplay
+    {
+        public string DisplayText { get; set; }
+        public string TimeInfo { get; set; }
     }
 
     public class MaterialRequestDisplay

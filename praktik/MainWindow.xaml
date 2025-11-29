@@ -456,6 +456,19 @@
                                     <DataGridTextColumn Header="Статус" Binding="{Binding TaskStatus.TaskStatusName}" Width="120"/>
                                     <DataGridTextColumn Header="Начало" Binding="{Binding StartDate, StringFormat=dd.MM.yyyy}" Width="100"/>
                                     <DataGridTextColumn Header="Окончание" Binding="{Binding EndDate, StringFormat=dd.MM.yyyy}" Width="100"/>
+                                    <DataGridTemplateColumn Header="Действия" Width="100">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="+ заметка" 
+                                                       Click="btnQuickNoteInList_Click" 
+                                                       Tag="{Binding TaskId}"
+                                                       Width="90" 
+                                                       Height="25" 
+                                                       FontSize="11"
+                                                       Padding="4,2"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
                         </StackPanel>

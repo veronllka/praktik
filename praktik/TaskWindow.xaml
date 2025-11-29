@@ -94,6 +94,77 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
+
+            <TabItem Header="События" x:Name="tabEvents">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Последние события" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
+                            <StackPanel x:Name="pnlQuickNote" Orientation="Horizontal" Visibility="Collapsed" Margin="0,5,0,0">
+                                <TextBox x:Name="txtQuickNote" 
+                                        Width="350" 
+                                        Height="32" 
+                                        Margin="0,0,10,0"
+                                        TextChanged="txtQuickNote_TextChanged"
+                                        KeyDown="txtQuickNote_KeyDown"
+                                        VerticalContentAlignment="Center"
+                                        FontSize="13"
+                                        Padding="8,0">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="ToolTip" Value="Короткая пометка…"/>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                                <Button x:Name="btnSaveNote" 
+                                       Content="Сохранить" 
+                                       Click="btnSaveNote_Click" 
+                                       Width="100" 
+                                       Height="32"
+                                       Margin="0,0,8,0"
+                                       IsEnabled="False"
+                                       Padding="8,0"
+                                       FontSize="13"/>
+                                <Button x:Name="btnCancelNote" 
+                                       Content="Отмена" 
+                                       Click="btnCancelNote_Click" 
+                                       Width="90" 
+                                       Height="32"
+                                       Padding="8,0"
+                                       FontSize="13"/>
+                            </StackPanel>
+                            <Button x:Name="btnAddQuickNote" 
+                                   Content="+ заметка" 
+                                   Click="btnAddQuickNote_Click" 
+                                   MinWidth="130" 
+                                   Padding="10,0"
+                                   Height="30"
+                                   HorizontalAlignment="Left"
+                                   Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ListBox x:Name="lbEvents" Grid.Row="1" 
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            BorderThickness="0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8,0,8" Margin="0,0,0,5">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" FontSize="13"/>
+                                        <TextBlock Text="{Binding TimeInfo}" FontSize="11" Foreground="#666666" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </TabItem>
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
