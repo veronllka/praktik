@@ -57,8 +57,43 @@ namespace praktik
             var qrWindow = new QRCodeScannerWindow();
             if (qrWindow.ShowDialog() == true && qrWindow.TaskId.HasValue)
             {
-                var taskViewWindow = new TaskViewWindow(qrWindow.TaskId.Value);
-                taskViewWindow.ShowDialog();
+                ((ListBoxItem)NavigationListBox.Items[3]).IsSelected = true;
+                HighlightTask(qrWindow.TaskId.Value);
+            }
+        }
+
+        private void HighlightTask(int taskId)
+        {
+            try
+            {
+                var tasks = dgTasks.ItemsSource as System.Collections.IList;
+                if (tasks != null)
+                {
+                    var task = tasks.Cast<Models.Task>().FirstOrDefault(t => t.TaskId == taskId);
+                    if (task != null)
+                    {
+                        dgTasks.SelectedItem = task;
+                        dgTasks.ScrollIntoView(task);
+                        dgTasks.Focus();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Задача не найдена в списке. Возможно, нужно сбросить фильтры.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при поиске задачи: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void dgTasks_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (selectedTask != null)
+            {
+                var qrWindow = new TaskQRCodeWindow(selectedTask.TaskId);
+                qrWindow.ShowDialog();
             }
         }
 

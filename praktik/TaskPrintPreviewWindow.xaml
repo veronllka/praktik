@@ -54,12 +54,6 @@
                         <TextBlock x:Name="txtComment" FontSize="12" TextWrapping="Wrap" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <StackPanel x:Name="pnlQR" Margin="0,20,0,15" HorizontalAlignment="Center">
-                        <TextBlock Text="Отсканируйте QR-код для быстрого доступа к задаче" 
-                                   FontSize="10" Foreground="#666666" TextAlignment="Center" Margin="0,0,0,10"/>
-                        <Image x:Name="imgQRCode" Width="150" Height="150" Stretch="Uniform"/>
-                    </StackPanel>
-
                     <Border BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Margin="0,20,0,0" Padding="0,10,0,0">
                         <StackPanel>
                             <TextBlock x:Name="txtPrintDate" FontSize="10" Foreground="#999999" TextAlignment="Right"/>
@@ -71,9 +65,8 @@
         </ScrollViewer>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,10">
-            <CheckBox x:Name="chkIncludeQR" Content="Включить QR-код" IsChecked="True" VerticalAlignment="Center" Margin="0,0,20,0" Checked="chkIncludeQR_CheckedChanged" Unchecked="chkIncludeQR_CheckedChanged"/>
-            <Button Content="Печать" Click="btnPrint_Click" Width="100" Margin="0,0,10,0"/>
-            <Button Content="Отмена" Click="btnCancel_Click" Width="100"/>
+            <Button Content="Печать" Click="btnPrint_Click" Width="120" Height="35" Margin="0,0,10,0" FontSize="14"/>
+            <Button Content="Отмена" Click="btnCancel_Click" Width="120" Height="35" FontSize="14"/>
         </StackPanel>
     </Grid>
 </Window>

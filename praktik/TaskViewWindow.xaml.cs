@@ -108,6 +108,15 @@ namespace praktik
             }
         }
 
+        private void btnShowQR_Click(object sender, RoutedEventArgs e)
+        {
+            if (task != null)
+            {
+                var qrWindow = new TaskQRCodeWindow(task.TaskId);
+                qrWindow.ShowDialog();
+            }
+        }
+
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();

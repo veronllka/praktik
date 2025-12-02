@@ -35,23 +35,6 @@ namespace praktik
 
             LoadTaskData();
             LoadLastReport();
-            
-            this.Loaded += (s, e) => 
-            {
-                System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
-                timer.Interval = TimeSpan.FromMilliseconds(100);
-                timer.Tick += (sender, args) =>
-                {
-                    timer.Stop();
-                    GenerateQRCode();
-                };
-                timer.Start();
-            };
-            
-            if (chkIncludeQR != null && pnlQR != null && imgQRCode != null)
-            {
-                GenerateQRCode();
-            }
         }
 
         private void LoadTaskData()
@@ -165,66 +148,6 @@ namespace praktik
             return $@"<!DOCTYPE html><html lang='ru'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Наряд #{task.TaskId}</title><style>body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#F5F5F5;color:#212121;line-height:1.6}}.c{{background:white;border-radius:8px;padding:30px;box-shadow:0 2px 4px rgba(0,0,0,.1)}}h1{{color:#1976D2;text-align:center;margin-bottom:10px;font-size:24px}}.tt{{text-align:center;font-size:18px;font-weight:600;margin-bottom:20px;color:#212121}}.id{{text-align:right;color:#757575;font-size:12px;margin-bottom:20px}}.s{{border-bottom:1px solid #E0E0E0;padding-bottom:15px;margin-bottom:20px}}.s:last-child{{border-bottom:none}}h2{{color:#424242;font-size:13px;font-weight:bold;margin-top:25px;margin-bottom:10px;text-transform:uppercase}}p{{margin:8px 0;font-size:15px}}.tc{{display:grid;grid-template-columns:1fr 1fr;gap:20px}}@media (max-width:600px){{.tc{{grid-template-columns:1fr}}}}</style></head><body><div class='c'><h1>НАРЯД-ЗАДАЧА</h1><div class='tt'>{taskTitle}</div><div class='id'>ID: #{task.TaskId}</div><div class='s'><h2>ОБЪЕКТ</h2><p>{siteInfo}</p></div><div class='s'><h2>БРИГАДА</h2><p>{crewInfo}</p>{brigadierInfo}</div><div class='s'><h2>ПЕРИОД ВЫПОЛНЕНИЯ</h2><p>{periodInfo}</p></div><div class='s tc'><div><h2>ПРИОРИТЕТ</h2><p>{priorityInfo}</p></div><div><h2>СТАТУС</h2><p>{statusInfo}</p></div></div>{progressInfo}<div class='s'><h2>ОПИСАНИЕ</h2><p>{descriptionInfo}</p></div></div></body></html>";
         }
 
-        private void GenerateQRCode()
-        {
-            if (task == null || pnlQR == null || chkIncludeQR == null || imgQRCode == null)
-            {
-                if (pnlQR != null)
-                    pnlQR.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            if (!chkIncludeQR.IsChecked.HasValue || !chkIncludeQR.IsChecked.Value)
-            {
-                pnlQR.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            pnlQR.Visibility = Visibility.Visible;
-
-            try
-            {
-                string qrData = $"TASK:{task.TaskId}";
-
-                var writer = new BarcodeWriter
-                {
-                    Format = BarcodeFormat.QR_CODE,
-                    Options = new QrCodeEncodingOptions
-                    {
-                        Height = 300,
-                        Width = 300,
-                        Margin = 2
-                    }
-                };
-
-                var bitmap = writer.Write(qrData);
-
-                using (var memory = new MemoryStream())
-                {
-                    bitmap.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
-                    memory.Position = 0;
-
-                    var bitmapImage = new BitmapImage();
-                    bitmapImage.BeginInit();
-                    bitmapImage.StreamSource = memory;
-                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapImage.EndInit();
-
-                    imgQRCode.Source = bitmapImage;
-                }
-            }
-            catch (Exception ex)
-            {
-                pnlQR.Visibility = Visibility.Collapsed;
-                MessageBox.Show($"Ошибка генерации QR-кода: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                System.Diagnostics.Debug.WriteLine($"Ошибка генерации QR-кода: {ex.Message}");
-            }
-        }
-
-        private void chkIncludeQR_CheckedChanged(object sender, RoutedEventArgs e)
-        {
-            GenerateQRCode();
-        }
 
         private void btnPrint_Click(object sender, RoutedEventArgs e)
         {
@@ -248,9 +171,8 @@ namespace praktik
                 {
                     PrintDocument(printDialog);
 
-                    string templateInfo = chkIncludeQR.IsChecked.Value ? "Template: Standard with QR" : "Template: Standard";
                     db.AddTaskReport(task.TaskId, LoginWindow.CurrentUser.UserId, 
-                        $"Задача распечатана ({templateInfo})");
+                        "Задача распечатана");
 
                     MessageBox.Show("Наряд напечатан", "Печать", MessageBoxButton.OK, MessageBoxImage.Information);
                     DialogResult = true;

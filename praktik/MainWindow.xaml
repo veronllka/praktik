@@ -447,7 +447,8 @@
                         <StackPanel>
                             <TextBlock Text="Задачи" Style="{StaticResource SubHeaderTextStyle}"/>
                             <DataGrid x:Name="dgTasks" AutoGenerateColumns="False" IsReadOnly="True" 
-                                    SelectionChanged="dgTasks_SelectionChanged" SelectionMode="Extended">
+                                    SelectionChanged="dgTasks_SelectionChanged" SelectionMode="Extended"
+                                    MouseDoubleClick="dgTasks_MouseDoubleClick">
                         <DataGrid.Columns>
                                     <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="*"/>
                                     <DataGridTextColumn Header="Объект" Binding="{Binding Site.SiteName}" Width="150"/>
