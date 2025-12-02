@@ -159,6 +159,138 @@
                                    LineHeight="22"/>
                     </StackPanel>
                 </Border>
+
+                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="ЗАМЕТКИ" 
+                                   FontWeight="Bold" 
+                                   FontSize="13" 
+                                   Margin="0,0,0,12" 
+                                   Foreground="#424242"/>
+                        
+                        <Border x:Name="pnlAddNote" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="1" 
+                                CornerRadius="4"
+                                Padding="12"
+                                Background="#F9F9F9"
+                                Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBox x:Name="txtNewNote" 
+                                         FontSize="14" 
+                                         Padding="8"
+                                         MinHeight="60"
+                                         MaxHeight="120"
+                                         TextWrapping="Wrap"
+                                         AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Background="White"
+                                         BorderBrush="#BDBDBD"
+                                         BorderThickness="1"
+                                         Foreground="#212121"
+                                         TextChanged="txtNewNote_TextChanged"
+                                         Margin="0,0,0,10"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Сохранить" 
+                                            x:Name="btnSaveNote"
+                                            Click="btnSaveNote_Click"
+                                            Width="120" 
+                                            Height="35"
+                                            FontSize="14"
+                                            FontWeight="Medium"
+                                            Margin="0,0,10,0"
+                                            Background="#4CAF50"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand"
+                                            IsEnabled="False">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" 
+                                                                    CornerRadius="4"
+                                                                    Padding="12,8">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Setter Property="Opacity" Value="1"/>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Opacity" Value="0.5"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#45A049"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                    <Button Content="Отмена" 
+                                            x:Name="btnCancelNote"
+                                            Click="btnCancelNote_Click"
+                                            Width="100" 
+                                            Height="35"
+                                            FontSize="14"
+                                            FontWeight="Medium"
+                                            Background="#757575"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}" 
+                                                                    CornerRadius="4"
+                                                                    Padding="12,8">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#616161"/>
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <ItemsControl x:Name="icNotes" Margin="0,0,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#E0E0E0" 
+                                            BorderThickness="0,0,0,1" 
+                                            Padding="0,0,0,10"
+                                            Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding ReportText}" 
+                                                       FontSize="14" 
+                                                       TextWrapping="Wrap" 
+                                                       Foreground="#212121"
+                                                       LineHeight="20"
+                                                       Margin="0,0,0,8"/>
+                                            <TextBlock FontSize="12" Foreground="#757575">
+                                                <Run Text="{Binding ReportDateDisplay}"/>
+                                                <Run Text=" • "/>
+                                                <Run Text="{Binding UserName}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

@@ -355,6 +355,44 @@ namespace praktik
             hasUnsavedNote = false;
         }
 
+        private void btnAddEventComment_Click(object sender, RoutedEventArgs e)
+        {
+            if (task == null)
+            {
+                MessageBox.Show("Сначала сохраните задачу");
+                return;
+            }
+
+            var commentText = txtEventComment.Text?.Trim() ?? "";
+            
+            if (string.IsNullOrWhiteSpace(commentText))
+            {
+                MessageBox.Show("Введите текст комментария", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (commentText.Length < 3 || commentText.Length > 500)
+            {
+                MessageBox.Show("Комментарий должен содержать от 3 до 500 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                db.AddTaskReport(task.TaskId, userId, commentText);
+
+                ShowToast("Комментарий добавлен");
+                
+                txtEventComment.Text = "";
+                LoadEvents();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при добавлении комментария: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void TaskWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (hasUnsavedNote)

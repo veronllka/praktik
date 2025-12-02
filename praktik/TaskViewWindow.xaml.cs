@@ -78,6 +78,8 @@ namespace praktik
             txtStatus.Text = task.TaskStatus?.TaskStatusName ?? "—";
 
             txtDescription.Text = !string.IsNullOrEmpty(task.Description) ? task.Description : "Описание отсутствует";
+            
+            LoadNotes();
         }
 
         private void LoadLastReport()
@@ -105,6 +107,58 @@ namespace praktik
             else
             {
                 pnlProgress.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void LoadNotes()
+        {
+            if (task == null) return;
+
+            var reports = db.GetTaskReports(task.TaskId);
+            icNotes.ItemsSource = reports;
+        }
+
+        private void txtNewNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            var text = txtNewNote.Text?.Trim() ?? "";
+            btnSaveNote.IsEnabled = text.Length >= 3 && text.Length <= 500;
+        }
+
+        private void btnSaveNote_Click(object sender, RoutedEventArgs e)
+        {
+            var noteText = txtNewNote.Text?.Trim() ?? "";
+            
+            if (noteText.Length < 3 || noteText.Length > 500)
+            {
+                MessageBox.Show("Заметка должна содержать от 3 до 500 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                db.AddTaskReport(task.TaskId, userId, noteText);
+
+                txtNewNote.Clear();
+                LoadNotes();
+                
+                MessageBox.Show("Заметка добавлена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btnCancelNote_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtNewNote.Text))
+            {
+                var result = MessageBox.Show("Отменить ввод заметки?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    txtNewNote.Clear();
+                }
             }
         }
 

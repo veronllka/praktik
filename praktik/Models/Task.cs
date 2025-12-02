@@ -41,5 +41,9 @@ namespace praktik.Models
             {
             }
         }
+
+        // For displaying notes in DataGrid
+        public string LastNoteText { get; set; }
+        public string LastNoteTooltip { get; set; }
     }
 }

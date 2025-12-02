@@ -14,7 +14,7 @@ using System.Text;
 
 namespace praktik
 {
-    public partial class TaskPrintPreviewWindow : Window
+    public partial class TaskPrintPreviewWindow : Window    
     {
         private WorkPlannerContext db = new WorkPlannerContext();
         private Task task;

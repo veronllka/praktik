@@ -111,10 +111,10 @@ namespace praktik
                 var reader = new BarcodeReader
                 {
                     AutoRotate = true,
-                    TryInverted = true,
                     Options = new ZXing.Common.DecodingOptions
                     {
                         TryHarder = true,
+                        TryInverted = true,
                         PossibleFormats = new[] { BarcodeFormat.QR_CODE }
                     }
                 };
