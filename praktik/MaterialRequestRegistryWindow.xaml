@@ -78,8 +78,9 @@
             </DataGrid.Columns>
         </DataGrid>
 
+        <!-- Нижняя часть уменьшена -->
         <materialDesign:Card Grid.Row="2">
-            <Grid Margin="16">
+            <Grid Margin="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
@@ -89,7 +90,7 @@
                     <TextBlock x:Name="txtSelectedRequestInfo" Text="Выберите заявку для просмотра деталей" 
                               TextWrapping="Wrap" Margin="0,0,0,8"/>
                     <DataGrid x:Name="dgRequestItems" AutoGenerateColumns="False" IsReadOnly="True" 
-                             MaxHeight="150" Visibility="Collapsed">
+                             MaxHeight="100" Visibility="Collapsed">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Материал" Binding="{Binding Material.Name}" Width="*"/>
                             <DataGridTextColumn Header="Ед. изм." Binding="{Binding Material.Unit}" Width="80"/>
@@ -126,4 +127,3 @@
         </materialDesign:Card>
     </Grid>
 </Window>
-

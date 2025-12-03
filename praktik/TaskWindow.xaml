@@ -86,9 +86,9 @@
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button x:Name="btnNewRequest" Content="Новая заявка" 
-                               Click="btnNewRequest_Click" Margin="0,0,8,0" Width="120"/>
+                               Click="btnNewRequest_Click" Margin="0,0,8,0" Width="140"/>
                         <Button x:Name="btnEditRequest" Content="Редактировать" 
-                               Click="btnEditRequest_Click" Margin="0,0,8,0" Width="120"/>
+                               Click="btnEditRequest_Click" Margin="0,0,8,0" Width="150"/>
                         <Button x:Name="btnViewRequestHistory" Content="История" 
                                Click="btnViewRequestHistory_Click" Width="100"/>
                     </StackPanel>
