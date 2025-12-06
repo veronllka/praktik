@@ -699,7 +699,8 @@
                     </materialDesign:Card>
 
                     <DataGrid x:Name="dgMaterialRequests" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" 
-                             SelectionChanged="dgMaterialRequests_SelectionChanged" Margin="16,0,16,8">
+                             SelectionChanged="dgMaterialRequests_SelectionChanged" 
+                             MouseDoubleClick="dgMaterialRequests_MouseDoubleClick" Margin="16,0,16,8">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="ID" Binding="{Binding RequestId}" Width="60"/>
                             <DataGridTextColumn Header="Задача" Binding="{Binding TaskTitle}" Width="*"/>
@@ -709,20 +710,33 @@
                             <DataGridTextColumn Header="Требуется к" Binding="{Binding RequiredDateDisplay}" Width="120"/>
                             <DataGridTextColumn Header="Создана" Binding="{Binding CreatedAtDisplay}" Width="130"/>
                             <DataGridTextColumn Header="Позиций" Binding="{Binding ItemsCount}" Width="80"/>
-                            <DataGridTemplateColumn Header="Индикатор" Width="100">
+                            <DataGridTemplateColumn Header="Индикатор" Width="230" MinWidth="230">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Border Background="{Binding IndicatorColor}" Padding="4" CornerRadius="2">
-                                            <TextBlock Text="{Binding IndicatorText}" Foreground="White" FontWeight="Bold" 
-                                                      HorizontalAlignment="Center" FontSize="10"/>
-                                        </Border>
+                                        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="4,2">
+                                            <Border Background="{Binding IndicatorColor}" Padding="16,6" CornerRadius="2" 
+                                                    HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                    Width="160">
+                                                <TextBlock Text="{Binding IndicatorText}" Foreground="White" FontWeight="Bold" 
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center" 
+                                                          FontSize="11" TextWrapping="NoWrap"/>
+                                            </Border>
+                                        </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellStyle>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                    </Style>
+                                </DataGridTemplateColumn.CellStyle>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <materialDesign:Card Grid.Row="2" Margin="16,0,16,16">
+                    <materialDesign:Card x:Name="cardMRDetailsPanel" Grid.Row="2" Margin="16,0,16,16" Visibility="Collapsed">
                         <Grid Margin="16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

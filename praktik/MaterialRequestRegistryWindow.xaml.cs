@@ -40,6 +40,11 @@ namespace praktik
             
             dgRequests.ItemsSource = requests;
             
+            if (detailsPanel != null)
+            {
+                detailsPanel.Visibility = Visibility.Collapsed;
+            }
+            
             try
             {
                 LoadFilters();
@@ -130,39 +135,69 @@ namespace praktik
 
         private void dgRequests_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (dgRequests.SelectedItem is MaterialRequestRegistryDisplay display)
-            {
-                var allRequests = db.GetMaterialRequests();
-                selectedRequest = allRequests.FirstOrDefault(r => r.RequestId == display.RequestId);
-                if (selectedRequest != null)
-                {
-                    ShowRequestDetails(selectedRequest);
-                    UpdateActionButtons();
-                }
-            }
-            else
+            if (dgRequests.SelectedItem == null)
             {
                 selectedRequest = null;
-                txtSelectedRequestInfo.Text = "Выберите заявку для просмотра деталей";
-                dgRequestItems.Visibility = Visibility.Collapsed;
-                UpdateActionButtons();
+                if (detailsPanel != null)
+                {
+                    detailsPanel.Visibility = Visibility.Collapsed;
+                }
+                return;
+            }
+
+            try
+            {
+                var display = dgRequests.SelectedItem as MaterialRequestRegistryDisplay;
+                if (display != null)
+                {
+                    selectedRequest = db.GetMaterialRequests(null, display.RequestId).FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки деталей заявки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void ShowRequestDetails(MaterialRequest request)
+        private void dgRequests_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            var task = db.GetTasks().FirstOrDefault(t => t.TaskId == request.TaskId);
-            txtSelectedRequestInfo.Text = $"Заявка #{request.RequestId}\n" +
-                                         $"Задача: {task?.Title ?? "Не найдена"}\n" +
-                                         $"Статус: {GetStatusName(request.Status)}\n" +
-                                         $"Создана: {request.CreatedAt:dd.MM.yyyy HH:mm}\n" +
-                                         $"Требуется к: {request.RequiredDate?.ToString("dd.MM.yyyy") ?? "не указано"}";
-            
-            dgRequestItems.ItemsSource = request.Items;
-            dgRequestItems.Visibility = Visibility.Visible;
+            if (dgRequests.SelectedItem == null) return;
+
+            if (dgRequests.SelectedItem is MaterialRequestRegistryDisplay display)
+            {
+                try
+                {
+                    selectedRequest = db.GetMaterialRequests(null, display.RequestId).FirstOrDefault();
+                    if (selectedRequest != null)
+                    {
+                        detailsPanel.Visibility = Visibility.Visible;
+                        
+                        txtSelectedRequestInfo.Text = $"Заявка #{selectedRequest.RequestId} - {selectedRequest.Task?.Title ?? "N/A"}\n" +
+                                                     $"Статус: {GetStatusText(selectedRequest.Status)}\n" +
+                                                     $"Создана: {selectedRequest.CreatedAt:dd.MM.yyyy HH:mm}\n" +
+                                                     $"Требуется к: {(selectedRequest.RequiredDate.HasValue ? selectedRequest.RequiredDate.Value.ToString("dd.MM.yyyy") : "Не указано")}";
+
+                        if (selectedRequest.Items != null && selectedRequest.Items.Count > 0)
+                        {
+                            dgRequestItems.ItemsSource = selectedRequest.Items;
+                            dgRequestItems.Visibility = Visibility.Visible;
+                        }
+                        else
+                        {
+                            dgRequestItems.Visibility = Visibility.Collapsed;
+                        }
+
+                        UpdateButtonStates();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка загрузки деталей заявки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
-        private void UpdateActionButtons()
+        private void UpdateButtonStates()
         {
             if (selectedRequest == null)
             {
@@ -183,6 +218,21 @@ namespace praktik
             btnEdit.IsEnabled = selectedRequest.Status == "Draft" || selectedRequest.Status == "Submitted" || selectedRequest.Status == "Approved";
         }
 
+        private string GetStatusText(string status)
+        {
+            switch (status)
+            {
+                case "Draft": return "Черновик";
+                case "Submitted": return "Отправлена";
+                case "Approved": return "Согласована";
+                case "Rejected": return "Отклонена";
+                case "Issued": return "Выдана";
+                case "Delivered": return "Доставлена";
+                case "Closed": return "Закрыта";
+                default: return status;
+            }
+        }
+
         private void btnApprove_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
@@ -193,6 +243,7 @@ namespace praktik
                 MessageBox.Show("Заявка согласована");
                 LoadRequests();
                 selectedRequest = null;
+                detailsPanel.Visibility = Visibility.Collapsed;
             }
             catch (Exception ex)
             {
@@ -219,6 +270,7 @@ namespace praktik
                     MessageBox.Show("Заявка отклонена");
                     LoadRequests();
                     selectedRequest = null;
+                    detailsPanel.Visibility = Visibility.Collapsed;
                 }
                 catch (Exception ex)
                 {
@@ -244,6 +296,7 @@ namespace praktik
                     MessageBox.Show("Выдача отмечена");
                     LoadRequests();
                     selectedRequest = null;
+                    detailsPanel.Visibility = Visibility.Collapsed;
                 }
                 catch (Exception ex)
                 {
@@ -269,6 +322,7 @@ namespace praktik
                     MessageBox.Show("Доставка отмечена");
                     LoadRequests();
                     selectedRequest = null;
+                    detailsPanel.Visibility = Visibility.Collapsed;
                 }
                 catch (Exception ex)
                 {
@@ -290,6 +344,7 @@ namespace praktik
                     MessageBox.Show("Заявка закрыта");
                     LoadRequests();
                     selectedRequest = null;
+                    detailsPanel.Visibility = Visibility.Collapsed;
                 }
                 catch (Exception ex)
                 {
@@ -306,6 +361,8 @@ namespace praktik
             if (window.ShowDialog() == true)
             {
                 LoadRequests();
+                detailsPanel.Visibility = Visibility.Collapsed;
+                selectedRequest = null;
             }
         }
 

@@ -485,7 +485,6 @@ namespace praktik
             {
                 var tasks = db.GetTasks();
                 
-                // Load last note for each task
                 var allReports = db.GetTaskReports();
                 foreach (var task in tasks)
                 {
@@ -1359,18 +1358,33 @@ namespace praktik
             {
                 var allRequests = db.GetMaterialRequests();
                 selectedMaterialRequest = allRequests.FirstOrDefault(r => r.RequestId == display.RequestId);
-                if (selectedMaterialRequest != null)
-                {
-                    ShowMaterialRequestDetails(selectedMaterialRequest);
-                    UpdateMaterialRequestActionButtons();
-                }
             }
             else
             {
                 selectedMaterialRequest = null;
+                if (cardMRDetailsPanel != null)
+                {
+                    cardMRDetailsPanel.Visibility = Visibility.Collapsed;
+                }
                 txtMRSelectedInfo.Text = "Выберите заявку для просмотра деталей";
                 dgMRItems.Visibility = Visibility.Collapsed;
-                UpdateMaterialRequestActionButtons();
+            }
+        }
+
+        private void dgMaterialRequests_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (dgMaterialRequests.SelectedItem == null) return;
+
+            if (dgMaterialRequests.SelectedItem is MaterialRequestRegistryDisplay display)
+            {
+                var allRequests = db.GetMaterialRequests();
+                selectedMaterialRequest = allRequests.FirstOrDefault(r => r.RequestId == display.RequestId);
+                if (selectedMaterialRequest != null)
+                {
+                    cardMRDetailsPanel.Visibility = Visibility.Visible;
+                    ShowMaterialRequestDetails(selectedMaterialRequest);
+                    UpdateMaterialRequestActionButtons();
+                }
             }
         }
 
@@ -1412,13 +1426,13 @@ namespace praktik
         {
             if (selectedMaterialRequest == null) return;
 
-            // Использование паттерна State через Facade
             string errorMessage;
             if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "approve", LoginWindow.CurrentUser.UserId, out errorMessage))
             {
                 MessageBox.Show("Заявка согласована");
                 LoadMaterialRequests();
                 selectedMaterialRequest = null;
+                cardMRDetailsPanel.Visibility = Visibility.Collapsed;
             }
             else
             {
@@ -1439,13 +1453,13 @@ namespace praktik
                     return;
                 }
 
-                // Использование паттерна State через Facade
                 string errorMessage;
                 if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "reject", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
                     MessageBox.Show("Заявка отклонена");
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
+                    cardMRDetailsPanel.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
@@ -1461,7 +1475,6 @@ namespace praktik
             var dialog = new MaterialRequestActionWindow("Выдача материалов", "Номер документа", "Примечание");
             if (dialog.ShowDialog() == true)
             {
-                // Использование паттерна State через Facade
                 string errorMessage;
                 if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "issue", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
@@ -1472,6 +1485,7 @@ namespace praktik
                     MessageBox.Show("Выдача отмечена");
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
+                    cardMRDetailsPanel.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
@@ -1487,7 +1501,6 @@ namespace praktik
             var dialog = new MaterialRequestActionWindow("Доставка материалов", "Номер документа", "Примечание");
             if (dialog.ShowDialog() == true)
             {
-                // Использование паттерна State через Facade
                 string errorMessage;
                 if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "deliver", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
@@ -1498,6 +1511,7 @@ namespace praktik
                     MessageBox.Show("Доставка отмечена");
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
+                    cardMRDetailsPanel.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
@@ -1513,13 +1527,13 @@ namespace praktik
             var result = MessageBox.Show("Закрыть заявку?", "Подтверждение", MessageBoxButton.YesNo);
             if (result == MessageBoxResult.Yes)
             {
-                // Использование паттерна State через Facade
                 string errorMessage;
                 if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "close", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
                     MessageBox.Show("Заявка закрыта");
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
+                    cardMRDetailsPanel.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
@@ -1536,6 +1550,8 @@ namespace praktik
             if (window.ShowDialog() == true)
             {
                 LoadMaterialRequests();
+                cardMRDetailsPanel.Visibility = Visibility.Collapsed;
+                selectedMaterialRequest = null;
             }
         }
 
