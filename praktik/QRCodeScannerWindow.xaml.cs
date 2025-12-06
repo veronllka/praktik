@@ -12,17 +12,18 @@ namespace praktik
     {
         public int? TaskId { get; private set; }
         public bool ShouldHighlightTask { get; private set; }
+        private readonly WorkPlannerContext db;
 
         public QRCodeScannerWindow()
         {
             InitializeComponent();
+            db = new WorkPlannerContext();
         }
 
-        private void ShowTaskPreview(int taskId, string jsonData)
+        private void ShowTaskPreview(int taskId)
         {
             try
             {
-                var db = new WorkPlannerContext();
                 var task = db.GetTaskById(taskId);
 
                 if (task != null)
@@ -136,7 +137,7 @@ namespace praktik
                         {
                             TaskId = jsonTaskId;
                             btnOpenTask.IsEnabled = true;
-                            ShowTaskPreview(jsonTaskId, qrText);
+                            ShowTaskPreview(jsonTaskId);
                             return;
                         }
                     }
@@ -148,7 +149,7 @@ namespace praktik
                         {
                             TaskId = taskId;
                             btnOpenTask.IsEnabled = true;
-                            ShowTaskPreview(taskId, null);
+                            ShowTaskPreview(taskId);
                             return;
                         }
                     }
@@ -157,7 +158,7 @@ namespace praktik
                     {
                         TaskId = directTaskId;
                         btnOpenTask.IsEnabled = true;
-                        ShowTaskPreview(directTaskId, null);
+                        ShowTaskPreview(directTaskId);
                         return;
                     }
 

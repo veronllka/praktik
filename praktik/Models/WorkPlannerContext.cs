@@ -26,7 +26,6 @@ namespace praktik.Models
             connectionString = cs != null ? cs.ConnectionString : "Server=WIN-IT3KG728UQJ\\SQLEXPRESS;Database=BrigadePlanner;Trusted_Connection=True;MultipleActiveResultSets=True;";
         }
 
-        // Методы для работы с пользователями
         public List<User> GetUsers()
         {
             var users = new List<User>();
@@ -462,7 +461,6 @@ namespace praktik.Models
             }
         }
 
-        // Регистрация пользователей
         public List<Role> GetRoles()
         {
             var roles = new List<Role>();
@@ -572,7 +570,6 @@ namespace praktik.Models
             return reports;
         }
 
-        // Добавление отчёта по задаче
         public void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -589,10 +586,6 @@ namespace praktik.Models
                 command.ExecuteNonQuery();
             }
         }
-
-        // ========== Методы для работы с заявками на материалы ==========
-
-        // Получение каталога материалов
         public List<MaterialCatalog> GetMaterialCatalog(bool activeOnly = true)
         {
             var materials = new List<MaterialCatalog>();
@@ -624,8 +617,7 @@ namespace praktik.Models
             return materials;
         }
 
-        // Получение заявок на материалы
-        public List<MaterialRequest> GetMaterialRequests(int? taskId = null, string status = null)
+        public List<MaterialRequest> GetMaterialRequests(int? taskId = null, int? requestId = null)
         {
             var requests = new List<MaterialRequest>();
             using (var connection = new SqlConnection(connectionString))
@@ -645,16 +637,16 @@ namespace praktik.Models
                 
                 if (taskId.HasValue)
                     sql += " AND mr.TaskId = @taskId";
-                if (!string.IsNullOrEmpty(status))
-                    sql += " AND mr.Status = @status";
+                if (requestId.HasValue)
+                    sql += " AND mr.RequestId = @requestId";
                 
                 sql += " ORDER BY mr.CreatedAt DESC";
                 
                 var command = new SqlCommand(sql, connection);
                 if (taskId.HasValue)
                     command.Parameters.AddWithValue("@taskId", taskId.Value);
-                if (!string.IsNullOrEmpty(status))
-                    command.Parameters.AddWithValue("@status", status);
+                if (requestId.HasValue)
+                    command.Parameters.AddWithValue("@requestId", requestId.Value);
                 
                 using (var reader = command.ExecuteReader())
                 {
@@ -681,7 +673,6 @@ namespace praktik.Models
                             CreatedByUser = new User { UserId = Convert.ToInt32(reader["CreatedByUserId"]), Username = reader["CreatedByName"] as string }
                         };
                         
-                        // Загружаем позиции заявки
                         request.Items = GetMaterialRequestItems(request.RequestId);
                         requests.Add(request);
                     }
@@ -730,7 +721,6 @@ namespace praktik.Models
             return items;
         }
 
-        // Создание заявки на материалы
         public int CreateMaterialRequest(MaterialRequest request)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -740,7 +730,6 @@ namespace praktik.Models
                 {
                     try
                     {
-                        // Создаем заявку
                         var command = new SqlCommand(@"
                             INSERT INTO MaterialRequests (TaskId, CreatedByUserId, CreatedAt, RequiredDate, Status, Comment)
                             OUTPUT INSERTED.RequestId
@@ -754,7 +743,6 @@ namespace praktik.Models
                         
                         var requestId = (int)command.ExecuteScalar();
                         
-                        // Добавляем позиции
                         foreach (var item in request.Items)
                         {
                             var itemCommand = new SqlCommand(@"
@@ -767,10 +755,8 @@ namespace praktik.Models
                             itemCommand.ExecuteNonQuery();
                         }
                         
-                        // Логируем создание
                         LogMaterialRequestStatusChange(requestId, null, request.Status, request.CreatedByUserId, "Создан черновик заявки", connection, transaction);
                         
-                        // Создаем служебную запись в TaskReports
                         AddServiceTaskReport(request.TaskId, request.CreatedByUserId, "Создан черновик заявки на материалы", connection, transaction);
                         
                         transaction.Commit();
@@ -795,7 +781,6 @@ namespace praktik.Models
                 {
                     try
                     {
-                        // Обновляем заявку
                         var command = new SqlCommand(@"
                             UPDATE MaterialRequests 
                             SET RequiredDate = @requiredDate, Status = @status, Comment = @comment
@@ -806,12 +791,10 @@ namespace praktik.Models
                         command.Parameters.AddWithValue("@comment", (object)request.Comment ?? DBNull.Value);
                         command.ExecuteNonQuery();
                         
-                        // Удаляем старые позиции
                         var deleteCommand = new SqlCommand("DELETE FROM MaterialRequestItems WHERE RequestId = @requestId", connection, transaction);
                         deleteCommand.Parameters.AddWithValue("@requestId", request.RequestId);
                         deleteCommand.ExecuteNonQuery();
                         
-                        // Добавляем новые позиции
                         foreach (var item in request.Items)
                         {
                             var itemCommand = new SqlCommand(@"
@@ -845,7 +828,6 @@ namespace praktik.Models
                 {
                     try
                     {
-                        // Получаем текущий статус и TaskId
                         var getCommand = new SqlCommand("SELECT Status, TaskId FROM MaterialRequests WHERE RequestId = @requestId", connection, transaction);
                         getCommand.Parameters.AddWithValue("@requestId", requestId);
                         string oldStatus = null;
@@ -859,20 +841,16 @@ namespace praktik.Models
                             }
                         }
                         
-                        // Обновляем статус
                         var updateCommand = new SqlCommand("UPDATE MaterialRequests SET Status = @status WHERE RequestId = @requestId", connection, transaction);
                         updateCommand.Parameters.AddWithValue("@status", newStatus);
                         updateCommand.Parameters.AddWithValue("@requestId", requestId);
                         updateCommand.ExecuteNonQuery();
                         
-                        // Логируем изменение статуса
                         LogMaterialRequestStatusChange(requestId, oldStatus, newStatus, userId, comment, connection, transaction);
                         
-                        // Создаем служебную запись в TaskReports
                         string reportText = GetStatusChangeReportText(oldStatus, newStatus, comment);
                         AddServiceTaskReport(taskId, userId, reportText, connection, transaction);
                         
-                        // Обновляем метку задачи "Ожидание МТС"
                         UpdateTaskLabelForMaterialRequest(taskId, newStatus, connection, transaction);
                         
                         transaction.Commit();
@@ -937,19 +915,16 @@ namespace praktik.Models
             }
         }
 
-        // Обновление метки задачи "Ожидание МТС"
         private void UpdateTaskLabelForMaterialRequest(int taskId, string requestStatus, SqlConnection connection, System.Data.SqlClient.SqlTransaction transaction)
         {
-            // Получаем ID метки "Ожидание МТС"
             var labelCommand = new SqlCommand("SELECT LabelId FROM TaskLabels WHERE Code = 'await_mts'", connection, transaction);
             var labelIdObj = labelCommand.ExecuteScalar();
             
             if (labelIdObj == null || labelIdObj == DBNull.Value)
-                return; // Метка не найдена
+                return; 
             
             int labelId = Convert.ToInt32(labelIdObj);
             
-            // Если статус "Delivered" или "Closed" - снимаем метку, иначе ставим
             var updateCommand = new SqlCommand("UPDATE Tasks SET LabelId = @labelId WHERE TaskId = @taskId", connection, transaction);
             if (requestStatus == "Delivered" || requestStatus == "Closed")
             {
@@ -961,13 +936,12 @@ namespace praktik.Models
             }
             else
             {
-                return; // Не меняем метку для других статусов
+                return;
             }
             updateCommand.Parameters.AddWithValue("@taskId", taskId);
             updateCommand.ExecuteNonQuery();
         }
 
-        // Получение ID метки задачи по коду
         public int? GetTaskLabelIdByCode(string code)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -980,7 +954,6 @@ namespace praktik.Models
             }
         }
 
-        // Добавление документа выдачи/доставки
         public void AddMaterialDeliveryDoc(int requestId, string eventType, string docNumber = null, string note = null)
         {
             using (var connection = new SqlConnection(connectionString))

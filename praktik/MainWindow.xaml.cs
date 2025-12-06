@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using praktik.Models;
+using praktik.Models.Patterns;
+using praktik.Models.Patterns.States;
 using System.IO;
 
 namespace praktik
@@ -12,6 +14,7 @@ namespace praktik
     public partial class MainWindow : Window
     {
         private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade; 
         private Site selectedSite;
         private Crew selectedCrew;
         private Models.Task selectedTask;
@@ -21,6 +24,7 @@ namespace praktik
         public MainWindow()
         {
             InitializeComponent();
+            facade = new WorkPlannerFacade(db); 
             LoadData();
             SetupPermissions();
             UpdateUserInfo();
@@ -1408,16 +1412,17 @@ namespace praktik
         {
             if (selectedMaterialRequest == null) return;
 
-            try
+            // Использование паттерна State через Facade
+            string errorMessage;
+            if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "approve", LoginWindow.CurrentUser.UserId, out errorMessage))
             {
-                db.ChangeMaterialRequestStatus(selectedMaterialRequest.RequestId, "Approved", LoginWindow.CurrentUser.UserId);
                 MessageBox.Show("Заявка согласована");
                 LoadMaterialRequests();
                 selectedMaterialRequest = null;
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show($"Ошибка: {ex.Message}");
+                MessageBox.Show($"Ошибка: {errorMessage}");
             }
         }
 
@@ -1434,16 +1439,17 @@ namespace praktik
                     return;
                 }
 
-                try
+                // Использование паттерна State через Facade
+                string errorMessage;
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "reject", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
-                    db.ChangeMaterialRequestStatus(selectedMaterialRequest.RequestId, "Rejected", LoginWindow.CurrentUser.UserId, dialog.Note);
                     MessageBox.Show("Заявка отклонена");
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Ошибка: {ex.Message}");
+                    MessageBox.Show($"Ошибка: {errorMessage}");
                 }
             }
         }
@@ -1455,9 +1461,10 @@ namespace praktik
             var dialog = new MaterialRequestActionWindow("Выдача материалов", "Номер документа", "Примечание");
             if (dialog.ShowDialog() == true)
             {
-                try
+                // Использование паттерна State через Facade
+                string errorMessage;
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "issue", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
-                    db.ChangeMaterialRequestStatus(selectedMaterialRequest.RequestId, "Issued", LoginWindow.CurrentUser.UserId, dialog.Note);
                     if (!string.IsNullOrEmpty(dialog.DocNumber))
                     {
                         db.AddMaterialDeliveryDoc(selectedMaterialRequest.RequestId, "Issued", dialog.DocNumber, dialog.Note);
@@ -1466,9 +1473,9 @@ namespace praktik
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Ошибка: {ex.Message}");
+                    MessageBox.Show($"Ошибка: {errorMessage}");
                 }
             }
         }
@@ -1480,9 +1487,10 @@ namespace praktik
             var dialog = new MaterialRequestActionWindow("Доставка материалов", "Номер документа", "Примечание");
             if (dialog.ShowDialog() == true)
             {
-                try
+                // Использование паттерна State через Facade
+                string errorMessage;
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "deliver", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
-                    db.ChangeMaterialRequestStatus(selectedMaterialRequest.RequestId, "Delivered", LoginWindow.CurrentUser.UserId, dialog.Note);
                     if (!string.IsNullOrEmpty(dialog.DocNumber))
                     {
                         db.AddMaterialDeliveryDoc(selectedMaterialRequest.RequestId, "Delivered", dialog.DocNumber, dialog.Note);
@@ -1491,9 +1499,9 @@ namespace praktik
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Ошибка: {ex.Message}");
+                    MessageBox.Show($"Ошибка: {errorMessage}");
                 }
             }
         }
@@ -1505,16 +1513,17 @@ namespace praktik
             var result = MessageBox.Show("Закрыть заявку?", "Подтверждение", MessageBoxButton.YesNo);
             if (result == MessageBoxResult.Yes)
             {
-                try
+                // Использование паттерна State через Facade
+                string errorMessage;
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "close", LoginWindow.CurrentUser.UserId, out errorMessage))
                 {
-                    db.ChangeMaterialRequestStatus(selectedMaterialRequest.RequestId, "Closed", LoginWindow.CurrentUser.UserId);
                     MessageBox.Show("Заявка закрыта");
                     LoadMaterialRequests();
                     selectedMaterialRequest = null;
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show($"Ошибка: {ex.Message}");
+                    MessageBox.Show($"Ошибка: {errorMessage}");
                 }
             }
         }
