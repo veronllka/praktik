@@ -60,19 +60,12 @@ namespace praktik
         {
             try
             {
-                // Получаем JSON данные для QR-кода
                 string qrData = task.GenerateQRData();
                 txtQRData.Text = qrData;
-
-                // Генерируем QR-код
                 QRCodeGenerator qrGenerator = new QRCodeGenerator();
                 QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
-                
-                // Создаем bitmap с QR-кодом
                 var qrCode = new QRCode(qrCodeData);
                 var qrCodeImage = qrCode.GetGraphic(20, "#000000", "#FFFFFF", true);
-
-                // Конвертируем в BitmapSource для WPF
                 qrCodeBitmap = ConvertBitmapToBitmapSource(qrCodeImage);
                 imgQRCode.Source = qrCodeBitmap;
             }

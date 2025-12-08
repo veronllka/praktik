@@ -4,9 +4,7 @@ using praktik.Models.Patterns.States;
 
 namespace praktik.Models.Patterns
 {
-    /// <summary>
-    /// Контекст для управления состояниями заявки на материалы (паттерн State)
-    /// </summary>
+  
     public class MaterialRequestContext
     {
         private IMaterialRequestState currentState;
@@ -22,14 +20,8 @@ namespace praktik.Models.Patterns
             this.currentState = GetStateByName(request.Status);
         }
 
-        /// <summary>
-        /// Текущее состояние
-        /// </summary>
         public IMaterialRequestState CurrentState => currentState;
 
-        /// <summary>
-        /// Установить новое состояние
-        /// </summary>
         public void SetState(IMaterialRequestState newState)
         {
             currentState = newState;
@@ -37,9 +29,6 @@ namespace praktik.Models.Patterns
             db.UpdateMaterialRequest(request);
         }
 
-        /// <summary>
-        /// Получить объект состояния по названию
-        /// </summary>
         private IMaterialRequestState GetStateByName(string stateName)
         {
             switch (stateName)
@@ -63,9 +52,6 @@ namespace praktik.Models.Patterns
             }
         }
 
-        /// <summary>
-        /// Логирование действия в журнал задачи
-        /// </summary>
         public void LogAction(int userId, string action)
         {
             var logText = $"Заявка на материалы #{request.RequestId}: {action}";

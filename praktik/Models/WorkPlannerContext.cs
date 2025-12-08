@@ -112,7 +112,7 @@ namespace praktik.Models
                 connection.Open();
                 var command = new SqlCommand("INSERT INTO Sites (SiteName, Address) VALUES (@name, @address)", connection);
                 command.Parameters.AddWithValue("@name", site.SiteName);
-                command.Parameters.AddWithValue("@address", (object)(site.Address ?? (string)null) ?? DBNull.Value);
+                command.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(site.Address) ? "" : site.Address);
                 command.ExecuteNonQuery();
             }
         }
@@ -496,7 +496,7 @@ namespace praktik.Models
                 
                 if (exists)
                 {
-                    throw new Exception("Пользователь с таким логином уже существует");
+                    throw new Exception("Пользователь уже зарегистрирован");
                 }
 
                 // Создаем пользователя

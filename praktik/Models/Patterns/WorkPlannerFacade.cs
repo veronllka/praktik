@@ -22,9 +22,6 @@ namespace praktik.Models.Patterns
 
         #region Task Operations
 
-        /// <summary>
-        /// Получить все задачи с применением фильтров
-        /// </summary>
         public List<Task> GetTasksWithFilters(int? siteId = null, int? crewId = null, int? statusId = null)
         {
             var tasks = db.GetTasks();
@@ -47,9 +44,6 @@ namespace praktik.Models.Patterns
             return tasks;
         }
 
-        /// <summary>
-        /// Создать новую задачу с валидацией
-        /// </summary>
         public bool CreateTask(Task task, int userId, out string errorMessage)
         {
             errorMessage = null;
@@ -83,9 +77,6 @@ namespace praktik.Models.Patterns
             }
         }
 
-        /// <summary>
-        /// Обновить статус задачи с логированием
-        /// </summary>
         public bool UpdateTaskStatus(int taskId, int newStatusId, int userId, out string errorMessage)
         {
             errorMessage = null;
@@ -132,9 +123,6 @@ namespace praktik.Models.Patterns
 
         #region Material Request Operations
 
-        /// <summary>
-        /// Получить заявки на материалы с деталями
-        /// </summary>
         public List<MaterialRequest> GetMaterialRequestsWithDetails(int? taskId = null, int? siteId = null, int? crewId = null, string status = null)
         {
             var requests = db.GetMaterialRequests(taskId, null);
@@ -157,9 +145,6 @@ namespace praktik.Models.Patterns
             return requests;
         }
 
-        /// <summary>
-        /// Обработать заявку на материалы с использованием паттерна State
-        /// </summary>
         public bool ProcessMaterialRequest(int requestId, string action, int userId, out string errorMessage)
         {
             errorMessage = null;
@@ -218,9 +203,7 @@ namespace praktik.Models.Patterns
 
         #region Report Operations
 
-        /// <summary>
-        /// Добавить отчет/заметку к задаче
-        /// </summary>
+     
         public bool AddTaskReport(int taskId, int userId, string reportText)
         {
             try
@@ -234,9 +217,6 @@ namespace praktik.Models.Patterns
             }
         }
 
-        /// <summary>
-        /// Получить отчеты по задаче
-        /// </summary>
         public List<TaskReport> GetTaskReports(int taskId)
         {
             return db.GetTaskReports(taskId);

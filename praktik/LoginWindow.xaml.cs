@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Input;
 using praktik.Models;
 
+using praktik.Models.Patterns;
+
 namespace praktik
 {
     public partial class LoginWindow : Window
@@ -22,9 +24,13 @@ namespace praktik
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
+                txtSuccess.Text = "";
                 txtError.Text = "Введите логин и пароль";
                 return;
             }
+
+            txtSuccess.Text = "";
+            txtError.Text = "";
 
             using (var context = new WorkPlannerContext())
             {
@@ -34,7 +40,7 @@ namespace praktik
                     CurrentUser = user;
                     try
                     {
-                        MainWindow mainWindow = new MainWindow();
+                        Window mainWindow = praktik.Models.Patterns.RoleWindowFactory.CreateWindow(user.Role);
                         mainWindow.Show();
                         this.Close();
                     }
@@ -55,7 +61,8 @@ namespace praktik
             var registerWindow = new RegisterWindow();
             if (registerWindow.ShowDialog() == true)
             {
-                txtError.Text = "Пользователь успешно зарегистрирован";
+                txtError.Text = "";
+                txtSuccess.Text = "Пользователь успешно зарегистрирован";
             }
         }
 
@@ -64,7 +71,8 @@ namespace praktik
             var registerWindow = new RegisterWindow();
             if (registerWindow.ShowDialog() == true)
             {
-                txtError.Text = "Пользователь успешно зарегистрирован";
+                txtError.Text = "";
+                txtSuccess.Text = "Пользователь успешно зарегистрирован";
             }
         }
 

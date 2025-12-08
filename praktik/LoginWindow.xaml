@@ -179,8 +179,8 @@
                 <DropShadowEffect Color="#40000000" Direction="270" ShadowDepth="8" BlurRadius="20" Opacity="0.15"/>
             </Border.Effect>
             
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="40,40,40,40">
+            
+            <StackPanel Margin="40,40,40,40">
                 <Grid Margin="0,0,0,30">
                     <Ellipse Width="70" Height="70" HorizontalAlignment="Center" Margin="0,0,0,15">
                         <Ellipse.Fill>
@@ -247,6 +247,16 @@
                          TextDecorations="Underline"/>
                 </TextBlock>
                 
+                <TextBlock x:Name="txtSuccess" 
+                          Foreground="#38A169" 
+                          HorizontalAlignment="Center"
+                          TextWrapping="Wrap"
+                          FontSize="13"
+                          FontWeight="SemiBold"
+                          TextAlignment="Center"
+                          MinHeight="20"
+                          Margin="0,0,0,10"/>
+                
                 <TextBlock x:Name="txtError" 
                           Foreground="#E53E3E" 
                           HorizontalAlignment="Center"
@@ -256,7 +266,6 @@
                           MinHeight="20"
                           Margin="0,0,0,10"/>
                 </StackPanel>
-            </ScrollViewer>
         </Border>
     </Grid>
 </Window>

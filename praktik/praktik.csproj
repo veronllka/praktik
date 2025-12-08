@@ -230,6 +230,7 @@
     <Compile Include="Models\MaterialRequestStatusLog.cs" />
     <Compile Include="Models\MaterialDeliveryDoc.cs" />
     <Compile Include="Models\Patterns\WorkPlannerFacade.cs" />
+    <Compile Include="Models\Patterns\RoleWindowFactory.cs" />
     <Compile Include="Models\Patterns\IMaterialRequestState.cs" />
     <Compile Include="Models\Patterns\MaterialRequestContext.cs" />
     <Compile Include="Models\Patterns\States\BaseState.cs" />

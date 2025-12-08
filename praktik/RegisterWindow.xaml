@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:praktik"
         mc:Ignorable="d"
-        Title="Регистрация пользователя" Height="700" Width="420" 
+        Title="Регистрация пользователя" Height="750" Width="420" 
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Window.Resources>
@@ -202,7 +202,7 @@
             </Ellipse>
         </Grid>
         
-        <Border Width="380" Height="620" 
+        <Border Width="380" Height="680" 
                 VerticalAlignment="Center" 
                 HorizontalAlignment="Center"
                 Background="White"
@@ -213,8 +213,7 @@
                 <DropShadowEffect Color="#40000000" Direction="270" ShadowDepth="8" BlurRadius="20" Opacity="0.15"/>
             </Border.Effect>
             
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="40,40,40,40">
+            <StackPanel Margin="40,40,40,40">
                     <Grid Margin="0,0,0,30">
                         <Ellipse Width="70" Height="70" HorizontalAlignment="Center" Margin="0,0,0,15">
                             <Ellipse.Fill>
@@ -310,8 +309,7 @@
                               TextAlignment="Center"
                               MinHeight="20"
                               Margin="0,0,0,10"/>
-                </StackPanel>
-            </ScrollViewer>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>
