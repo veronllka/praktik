@@ -201,7 +201,7 @@
                              VerticalAlignment="Center" Margin="16,0"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Border Background="#7B1FA2" CornerRadius="4" Margin="0,0,16,0" Padding="8,4">
+                        <Border Background="#C2B39A" CornerRadius="4" Margin="0,0,16,0" Padding="8,4">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="White"/>
                                 <TextBlock x:Name="UserInfo" Text="Загрузка..." 

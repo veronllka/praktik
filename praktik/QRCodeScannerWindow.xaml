@@ -83,7 +83,7 @@
                         FontSize="14"
                         FontWeight="Medium"
                         Margin="0,0,10,0"
-                        Background="#7B1FA2"
+                        Background="#C2B39A"
                         Foreground="White"
                         BorderThickness="0"
                         Cursor="Hand"
@@ -107,7 +107,7 @@
                                     <Setter Property="Opacity" Value="0.5"/>
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#6A1B9A"/>
+                                    <Setter Property="Background" Value="#B6A588"/>
                                 </Trigger>
                             </Style.Triggers>
                         </Style>

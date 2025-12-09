@@ -13,7 +13,7 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
                 
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Purple" SecondaryColor="Amber" />
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Brown" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml" />
                 
                 <ResourceDictionary>
@@ -49,7 +49,7 @@
                     
                     <Style x:Key="ModernButtonStyle" TargetType="Button">
                         <Setter Property="Padding" Value="16,8"/>
-                        <Setter Property="Background" Value="#5C6BC0"/>
+                        <Setter Property="Background" Value="#C2B39A"/>
                         <Setter Property="Foreground" Value="White"/>
                         <Setter Property="BorderThickness" Value="0"/>
                         <Setter Property="FontWeight" Value="Medium"/>
@@ -69,11 +69,11 @@
                         </Setter>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#3F51B5"/>
+                                <Setter Property="Background" Value="#B6A588"/>
                                 <Setter Property="Cursor" Value="Hand"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#303F9F"/>
+                                <Setter Property="Background" Value="#A78F73"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -81,9 +81,9 @@
                     <Style x:Key="ModernOutlinedButtonStyle" TargetType="Button">
                         <Setter Property="Padding" Value="16,8"/>
                         <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="Foreground" Value="#5C6BC0"/>
+                        <Setter Property="Foreground" Value="#7C746A"/>
                         <Setter Property="BorderThickness" Value="1"/>
-                        <Setter Property="BorderBrush" Value="#5C6BC0"/>
+                        <Setter Property="BorderBrush" Value="#7C746A"/>
                         <Setter Property="FontWeight" Value="Medium"/>
                         <Setter Property="FontSize" Value="13"/>
                         <Setter Property="Height" Value="40"/>
@@ -101,11 +101,11 @@
                         </Setter>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#E8EAF6"/>
+                                <Setter Property="Background" Value="#F2ECE3"/>
                                 <Setter Property="Cursor" Value="Hand"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#C5CAE9"/>
+                                <Setter Property="Background" Value="#E4DCCF"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
