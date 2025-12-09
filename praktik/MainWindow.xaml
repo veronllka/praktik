@@ -340,8 +340,8 @@
                                    Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                                    Margin="0,0,0,24"/>
 
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto">
-                                <StackPanel Orientation="Horizontal">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Button x:Name="btnAddSite" Content="ДОБАВИТЬ" 
                                           Click="btnAddSite_Click" 
                                           Style="{StaticResource MaterialDesignRaisedButton}"
@@ -350,14 +350,14 @@
                                     <Button x:Name="btnUpdateSite" Content="ОБНОВИТЬ" 
                                           Click="btnUpdateSite_Click" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          Width="110"
-                                          Margin="0,0,8,0"/>
-                                    <Button x:Name="btnDeleteSite" Content="УДАЛИТЬ" 
-                                          Click="btnDeleteSite_Click" 
-                                          Width="110"
-                                          Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                          Width="110"/>
                                 </StackPanel>
-                            </ScrollViewer>
+                                <Button x:Name="btnDeleteSite" Content="УДАЛИТЬ" 
+                                      Click="btnDeleteSite_Click" 
+                                      Width="110"
+                                      HorizontalAlignment="Left"
+                                      Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                            </StackPanel>
                         </StackPanel>
                     </materialDesign:Card>
                 </Grid>
@@ -396,8 +396,8 @@
                                      DisplayMemberPath="Username"
                                      Margin="0,0,0,24"/>
 
-                            <ScrollViewer HorizontalScrollBarVisibility="Auto">
-                                <StackPanel Orientation="Horizontal">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Button x:Name="btnAddCrew" Content="ДОБАВИТЬ" 
                                           Click="btnAddCrew_Click" 
                                           Style="{StaticResource MaterialDesignRaisedButton}"
@@ -406,14 +406,14 @@
                                     <Button x:Name="btnUpdateCrew" Content="ОБНОВИТЬ" 
                                           Click="btnUpdateCrew_Click" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
-                                          Width="110"
-                                          Margin="0,0,8,0"/>
-                                    <Button x:Name="btnDeleteCrew" Content="УДАЛИТЬ" 
-                                          Click="btnDeleteCrew_Click" 
-                                          Width="110"
-                                          Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                          Width="110"/>
                                 </StackPanel>
-                            </ScrollViewer>
+                                <Button x:Name="btnDeleteCrew" Content="УДАЛИТЬ" 
+                                      Click="btnDeleteCrew_Click" 
+                                      Width="110"
+                                      HorizontalAlignment="Left"
+                                      Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                            </StackPanel>
                         </StackPanel>
                     </materialDesign:Card>
                 </Grid>

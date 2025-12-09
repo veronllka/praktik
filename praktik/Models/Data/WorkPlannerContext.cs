@@ -88,7 +88,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("SELECT SiteId, SiteName, Address FROM Sites", connection);
+                var command = new SqlCommand("SELECT SiteId, SiteCode, SiteName, Address FROM Sites", connection);
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -96,6 +96,7 @@ namespace praktik.Models
                         sites.Add(new Site
                         {
                             SiteId = Convert.ToInt32(reader["SiteId"]),
+                            SiteCode = reader["SiteCode"] as string,
                             SiteName = (string)reader["SiteName"],
                             Address = reader["Address"] as string
                         });
@@ -110,7 +111,9 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("INSERT INTO Sites (SiteName, Address) VALUES (@name, @address)", connection);
+                var command = new SqlCommand("INSERT INTO Sites (SiteCode, SiteName, Address) VALUES (@code, @name, @address)", connection);
+                var code = string.IsNullOrWhiteSpace(site.SiteCode) ? GenerateSiteCode() : site.SiteCode;
+                command.Parameters.AddWithValue("@code", code);
                 command.Parameters.AddWithValue("@name", site.SiteName);
                 command.Parameters.AddWithValue("@address", string.IsNullOrWhiteSpace(site.Address) ? "" : site.Address);
                 command.ExecuteNonQuery();
@@ -139,6 +142,11 @@ namespace praktik.Models
                 command.Parameters.AddWithValue("@id", siteId);
                 command.ExecuteNonQuery();
             }
+        }
+
+        private string GenerateSiteCode()
+        {
+            return $"SITE-{Guid.NewGuid():N}".Substring(0, 10).ToUpperInvariant();
         }
 
         public List<Crew> GetCrews()
