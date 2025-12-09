@@ -19,28 +19,28 @@ namespace praktik
             this.Closing += QuickNoteWindow_Closing;
         }
 
-        private void txtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             var text = txtNote.Text?.Trim() ?? "";
             btnSave.IsEnabled = text.Length >= 3 && text.Length <= 200;
             hasUnsavedNote = !string.IsNullOrWhiteSpace(text);
         }
 
-        private void txtNote_KeyDown(object sender, KeyEventArgs e)
+        private void TxtNote_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && btnSave.IsEnabled)
             {
-                btnSave_Click(sender, e);
+                BtnSave_Click(sender, e);
                 e.Handled = true;
             }
             else if (e.Key == Key.Escape)
             {
-                btnCancel_Click(sender, e);
+                BtnCancel_Click(sender, e);
                 e.Handled = true;
             }
         }
 
-        private void btnSave_Click(object sender, RoutedEventArgs e)
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             var noteText = txtNote.Text?.Trim() ?? "";
             
@@ -66,14 +66,14 @@ namespace praktik
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             if (hasUnsavedNote)
             {
                 var result = MessageBox.Show("Сохранить черновик?", "Несохраненная заметка", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
-                    btnSave_Click(sender, e);
+                    BtnSave_Click(sender, e);
                     return;
                 }
                 else if (result == MessageBoxResult.Cancel)
@@ -95,7 +95,7 @@ namespace praktik
                 {
                     if (btnSave.IsEnabled)
                     {
-                        btnSave_Click(null, null);
+                        BtnSave_Click(null, null);
                     }
                     else
                     {

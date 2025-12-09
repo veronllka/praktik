@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using praktik.Models;
@@ -16,10 +15,10 @@ namespace praktik
             InitializeComponent();
         }
 
-        private void btnLogin_Click(object sender, RoutedEventArgs e)
+        private void BtnLogin_Click(object sender, RoutedEventArgs e)
         {
-            string username = txtUsername.Text.Trim();
-            string password = txtPassword.Password;
+            var username = txtUsername.Text.Trim();
+            var password = txtPassword.Password;
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
@@ -29,32 +28,10 @@ namespace praktik
             }
 
             ClearMessages();
-
-            using (var context = new WorkPlannerContext())
-            {
-                var user = context.GetUser(username, password);
-                if (user != null)
-                {
-                    CurrentUser = user;
-                    try
-                    {
-                        Window mainWindow = RoleWindowFactory.CreateWindow(user.Role);
-                        mainWindow.Show();
-                        this.Close();
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Ошибка при открытии главного окна: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
-                }
-                else
-                {
-                    txtError.Text = "Неверный логин или пароль";
-                }
-            }
+            TryLogin(username, password);
         }
 
-        private void btnRegister_Click(object sender, RoutedEventArgs e)
+        private void BtnRegister_Click(object sender, RoutedEventArgs e)
         {
             ShowRegisterWindow();
         }
@@ -68,7 +45,7 @@ namespace praktik
         {
             if (e.Key == Key.Enter)
             {
-                btnLogin_Click(sender, e);
+                BtnLogin_Click(sender, e);
             }
         }
 
@@ -90,15 +67,17 @@ namespace praktik
 
         private void TryLogin(string username, string password)
         {
-            using var context = new WorkPlannerContext();
-            var user = context.GetUser(username, password);
-            if (user == null)
+            using (var context = new WorkPlannerContext())
             {
-                txtError.Text = "Неверный логин или пароль";
-                return;
-            }
+                var user = context.GetUser(username, password);
+                if (user == null)
+                {
+                    txtError.Text = "Неверный логин или пароль";
+                    return;
+                }
 
-            OpenMainWindow(user);
+                OpenMainWindow(user);
+            }
         }
 
         private void OpenMainWindow(User user)
@@ -110,7 +89,7 @@ namespace praktik
                 mainWindow.Show();
                 Close();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при открытии главного окна: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }

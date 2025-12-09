@@ -37,7 +37,7 @@
 
         <TextBlock Grid.Row="1" Text="Позиции заявки" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,8"/>
         <DataGrid x:Name="dgItems" Grid.Row="2" AutoGenerateColumns="False" CanUserAddRows="False" 
-                  SelectionChanged="dgItems_SelectionChanged" Margin="0,0,0,16">
+                  SelectionChanged="DgItems_SelectionChanged" Margin="0,0,0,16">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Материал" Binding="{Binding Material.Name}" Width="*" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Ед. изм." Binding="{Binding Material.Unit}" Width="80" IsReadOnly="True"/>
@@ -52,7 +52,7 @@
                 <DataGridTemplateColumn Header="Действия" Width="120" MinWidth="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="Удалить" Click="btnDeleteItem_Click" Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"/>
+                            <Button Content="Удалить" Click="BtnDeleteItem_Click" Style="{StaticResource MaterialDesignFlatButton}" Padding="8,4"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -75,19 +75,19 @@
                 <TextBox x:Name="txtItemComment" Grid.Column="2" 
                         materialDesign:HintAssist.Hint="Комментарий" Margin="0,0,8,0"/>
                 <Button x:Name="btnAddItem" Grid.Column="3" Content="Добавить" 
-                       Click="btnAddItem_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                       Click="BtnAddItem_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
             </Grid>
         </GroupBox>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="btnSave" Content="Сохранить черновик" 
-                   Click="btnSave_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                   Click="BtnSave_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                    Margin="0,0,8,0"/>
             <Button x:Name="btnSubmit" Content="Отправить" 
-                   Click="btnSubmit_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                   Click="BtnSubmit_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                    Margin="0,0,8,0"/>
             <Button x:Name="btnCancel" Content="Отмена" 
-                   Click="btnCancel_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                   Click="BtnCancel_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -21,7 +21,7 @@ namespace praktik
             cbRoles.ItemsSource = db.GetRoles();
         }
 
-        private void btnRegister_Click(object sender, RoutedEventArgs e)
+        private void BtnRegister_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtUsername.Text) || 
                 string.IsNullOrWhiteSpace(txtPassword.Password) ||
@@ -46,7 +46,7 @@ namespace praktik
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
@@ -56,7 +56,7 @@ namespace praktik
         {
             if (e.Key == Key.Enter)
             {
-                btnRegister_Click(sender, e);
+                BtnRegister_Click(sender, e);
             }
         }
     }

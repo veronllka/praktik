@@ -232,7 +232,7 @@
                 
                 <Button x:Name="btnLogin" 
                        Content="Войти" 
-                       Click="btnLogin_Click" 
+                       Click="BtnLogin_Click" 
                        Style="{StaticResource PrimaryButtonStyle}"
                        Height="45"
                        Margin="0,0,0,16"/>

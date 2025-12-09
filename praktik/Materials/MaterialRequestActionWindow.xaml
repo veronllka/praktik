@@ -9,7 +9,7 @@
         ResizeMode="NoResize">
     <DockPanel Margin="16">
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button x:Name="btnOk" Content="Подтвердить" Click="btnOk_Click" 
+            <Button x:Name="btnOk" Content="Подтвердить" Click="BtnOk_Click" 
                     Width="140" Height="40" Margin="0,0,8,0" 
                     Background="#7B1FA2" Foreground="White" 
                     BorderThickness="0" FontSize="14" FontWeight="Medium"
@@ -37,7 +37,7 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button x:Name="btnCancel" Content="Отмена" Click="btnCancel_Click" 
+            <Button x:Name="btnCancel" Content="Отмена" Click="BtnCancel_Click" 
                     Width="140" Height="40"
                     Background="Transparent" Foreground="#7B1FA2" 
                     BorderThickness="1" BorderBrush="#7B1FA2" FontSize="14" FontWeight="Medium"
@@ -80,4 +80,3 @@
         </StackPanel>
     </DockPanel>
 </Window>
-

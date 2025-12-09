@@ -106,11 +106,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TaskWindow.xaml">
+    <Page Include="Tasks\TaskWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TaskStatusWindow.xaml">
+    <Page Include="Tasks\TaskStatusWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -118,23 +118,23 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MaterialRequestEditWindow.xaml">
+    <Page Include="Materials\MaterialRequestEditWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MaterialRequestRegistryWindow.xaml">
+    <Page Include="Materials\MaterialRequestRegistryWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="MaterialRequestActionWindow.xaml">
+    <Page Include="Materials\MaterialRequestActionWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TaskSelectionWindow.xaml">
+    <Page Include="Tasks\TaskSelectionWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TaskPrintPreviewWindow.xaml">
+    <Page Include="Tasks\TaskPrintPreviewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -142,7 +142,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TaskViewWindow.xaml">
+    <Page Include="Tasks\TaskViewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -150,7 +150,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="TaskQRCodeWindow.xaml">
+    <Page Include="Tasks\TaskQRCodeWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -166,11 +166,11 @@
       <DependentUpon>LoginWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TaskWindow.xaml.cs">
+    <Compile Include="Tasks\TaskWindow.xaml.cs">
       <DependentUpon>TaskWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TaskStatusWindow.xaml.cs">
+    <Compile Include="Tasks\TaskStatusWindow.xaml.cs">
       <DependentUpon>TaskStatusWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -178,23 +178,23 @@
       <DependentUpon>RegisterWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MaterialRequestEditWindow.xaml.cs">
+    <Compile Include="Materials\MaterialRequestEditWindow.xaml.cs">
       <DependentUpon>MaterialRequestEditWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MaterialRequestRegistryWindow.xaml.cs">
+    <Compile Include="Materials\MaterialRequestRegistryWindow.xaml.cs">
       <DependentUpon>MaterialRequestRegistryWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MaterialRequestActionWindow.xaml.cs">
+    <Compile Include="Materials\MaterialRequestActionWindow.xaml.cs">
       <DependentUpon>MaterialRequestActionWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TaskSelectionWindow.xaml.cs">
+    <Compile Include="Tasks\TaskSelectionWindow.xaml.cs">
       <DependentUpon>TaskSelectionWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TaskPrintPreviewWindow.xaml.cs">
+    <Compile Include="Tasks\TaskPrintPreviewWindow.xaml.cs">
       <DependentUpon>TaskPrintPreviewWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -202,7 +202,7 @@
       <DependentUpon>QRCodeScannerWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TaskViewWindow.xaml.cs">
+    <Compile Include="Tasks\TaskViewWindow.xaml.cs">
       <DependentUpon>TaskViewWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -210,27 +210,27 @@
       <DependentUpon>QuickNoteWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="TaskQRCodeWindow.xaml.cs">
+    <Compile Include="Tasks\TaskQRCodeWindow.xaml.cs">
       <DependentUpon>TaskQRCodeWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Models\WorkPlannerContext.cs" />
-    <Compile Include="Models\User.cs" />
-    <Compile Include="Models\Site.cs" />
-    <Compile Include="Models\Crew.cs" />
-    <Compile Include="Models\Priority.cs" />
-    <Compile Include="Models\TaskStatus.cs" />
-    <Compile Include="Models\Task.cs" />
-    <Compile Include="Models\TaskReport.cs" />
-    <Compile Include="Models\Role.cs" />
-    <Compile Include="Models\Logger.cs" />
-    <Compile Include="Models\MaterialCatalog.cs" />
-    <Compile Include="Models\MaterialRequest.cs" />
-    <Compile Include="Models\MaterialRequestItem.cs" />
-    <Compile Include="Models\MaterialRequestStatusLog.cs" />
-    <Compile Include="Models\MaterialDeliveryDoc.cs" />
+    <Compile Include="Models\Data\WorkPlannerContext.cs" />
+    <Compile Include="Models\Entities\User.cs" />
+    <Compile Include="Models\Entities\Site.cs" />
+    <Compile Include="Models\Entities\Crew.cs" />
+    <Compile Include="Models\Entities\Priority.cs" />
+    <Compile Include="Models\Entities\TaskStatus.cs" />
+    <Compile Include="Models\Entities\Task.cs" />
+    <Compile Include="Models\Entities\TaskReport.cs" />
+    <Compile Include="Models\Entities\Role.cs" />
+    <Compile Include="Models\Infrastructure\Logger.cs" />
+    <Compile Include="Models\Entities\MaterialCatalog.cs" />
+    <Compile Include="Models\Entities\MaterialRequest.cs" />
+    <Compile Include="Models\Entities\MaterialRequestItem.cs" />
+    <Compile Include="Models\Entities\MaterialRequestStatusLog.cs" />
+    <Compile Include="Models\Entities\MaterialDeliveryDoc.cs" />
     <Compile Include="Models\Patterns\WorkPlannerFacade.cs" />
-    <Compile Include="Models\Patterns\RoleWindowFactory.cs" />
+    <Compile Include="Models\Patterns\Factories\RoleWindowFactory.cs" />
     <Compile Include="Models\Patterns\IMaterialRequestState.cs" />
     <Compile Include="Models\Patterns\MaterialRequestContext.cs" />
     <Compile Include="Models\Patterns\States\BaseState.cs" />

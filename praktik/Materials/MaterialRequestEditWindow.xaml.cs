@@ -73,7 +73,7 @@ namespace praktik
             }
         }
 
-        private void btnAddItem_Click(object sender, RoutedEventArgs e)
+        private void BtnAddItem_Click(object sender, RoutedEventArgs e)
         {
             if (cbMaterial.SelectedItem == null)
             {
@@ -101,7 +101,7 @@ namespace praktik
             cbMaterial.SelectedItem = null;
         }
 
-        private void btnDeleteItem_Click(object sender, RoutedEventArgs e)
+        private void BtnDeleteItem_Click(object sender, RoutedEventArgs e)
         {
             if (dgItems.SelectedItem is MaterialRequestItem item)
             {
@@ -109,11 +109,11 @@ namespace praktik
             }
         }
 
-        private void dgItems_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void DgItems_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
         }
 
-        private void btnSave_Click(object sender, RoutedEventArgs e)
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (items.Count == 0)
             {
@@ -166,7 +166,7 @@ namespace praktik
             }
         }
 
-        private void btnSubmit_Click(object sender, RoutedEventArgs e)
+        private void BtnSubmit_Click(object sender, RoutedEventArgs e)
         {
             if (items.Count == 0)
             {
@@ -225,7 +225,7 @@ namespace praktik
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();

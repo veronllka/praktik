@@ -289,14 +289,14 @@
                     
                     <Button x:Name="btnRegister" 
                            Content="Зарегистрироваться" 
-                           Click="btnRegister_Click" 
+                           Click="BtnRegister_Click" 
                            Style="{StaticResource PrimaryButtonStyle}"
                            Height="45"
                            Margin="0,0,0,12"/>
                     
                     <Button x:Name="btnCancel" 
                            Content="Отмена" 
-                           Click="btnCancel_Click" 
+                           Click="BtnCancel_Click" 
                            Style="{StaticResource SecondaryButtonStyle}"
                            Height="45"
                            Margin="0,0,0,16"/>

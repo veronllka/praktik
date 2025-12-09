@@ -15,7 +15,7 @@ namespace praktik
             lblNote.Text = noteLabel + ":";
         }
 
-        private void btnOk_Click(object sender, RoutedEventArgs e)
+        private void BtnOk_Click(object sender, RoutedEventArgs e)
         {
             DocNumber = txtDocNumber.Text;
             Note = txtNote.Text;
@@ -23,7 +23,7 @@ namespace praktik
             Close();
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
