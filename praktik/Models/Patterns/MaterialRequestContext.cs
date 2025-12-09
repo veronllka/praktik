@@ -1,12 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using praktik.Models.Patterns.States;
 
 namespace praktik.Models.Patterns
 {
-  
     public class MaterialRequestContext
     {
+        private static readonly Dictionary<string, Func<IMaterialRequestState>> stateFactories =
+            new Dictionary<string, Func<IMaterialRequestState>>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Draft", () => new DraftState() },
+                { "Submitted", () => new SubmittedState() },
+                { "Approved", () => new ApprovedState() },
+                { "Rejected", () => new RejectedState() },
+                { "Issued", () => new IssuedState() },
+                { "Delivered", () => new DeliveredState() },
+                { "Closed", () => new ClosedState() }
+            };
+
         private IMaterialRequestState currentState;
         private readonly MaterialRequest request;
         private readonly WorkPlannerContext db;
@@ -17,7 +29,7 @@ namespace praktik.Models.Patterns
         {
             this.request = request;
             this.db = db;
-            this.currentState = GetStateByName(request.Status);
+            currentState = GetStateByName(request.Status);
         }
 
         public IMaterialRequestState CurrentState => currentState;
@@ -31,25 +43,13 @@ namespace praktik.Models.Patterns
 
         private IMaterialRequestState GetStateByName(string stateName)
         {
-            switch (stateName)
+            var normalized = stateName?.Trim();
+            if (!string.IsNullOrEmpty(normalized) && stateFactories.TryGetValue(normalized, out var factory))
             {
-                case "Draft":
-                    return new DraftState();
-                case "Submitted":
-                    return new SubmittedState();
-                case "Approved":
-                    return new ApprovedState();
-                case "Rejected":
-                    return new RejectedState();
-                case "Issued":
-                    return new IssuedState();
-                case "Delivered":
-                    return new DeliveredState();
-                case "Closed":
-                    return new ClosedState();
-                default:
-                    throw new ArgumentException($"Неизвестное состояние: {stateName}");
+                return factory();
             }
+
+            throw new ArgumentException($"Неизвестное состояние: {stateName}");
         }
 
         public void LogAction(int userId, string action)

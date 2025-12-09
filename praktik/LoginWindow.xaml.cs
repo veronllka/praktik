@@ -3,8 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using praktik.Models;
-
-using praktik.Models.Patterns;
+using praktik.Models.Patterns.Factories;
 
 namespace praktik
 {
@@ -24,13 +23,12 @@ namespace praktik
 
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                txtSuccess.Text = "";
+                ClearMessages();
                 txtError.Text = "Введите логин и пароль";
                 return;
             }
 
-            txtSuccess.Text = "";
-            txtError.Text = "";
+            ClearMessages();
 
             using (var context = new WorkPlannerContext())
             {
@@ -40,7 +38,7 @@ namespace praktik
                     CurrentUser = user;
                     try
                     {
-                        Window mainWindow = praktik.Models.Patterns.RoleWindowFactory.CreateWindow(user.Role);
+                        Window mainWindow = RoleWindowFactory.CreateWindow(user.Role);
                         mainWindow.Show();
                         this.Close();
                     }
@@ -58,22 +56,12 @@ namespace praktik
 
         private void btnRegister_Click(object sender, RoutedEventArgs e)
         {
-            var registerWindow = new RegisterWindow();
-            if (registerWindow.ShowDialog() == true)
-            {
-                txtError.Text = "";
-                txtSuccess.Text = "Пользователь успешно зарегистрирован";
-            }
+            ShowRegisterWindow();
         }
 
         private void RegisterLink_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            var registerWindow = new RegisterWindow();
-            if (registerWindow.ShowDialog() == true)
-            {
-                txtError.Text = "";
-                txtSuccess.Text = "Пользователь успешно зарегистрирован";
-            }
+            ShowRegisterWindow();
         }
 
         private void InputField_KeyDown(object sender, KeyEventArgs e)
@@ -81,6 +69,50 @@ namespace praktik
             if (e.Key == Key.Enter)
             {
                 btnLogin_Click(sender, e);
+            }
+        }
+
+        private void ClearMessages()
+        {
+            txtSuccess.Text = "";
+            txtError.Text = "";
+        }
+
+        private void ShowRegisterWindow()
+        {
+            var registerWindow = new RegisterWindow();
+            if (registerWindow.ShowDialog() == true)
+            {
+                ClearMessages();
+                txtSuccess.Text = "Пользователь успешно зарегистрирован";
+            }
+        }
+
+        private void TryLogin(string username, string password)
+        {
+            using var context = new WorkPlannerContext();
+            var user = context.GetUser(username, password);
+            if (user == null)
+            {
+                txtError.Text = "Неверный логин или пароль";
+                return;
+            }
+
+            OpenMainWindow(user);
+        }
+
+        private void OpenMainWindow(User user)
+        {
+            CurrentUser = user;
+            try
+            {
+                var mainWindow = RoleWindowFactory.CreateWindow(user.Role);
+                mainWindow.Show();
+                Close();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Ошибка при открытии главного окна: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
