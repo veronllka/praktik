@@ -7,7 +7,7 @@ namespace praktik
 {
     public partial class QuickNoteWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private int taskId;
         private bool hasUnsavedNote = false;
 

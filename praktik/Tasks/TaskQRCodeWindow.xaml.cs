@@ -11,7 +11,7 @@ namespace praktik
 {
     public partial class TaskQRCodeWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private Models.Task task;
         private BitmapSource qrCodeBitmap;
 

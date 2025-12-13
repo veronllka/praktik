@@ -16,7 +16,7 @@ namespace praktik
 {
     public partial class TaskPrintPreviewWindow : Window    
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private Task task;
         private TaskReport lastReport;
 
@@ -209,4 +209,3 @@ namespace praktik
         }
     }
 }
-

@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:praktik"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Регистрация пользователя" Height="750" Width="420" 
+        Title="Регистрация пользователя" Height="820" Width="420" 
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Window.Resources>
@@ -91,7 +92,8 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="6">
                             <ScrollViewer x:Name="PART_ContentHost" 
-                                        Margin="{TemplateBinding Padding}"/>
+                                        Margin="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -202,7 +204,7 @@
             </Ellipse>
         </Grid>
         
-        <Border Width="380" Height="680" 
+        <Border Width="380" 
                 VerticalAlignment="Center" 
                 HorizontalAlignment="Center"
                 Background="White"
@@ -257,10 +259,36 @@
                                   FontWeight="SemiBold"
                                   Foreground="#4A5568"
                                   Margin="0,0,0,8"/>
+                    <Grid>
                         <PasswordBox x:Name="txtPassword" 
                                     Style="{StaticResource ModernPasswordBoxStyle}"
                                     Height="45"
-                                    KeyDown="InputField_KeyDown"/>
+                                    KeyDown="InputField_KeyDown"
+                                    PasswordChanged="TxtPassword_PasswordChanged"
+                                    Visibility="Visible"
+                                    Padding="12,0,40,0"/>
+                        <TextBox x:Name="txtPasswordVisible"
+                                 Style="{StaticResource ModernTextBoxStyle}"
+                                 Height="45"
+                                 KeyDown="InputField_KeyDown"
+                                 TextChanged="TxtPasswordVisible_TextChanged"
+                                 Visibility="Collapsed"
+                                 Padding="12,0,40,0"/>
+                        <Button x:Name="btnTogglePassword"
+                                Width="32" Height="32"
+                                Panel.ZIndex="10"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                Click="BtnTogglePassword_Click"
+                                Style="{x:Null}"
+                                Background="Transparent"
+                                BorderBrush="{x:Null}"
+                                BorderThickness="0"
+                                Cursor="Hand">
+                            <materialDesign:PackIcon x:Name="IconPasswordEye" Kind="EyeOff" Width="20" Height="20" Foreground="#4A5568"/>
+                        </Button>
+                    </Grid>
                     </StackPanel>
                     
                     <StackPanel Margin="0,0,0,18">

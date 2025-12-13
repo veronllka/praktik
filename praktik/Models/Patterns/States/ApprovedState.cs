@@ -3,8 +3,11 @@ using System;
 namespace praktik.Models.Patterns.States
 {
     /// <summary>
-    /// Состояние "Согласована"
-    /// Возможные переходы: → Issued, → Rejected
+    /// Состояние "Согласована" (Approved).
+    /// Заявка успешно прошла согласование.
+    /// Возможные переходы:
+    /// - Issued (Материалы выданы)
+    /// - Rejected (Отклонена, например, при отсутствии материалов)
     /// </summary>
     public class ApprovedState : BaseState
     {
@@ -15,6 +18,12 @@ namespace praktik.Models.Patterns.States
             return targetState == "Issued" || targetState == "Rejected";
         }
 
+        /// <summary>
+        /// Выполняет действие "Выдать материалы".
+        /// Переводит заявку в состояние 'Issued'.
+        /// </summary>
+        /// <param name="context">Контекст заявки.</param>
+        /// <param name="userId">ID пользователя, выдающего материалы.</param>
         public override void Issue(MaterialRequestContext context, int userId)
         {
             if (!CanTransitionTo("Issued"))
@@ -26,6 +35,13 @@ namespace praktik.Models.Patterns.States
             context.LogAction(userId, "Материалы выданы");
         }
 
+        /// <summary>
+        /// Выполняет действие "Отклонить".
+        /// Позволяет отклонить заявку даже после согласования (например, нет на складе).
+        /// Переводит заявку в состояние 'Rejected'.
+        /// </summary>
+        /// <param name="context">Контекст заявки.</param>
+        /// <param name="userId">ID пользователя, отклоняющего заявку.</param>
         public override void Reject(MaterialRequestContext context, int userId)
         {
             if (!CanTransitionTo("Rejected"))

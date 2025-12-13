@@ -7,7 +7,7 @@ namespace praktik
 {
     public partial class TaskStatusWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private Task task;
 
         public TaskStatusWindow(Task task)

@@ -3,8 +3,9 @@ using System;
 namespace praktik.Models.Patterns.States
 {
     /// <summary>
-    /// Состояние "Закрыта"
-    /// Конечное состояние - переходов нет
+    /// Состояние "Закрыта" (Closed).
+    /// Конечное состояние жизненного цикла заявки.
+    /// Переходы из этого состояния невозможны.
     /// </summary>
     public class ClosedState : BaseState
     {

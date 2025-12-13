@@ -11,7 +11,7 @@ namespace praktik
 {
     public partial class TaskWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private Task task;
         private ObservableCollection<MaterialRequestDisplay> materialRequests;
         private bool hasUnsavedNote = false;
@@ -267,7 +267,7 @@ namespace praktik
             lbEvents.ItemsSource = events;
         }
 
-        private void btnAddQuickNote_Click(object sender, RoutedEventArgs e)
+        private void BtnAddQuickNote_Click(object sender, RoutedEventArgs e)
         {
             if (task == null)
             {
@@ -280,14 +280,14 @@ namespace praktik
             txtQuickNote.Focus();
         }
 
-        private void txtQuickNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void TxtQuickNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             var text = txtQuickNote.Text?.Trim() ?? "";
             btnSaveNote.IsEnabled = text.Length >= 3 && text.Length <= 200;
             hasUnsavedNote = !string.IsNullOrWhiteSpace(text);
         }
 
-        private void txtQuickNote_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void TxtQuickNote_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter && btnSaveNote.IsEnabled)
             {
@@ -355,7 +355,7 @@ namespace praktik
             hasUnsavedNote = false;
         }
 
-        private void btnAddEventComment_Click(object sender, RoutedEventArgs e)
+        private void BtnAddEventComment_Click(object sender, RoutedEventArgs e)
         {
             if (task == null)
             {

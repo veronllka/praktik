@@ -131,7 +131,7 @@
                                              Margin="0,0,0,8"/>
                                     <Button Content="Добавить" 
                                             x:Name="btnAddEventComment"
-                                            Click="btnAddEventComment_Click"
+                                            Click="BtnAddEventComment_Click"
                                             Width="100" 
                                             Height="32"
                                             HorizontalAlignment="Left"
@@ -145,8 +145,8 @@
                                         Width="350" 
                                         Height="32" 
                                         Margin="0,0,10,0"
-                                        TextChanged="txtQuickNote_TextChanged"
-                                        KeyDown="txtQuickNote_KeyDown"
+                                        TextChanged="TxtQuickNote_TextChanged"
+                                        KeyDown="TxtQuickNote_KeyDown"
                                         VerticalContentAlignment="Center"
                                         FontSize="13"
                                         Padding="8,0">
@@ -175,7 +175,7 @@
                             </StackPanel>
                             <Button x:Name="btnAddQuickNote" 
                                    Content="+ заметка" 
-                                   Click="btnAddQuickNote_Click" 
+                                   Click="BtnAddQuickNote_Click" 
                                    MinWidth="130" 
                                    Padding="10,0"
                                    Height="30"

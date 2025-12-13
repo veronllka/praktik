@@ -3,8 +3,10 @@ using System;
 namespace praktik.Models.Patterns.States
 {
     /// <summary>
-    /// Состояние "Выдана"
-    /// Возможные переходы: → Delivered
+    /// Состояние "Выдана" (Issued).
+    /// Материалы выданы со склада.
+    /// Возможные переходы:
+    /// - Delivered (Доставка на объект)
     /// </summary>
     public class IssuedState : BaseState
     {
@@ -15,6 +17,12 @@ namespace praktik.Models.Patterns.States
             return targetState == "Delivered";
         }
 
+        /// <summary>
+        /// Выполняет действие "Доставить материалы".
+        /// Переводит заявку в состояние 'Delivered'.
+        /// </summary>
+        /// <param name="context">Контекст заявки.</param>
+        /// <param name="userId">ID пользователя, отмечающего доставку.</param>
         public override void Deliver(MaterialRequestContext context, int userId)
         {
             if (!CanTransitionTo("Delivered"))

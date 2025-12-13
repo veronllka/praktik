@@ -44,7 +44,7 @@ namespace praktik
             }
         }
 
-        private void btnOpenTask_Click(object sender, RoutedEventArgs e)
+        private void BtnOpenTask_Click(object sender, RoutedEventArgs e)
         {
             if (!TaskId.HasValue)
             {
@@ -72,13 +72,13 @@ namespace praktik
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
         }
 
-        private void btnSelectImage_Click(object sender, RoutedEventArgs e)
+        private void BtnSelectImage_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -182,4 +182,3 @@ namespace praktik
         }
     }
 }
-

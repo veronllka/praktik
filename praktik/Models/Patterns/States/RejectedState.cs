@@ -3,8 +3,9 @@ using System;
 namespace praktik.Models.Patterns.States
 {
     /// <summary>
-    /// Состояние "Отклонена"
-    /// Конечное состояние - переходов нет
+    /// Состояние "Отклонена" (Rejected).
+    /// Заявка отклонена.
+    /// Конечное состояние (в текущей реализации).
     /// </summary>
     public class RejectedState : BaseState
     {

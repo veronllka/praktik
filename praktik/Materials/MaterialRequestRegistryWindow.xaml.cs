@@ -11,7 +11,7 @@ namespace praktik
 {
     public partial class MaterialRequestRegistryWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private ObservableCollection<MaterialRequestRegistryDisplay> requests;
         private MaterialRequest selectedRequest;
 

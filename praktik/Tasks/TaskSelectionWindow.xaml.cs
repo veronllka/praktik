@@ -7,7 +7,7 @@ namespace praktik
 {
     public partial class TaskSelectionWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         public Task SelectedTask { get; private set; }
 
         public TaskSelectionWindow()

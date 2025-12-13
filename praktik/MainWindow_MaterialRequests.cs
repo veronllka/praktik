@@ -64,6 +64,8 @@ namespace praktik
                 var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId);
                 materialRequests.Add(new MaterialRequestRegistryDisplay(req, task));
             }
+
+            UpdateMaterialRequestsPlaceholder();
         }
 
         private void MRFilter_Changed(object sender, EventArgs e)
@@ -103,6 +105,18 @@ namespace praktik
                 dgMRItems.Visibility = Visibility.Collapsed;
                 UpdateMaterialRequestActionButtons();
             }
+        }
+
+        private void UpdateMaterialRequestsPlaceholder()
+        {
+            if (MaterialRequestsPlaceholder == null || materialRequests == null)
+            {
+                return;
+            }
+
+            MaterialRequestsPlaceholder.Visibility = materialRequests.Count == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void ShowMaterialRequestDetails(MaterialRequest request)

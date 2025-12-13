@@ -5,16 +5,27 @@ using praktik.Models;
 
 namespace praktik.Models.Patterns
 {
-   
+    /// <summary>
+    /// Фасад для упрощения взаимодействия с бизнес-логикой приложения.
+    /// Предоставляет методы для работы с задачами, заявками на материалы и отчетами.
+    /// </summary>
     public class WorkPlannerFacade
     {
         private readonly WorkPlannerContext db;
 
+        /// <summary>
+        /// Инициализирует новый экземпляр класса <see cref="WorkPlannerFacade"/>.
+        /// Создает новый контекст базы данных.
+        /// </summary>
         public WorkPlannerFacade()
         {
             db = new WorkPlannerContext();
         }
 
+        /// <summary>
+        /// Инициализирует новый экземпляр класса <see cref="WorkPlannerFacade"/> с существующим контекстом.
+        /// </summary>
+        /// <param name="context">Контекст базы данных.</param>
         public WorkPlannerFacade(WorkPlannerContext context)
         {
             db = context;
@@ -22,6 +33,13 @@ namespace praktik.Models.Patterns
 
         #region Task Operations
 
+        /// <summary>
+        /// Получает список задач с возможностью фильтрации.
+        /// </summary>
+        /// <param name="siteId">ID площадки (опционально).</param>
+        /// <param name="crewId">ID бригады (опционально).</param>
+        /// <param name="statusId">ID статуса задачи (опционально).</param>
+        /// <returns>Список задач, соответствующих критериям фильтрации.</returns>
         public List<Task> GetTasksWithFilters(int? siteId = null, int? crewId = null, int? statusId = null)
         {
             var tasks = db.GetTasks();
@@ -44,6 +62,13 @@ namespace praktik.Models.Patterns
             return tasks;
         }
 
+        /// <summary>
+        /// Создает новую задачу.
+        /// </summary>
+        /// <param name="task">Объект задачи.</param>
+        /// <param name="userId">ID пользователя, создающего задачу.</param>
+        /// <param name="errorMessage">Сообщение об ошибке, если создание не удалось.</param>
+        /// <returns>True, если задача успешно создана; иначе False.</returns>
         public bool CreateTask(Task task, int userId, out string errorMessage)
         {
             errorMessage = null;
@@ -77,6 +102,14 @@ namespace praktik.Models.Patterns
             }
         }
 
+        /// <summary>
+        /// Обновляет статус существующей задачи.
+        /// </summary>
+        /// <param name="taskId">ID задачи.</param>
+        /// <param name="newStatusId">Новый ID статуса.</param>
+        /// <param name="userId">ID пользователя, выполняющего обновление.</param>
+        /// <param name="errorMessage">Сообщение об ошибке, если обновление не удалось.</param>
+        /// <returns>True, если статус успешно обновлен; иначе False.</returns>
         public bool UpdateTaskStatus(int taskId, int newStatusId, int userId, out string errorMessage)
         {
             errorMessage = null;
@@ -90,8 +123,7 @@ namespace praktik.Models.Patterns
                     return false;
                 }
 
-                var oldStatusObj = db.GetTaskStatuses().FirstOrDefault(s => s.TaskStatusId == task.TaskStatusId);
-                var oldStatus = oldStatusObj?.TaskStatusName ?? "Unknown";
+                var oldStatus = task.TaskStatus?.TaskStatusName ?? "Unknown";
                 task.TaskStatusId = newStatusId;
                 task.UpdatedAt = DateTime.Now;
                 db.UpdateTask(task);
@@ -110,8 +142,10 @@ namespace praktik.Models.Patterns
         }
 
         /// <summary>
-        /// Получить задачи по дате
+        /// Получает список задач, активных на указанную дату.
         /// </summary>
+        /// <param name="date">Дата для поиска активных задач.</param>
+        /// <returns>Список задач, активных в указанную дату.</returns>
         public List<Task> GetTasksByDate(DateTime date)
         {
             return db.GetTasks()
@@ -123,6 +157,14 @@ namespace praktik.Models.Patterns
 
         #region Material Request Operations
 
+        /// <summary>
+        /// Получает заявки на материалы с возможностью гибкой фильтрации.
+        /// </summary>
+        /// <param name="taskId">ID задачи (опционально).</param>
+        /// <param name="siteId">ID площадки (опционально).</param>
+        /// <param name="crewId">ID бригады (опционально).</param>
+        /// <param name="status">Статус заявки текстом ("Все" для отмены фильтра).</param>
+        /// <returns>Список отфильтрованных заявок на материалы.</returns>
         public List<MaterialRequest> GetMaterialRequestsWithDetails(int? taskId = null, int? siteId = null, int? crewId = null, string status = null)
         {
             var requests = db.GetMaterialRequests(taskId, null);
@@ -145,6 +187,14 @@ namespace praktik.Models.Patterns
             return requests;
         }
 
+        /// <summary>
+        /// Обрабатывает переход заявки на материалы в новое состояние.
+        /// </summary>
+        /// <param name="requestId">ID заявки.</param>
+        /// <param name="action">Действие (submit, approve, reject, issue, deliver, close).</param>
+        /// <param name="userId">ID пользователя, выполняющего действие.</param>
+        /// <param name="errorMessage">Сообщение об ошибке, если действие не удалось.</param>
+        /// <returns>True, если действие выполнено успешно; иначе False.</returns>
         public bool ProcessMaterialRequest(int requestId, string action, int userId, out string errorMessage)
         {
             errorMessage = null;
@@ -203,7 +253,13 @@ namespace praktik.Models.Patterns
 
         #region Report Operations
 
-     
+        /// <summary>
+        /// Добавляет отчет (запись истории) к задаче.
+        /// </summary>
+        /// <param name="taskId">ID задачи.</param>
+        /// <param name="userId">ID пользователя, создающего запись.</param>
+        /// <param name="reportText">Текст отчета.</param>
+        /// <returns>True, если отчет добавлен успешно; иначе False.</returns>
         public bool AddTaskReport(int taskId, int userId, string reportText)
         {
             try
@@ -217,6 +273,11 @@ namespace praktik.Models.Patterns
             }
         }
 
+        /// <summary>
+        /// Получает список отчетов для конкретной задачи.
+        /// </summary>
+        /// <param name="taskId">ID задачи.</param>
+        /// <returns>Список отчетов.</returns>
         public List<TaskReport> GetTaskReports(int taskId)
         {
             return db.GetTaskReports(taskId);
@@ -226,10 +287,29 @@ namespace praktik.Models.Patterns
 
         #region Reference Data
 
+        /// <summary>
+        /// Получает список всех строительных площадок.
+        /// </summary>
         public List<Site> GetSites() => db.GetSites();
+
+        /// <summary>
+        /// Получает список всех бригад.
+        /// </summary>
         public List<Crew> GetCrews() => db.GetCrews();
+
+        /// <summary>
+        /// Получает список всех приоритетов задач.
+        /// </summary>
         public List<Priority> GetPriorities() => db.GetPriorities();
+
+        /// <summary>
+        /// Получает список всех возможных статусов задач.
+        /// </summary>
         public List<TaskStatus> GetTaskStatuses() => db.GetTaskStatuses();
+
+        /// <summary>
+        /// Получает список всех пользователей.
+        /// </summary>
         public List<User> GetUsers() => db.GetUsers();
 
         #endregion

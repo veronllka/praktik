@@ -6,6 +6,10 @@ using System.Windows;
 
 namespace praktik.Models
 {
+    /// <summary>
+    /// Контекст базы данных для планировщика работ.
+    /// Отвечает за взаимодействие с базой данных, включая CRUD операции для пользователей, задач, бригад и объектов.
+    /// </summary>
     public class WorkPlannerContext : IDisposable
     {
         private string connectionString;
@@ -26,6 +30,10 @@ namespace praktik.Models
             connectionString = cs != null ? cs.ConnectionString : "Server=WIN-IT3KG728UQJ\\SQLEXPRESS;Database=BrigadePlanner;Trusted_Connection=True;MultipleActiveResultSets=True;";
         }
 
+        /// <summary>
+        /// Получает список всех пользователей из базы данных.
+        /// </summary>
+        /// <returns>Список объектов User.</returns>
         public List<User> GetUsers()
         {
             var users = new List<User>();
@@ -53,6 +61,13 @@ namespace praktik.Models
             return users;
         }
 
+        /// <summary>
+        /// Получает пользователя по имени пользователя и паролю.
+        /// Используется для аутентификации.
+        /// </summary>
+        /// <param name="username">Имя пользователя.</param>
+        /// <param name="password">Пароль (в открытом виде).</param>
+        /// <returns>Объект User, если найден, иначе null.</returns>
         public User GetUser(string username, string password)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -173,6 +188,10 @@ namespace praktik.Models
             return crews;
         }
 
+        /// <summary>
+        /// Получает список всех задач со связанными данными (площадки, бригады, приоритеты, статусы).
+        /// </summary>
+        /// <returns>Список объектов Task.</returns>
         public List<Models.Task> GetTasks()
         {
             var tasks = new List<Models.Task>();
@@ -214,6 +233,12 @@ namespace praktik.Models
             return tasks;
         }
 
+        /// <summary>
+        /// Получает полную информацию о задаче по её идентификатору.
+        /// Включает данные о бригадире, статусе и приоритете.
+        /// </summary>
+        /// <param name="taskId">Идентификатор задачи.</param>
+        /// <returns>Объект Task или null, если задача не найдена.</returns>
         public Models.Task GetTaskById(int taskId)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -358,6 +383,10 @@ namespace praktik.Models
             }
         }
 
+        /// <summary>
+        /// Добавляет новую задачу в базу данных.
+        /// </summary>
+        /// <param name="task">Объект задачи для добавления.</param>
         public void AddTask(Models.Task task)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -378,6 +407,10 @@ namespace praktik.Models
             }
         }
 
+        /// <summary>
+        /// Обновляет существующую задачу в базе данных.
+        /// </summary>
+        /// <param name="task">Объект задачи с обновленными данными.</param>
         public void UpdateTask(Models.Task task)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -385,7 +418,7 @@ namespace praktik.Models
                 connection.Open();
                 var command = new SqlCommand(@"
                     UPDATE Tasks SET SiteId = @siteId, CrewId = @crewId, Title = @title, Description = @description,
-                    StartDate = @startDate, EndDate = @endDate, PriorityId = @priorityId
+                    StartDate = @startDate, EndDate = @endDate, PriorityId = @priorityId, StatusId = @statusId
                     WHERE TaskId = @taskId", connection);
                 command.Parameters.AddWithValue("@siteId", task.SiteId);
                 command.Parameters.AddWithValue("@crewId", task.CrewId ?? (object)DBNull.Value);
@@ -394,6 +427,7 @@ namespace praktik.Models
                 command.Parameters.AddWithValue("@startDate", task.StartDate);
                 command.Parameters.AddWithValue("@endDate", task.EndDate);
                 command.Parameters.AddWithValue("@priorityId", task.PriorityId);
+                command.Parameters.AddWithValue("@statusId", task.TaskStatusId);
                 command.Parameters.AddWithValue("@taskId", task.TaskId);
                 command.ExecuteNonQuery();
             }
@@ -491,6 +525,13 @@ namespace praktik.Models
             return roles;
         }
 
+        /// <summary>
+        /// Регистрирует нового пользователя в системе.
+        /// </summary>
+        /// <param name="loginName">Логин.</param>
+        /// <param name="password">Пароль.</param>
+        /// <param name="fullName">Полное имя.</param>
+        /// <param name="roleId">ID назначенной роли.</param>
         public void RegisterUser(string loginName, string password, string fullName, int roleId)
         {
             using (var connection = new SqlConnection(connectionString))

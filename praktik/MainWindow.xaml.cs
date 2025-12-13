@@ -11,9 +11,13 @@ using System.IO;
 
 namespace praktik
 {
+    /// <summary>
+    /// Главное окно приложения.
+    /// Управляет отображением задач, навигацией и взаимодействием ролей пользователей.
+    /// </summary>
     public partial class MainWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private readonly WorkPlannerFacade facade; 
         private Site selectedSite;
         private Crew selectedCrew;
@@ -187,13 +191,56 @@ namespace praktik
             HelpJournalExpander.Visibility = journal ? Visibility.Visible : Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Загружает все необходимые данные для отображения (задачи, площадки, бригады и отчеты).
+        /// </summary>
         private void LoadData()
         {
+            CheckOverdueTasks();
             LoadSites();
             LoadCrews();
             LoadTasks();
             LoadTaskReports();
             LoadFilters();
+        }
+
+        /// <summary>
+        /// Проверяет задачи на просроченность.
+        /// Если дата окончания задачи прошла, её статус автоматически меняется на "Просрочено".
+        /// </summary>
+        private void CheckOverdueTasks()
+        {
+            try
+            {
+                var tasks = db.GetTasks();
+                var overdueStatus = db.GetTaskStatuses().FirstOrDefault(s => s.TaskStatusName == "Просрочено");
+
+                if (overdueStatus == null) return;
+
+                bool hasChanges = false;
+                foreach (var task in tasks)
+                {
+                    if (task.TaskStatus?.TaskStatusName != "Завершено" && 
+                        task.TaskStatus?.TaskStatusName != "Просрочено" &&
+                        task.EndDate < DateTime.Now)
+                    {
+                        task.TaskStatusId = overdueStatus.TaskStatusId;
+                        db.UpdateTask(task);
+                        hasChanges = true;
+                    }
+                }
+
+                if (hasChanges)
+                {
+                    // No explicit save needed if methods save immediately, but if EF context is shared it might be needed.
+                    // Assuming db.UpdateTask handles saving.
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently fail or log, to not disrupt startup
+                Console.WriteLine($"Ошибка обновления статусов задач: {ex.Message}");
+            }
         }
 
         private void LoadSites()
@@ -874,6 +921,12 @@ namespace praktik
             {
                 MessageBox.Show($"Ошибка формирования отчёта: {ex.Message}");
             }
+        }
+
+        private void btnOpenReports_Click(object sender, RoutedEventArgs e)
+        {
+            var wnd = new ReportsWindow();
+            wnd.ShowDialog();
         }
 
         private string GetReportsFolderPath()

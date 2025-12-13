@@ -2,13 +2,20 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Controls;
 using praktik.Models;
 
 namespace praktik
 {
+    /// <summary>
+    /// Окно регистрации нового пользователя.
+    /// Позволяет создать новую учетную запись с выбором роли.
+    /// </summary>
     public partial class RegisterWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private bool isPasswordVisible = false;
+        private string currentPassword = string.Empty;
 
         public RegisterWindow()
         {
@@ -21,10 +28,14 @@ namespace praktik
             cbRoles.ItemsSource = db.GetRoles();
         }
 
+        /// <summary>
+        /// Обработчик нажатия кнопки регистрации.
+        /// Проверяет введенные данные и создает нового пользователя в базе.
+        /// </summary>
         private void BtnRegister_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtUsername.Text) || 
-                string.IsNullOrWhiteSpace(txtPassword.Password) ||
+                string.IsNullOrWhiteSpace(currentPassword) ||
                 string.IsNullOrWhiteSpace(txtFullName.Text) ||
                 cbRoles.SelectedItem == null)
             {
@@ -35,7 +46,7 @@ namespace praktik
             try
             {
                 var selectedRole = cbRoles.SelectedItem as Role;
-                db.RegisterUser(txtUsername.Text.Trim(), txtPassword.Password, txtFullName.Text.Trim(), selectedRole.RoleId);
+                db.RegisterUser(txtUsername.Text.Trim(), currentPassword, txtFullName.Text.Trim(), selectedRole.RoleId);
                 
                 DialogResult = true;
                 Close();
@@ -57,6 +68,46 @@ namespace praktik
             if (e.Key == Key.Enter)
             {
                 BtnRegister_Click(sender, e);
+            }
+        }
+
+        private void BtnTogglePassword_Click(object sender, RoutedEventArgs e)
+        {
+            isPasswordVisible = !isPasswordVisible;
+            UpdatePasswordVisibility();
+        }
+
+        private void TxtPassword_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (!isPasswordVisible)
+            {
+                currentPassword = txtPassword.Password;
+            }
+        }
+
+        private void TxtPasswordVisible_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            if (isPasswordVisible)
+            {
+                currentPassword = txtPasswordVisible.Text;
+            }
+        }
+
+        private void UpdatePasswordVisibility()
+        {
+            if (isPasswordVisible)
+            {
+                txtPasswordVisible.Text = currentPassword;
+                txtPasswordVisible.Visibility = Visibility.Visible;
+                txtPassword.Visibility = Visibility.Collapsed;
+                IconPasswordEye.Kind = MaterialDesignThemes.Wpf.PackIconKind.Eye;
+            }
+            else
+            {
+                txtPassword.Password = currentPassword;
+                txtPassword.Visibility = Visibility.Visible;
+                txtPasswordVisible.Visibility = Visibility.Collapsed;
+                IconPasswordEye.Kind = MaterialDesignThemes.Wpf.PackIconKind.EyeOff;
             }
         }
     }

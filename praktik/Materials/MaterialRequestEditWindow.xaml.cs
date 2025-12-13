@@ -8,7 +8,7 @@ namespace praktik
 {
     public partial class MaterialRequestEditWindow : Window
     {
-        private WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerContext db = new WorkPlannerContext();
         private MaterialRequest request;
         private int taskId;
         private ObservableCollection<MaterialRequestItem> items;

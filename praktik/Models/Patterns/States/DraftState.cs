@@ -3,8 +3,10 @@ using System;
 namespace praktik.Models.Patterns.States
 {
     /// <summary>
-    /// Состояние "Черновик"
-    /// Возможные переходы: → Submitted
+    /// Состояние "Черновик" (Draft).
+    /// Начальное состояние заявки. Можно редактировать.
+    /// Возможные переходы:
+    /// - Submitted (Отправка на согласование)
     /// </summary>
     public class DraftState : BaseState
     {
@@ -15,6 +17,12 @@ namespace praktik.Models.Patterns.States
             return targetState == "Submitted";
         }
 
+        /// <summary>
+        /// Выполняет действие "Отправить на согласование".
+        /// Переводит заявку в состояние 'Submitted'.
+        /// </summary>
+        /// <param name="context">Контекст заявки.</param>
+        /// <param name="userId">ID пользователя, отправляющего заявку.</param>
         public override void Submit(MaterialRequestContext context, int userId)
         {
             if (!CanTransitionTo("Submitted"))
