@@ -12,6 +12,7 @@ namespace praktik.Models
     /// </summary>
     public class WorkPlannerContext : IDisposable
     {
+        private const int DefaultCrewEmployeeRoleId = 3;
         private string connectionString;
         private SqlConnection connection;
 
@@ -31,7 +32,7 @@ namespace praktik.Models
         }
 
         /// <summary>
-        /// Получает список всех пользователей из базы данных.
+        /// Получает список активных пользователей из базы данных.
         /// </summary>
         /// <returns>Список объектов User.</returns>
         public List<User> GetUsers()
@@ -40,10 +41,11 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"SELECT u.UserId, u.LoginName, u.PasswordPlain, r.RoleName
+                var command = new SqlCommand(@"SELECT u.UserId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
                                               FROM Users u
-                                              LEFT JOIN UserRoles ur ON ur.UserId = u.UserId
-                                              LEFT JOIN Roles r ON r.RoleId = ur.RoleId", connection);
+                                              LEFT JOIN Roles r ON r.RoleId = u.RoleId
+                                              WHERE u.IsActive = 1
+                                              ORDER BY COALESCE(NULLIF(u.FullName, ''), u.LoginName)", connection);
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -52,6 +54,7 @@ namespace praktik.Models
                         {
                             UserId = (int)reader["UserId"],
                             Username = (string)reader["LoginName"],
+                            FullName = reader["FullName"] != DBNull.Value ? (string)reader["FullName"] : null,
                             Password = (string)reader["PasswordPlain"],
                             Role = reader["RoleName"] != DBNull.Value ? (string)reader["RoleName"] : null
                         });
@@ -73,11 +76,12 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.LoginName, u.PasswordPlain, r.RoleName
+                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
                                               FROM Users u
-                                              LEFT JOIN UserRoles ur ON ur.UserId = u.UserId
-                                              LEFT JOIN Roles r ON r.RoleId = ur.RoleId
-                                              WHERE u.LoginName = @username AND u.PasswordPlain = @password", connection);
+                                              LEFT JOIN Roles r ON r.RoleId = u.RoleId
+                                              WHERE u.LoginName = @username
+                                                AND u.PasswordPlain = @password
+                                                AND u.IsActive = 1", connection);
                 command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@password", password);
                 using (var reader = command.ExecuteReader())
@@ -88,6 +92,7 @@ namespace praktik.Models
                         {
                             UserId = (int)reader["UserId"],
                             Username = (string)reader["LoginName"],
+                            FullName = reader["FullName"] != DBNull.Value ? (string)reader["FullName"] : null,
                             Password = (string)reader["PasswordPlain"],
                             Role = reader["RoleName"] != DBNull.Value ? (string)reader["RoleName"] : null
                         };
@@ -170,7 +175,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("SELECT c.CrewId, c.CrewName, c.ForemanUserId, u.LoginName as BrigadierName FROM Crews c LEFT JOIN Users u ON c.ForemanUserId = u.UserId", connection);
+                var command = new SqlCommand("SELECT c.CrewId, c.CrewName, c.ForemanUserId, COALESCE(NULLIF(u.FullName, ''), u.LoginName) as BrigadierName FROM Crews c LEFT JOIN Users u ON c.ForemanUserId = u.UserId", connection);
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -186,6 +191,214 @@ namespace praktik.Models
                 }
             }
             return crews;
+        }
+
+        public List<CrewMember> GetCrewMembers(int crewId, bool activeOnly = true)
+        {
+            var members = new List<CrewMember>();
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var sql = @"
+                    SELECT cm.CrewId, cm.UserId, cm.JoinedAt, cm.LeftAt,
+                           u.LoginName, u.FullName, r.RoleName
+                    FROM CrewMembers cm
+                    INNER JOIN Users u ON u.UserId = cm.UserId
+                    LEFT JOIN Roles r ON r.RoleId = u.RoleId
+                    WHERE cm.CrewId = @crewId";
+
+                if (activeOnly)
+                {
+                    sql += " AND cm.LeftAt IS NULL";
+                }
+
+                sql += " ORDER BY CASE WHEN cm.LeftAt IS NULL THEN 0 ELSE 1 END, cm.JoinedAt DESC, u.LoginName";
+
+                var command = new SqlCommand(sql, connection);
+                command.Parameters.AddWithValue("@crewId", crewId);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        members.Add(new CrewMember
+                        {
+                            CrewId = Convert.ToInt32(reader["CrewId"]),
+                            UserId = Convert.ToInt32(reader["UserId"]),
+                            JoinedAt = Convert.ToDateTime(reader["JoinedAt"]),
+                            LeftAt = reader["LeftAt"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["LeftAt"]) : null,
+                            User = new User
+                            {
+                                UserId = Convert.ToInt32(reader["UserId"]),
+                                Username = reader["LoginName"] as string ?? string.Empty,
+                                FullName = reader["FullName"] as string,
+                                Role = reader["RoleName"] as string
+                            }
+                        });
+                    }
+                }
+            }
+
+            return members;
+        }
+
+        public List<User> GetAvailableUsersForCrew(int crewId)
+        {
+            var users = new List<User>();
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+                    SELECT u.UserId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                    FROM Users u
+                    LEFT JOIN Roles r ON r.RoleId = u.RoleId
+                    WHERE u.IsActive = 1
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM CrewMembers cm
+                          WHERE cm.CrewId = @crewId
+                            AND cm.UserId = u.UserId
+                            AND cm.LeftAt IS NULL
+                      )
+                    ORDER BY COALESCE(NULLIF(u.FullName, ''), u.LoginName)", connection);
+
+                command.Parameters.AddWithValue("@crewId", crewId);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        users.Add(new User
+                        {
+                            UserId = Convert.ToInt32(reader["UserId"]),
+                            Username = reader["LoginName"] as string ?? string.Empty,
+                            FullName = reader["FullName"] as string,
+                            Password = reader["PasswordPlain"] as string,
+                            Role = reader["RoleName"] as string
+                        });
+                    }
+                }
+            }
+
+            return users;
+        }
+
+        public bool AddCrewMember(int crewId, int userId, DateTime joinedAt, out string errorMessage)
+        {
+            errorMessage = null;
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    var checkByDateCommand = new SqlCommand(@"
+                        SELECT COUNT(1)
+                        FROM CrewMembers
+                        WHERE CrewId = @crewId AND UserId = @userId AND JoinedAt = @joinedAt", connection);
+                    checkByDateCommand.Parameters.AddWithValue("@crewId", crewId);
+                    checkByDateCommand.Parameters.AddWithValue("@userId", userId);
+                    checkByDateCommand.Parameters.AddWithValue("@joinedAt", joinedAt.Date);
+
+                    if (Convert.ToInt32(checkByDateCommand.ExecuteScalar()) > 0)
+                    {
+                        errorMessage = "На выбранную дату для этого сотрудника уже есть запись в составе бригады. Выберите другую дату включения.";
+                        return false;
+                    }
+
+                    var checkCommand = new SqlCommand(@"
+                        SELECT COUNT(1)
+                        FROM CrewMembers
+                        WHERE CrewId = @crewId AND UserId = @userId AND LeftAt IS NULL", connection);
+                    checkCommand.Parameters.AddWithValue("@crewId", crewId);
+                    checkCommand.Parameters.AddWithValue("@userId", userId);
+
+                    if (Convert.ToInt32(checkCommand.ExecuteScalar()) > 0)
+                    {
+                        errorMessage = "Сотрудник уже состоит в этой бригаде";
+                        return false;
+                    }
+
+                    var command = new SqlCommand(@"
+                        INSERT INTO CrewMembers (CrewId, UserId, JoinedAt, LeftAt)
+                        VALUES (@crewId, @userId, @joinedAt, NULL)", connection);
+                    command.Parameters.AddWithValue("@crewId", crewId);
+                    command.Parameters.AddWithValue("@userId", userId);
+                    command.Parameters.AddWithValue("@joinedAt", joinedAt.Date);
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is SqlException sqlEx && (sqlEx.Number == 2627 || sqlEx.Number == 2601))
+                {
+                    errorMessage = "Запись с таким сотрудником и датой уже существует. Укажите другую дату включения.";
+                    return false;
+                }
+
+                errorMessage = $"Ошибка при добавлении сотрудника: {ex.Message}";
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool RemoveCrewMember(int crewId, int userId, DateTime leftAt, out string errorMessage)
+        {
+            errorMessage = null;
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    var selectCommand = new SqlCommand(@"
+                        SELECT TOP(1) JoinedAt
+                        FROM CrewMembers
+                        WHERE CrewId = @crewId AND UserId = @userId AND LeftAt IS NULL
+                        ORDER BY JoinedAt DESC", connection);
+                    selectCommand.Parameters.AddWithValue("@crewId", crewId);
+                    selectCommand.Parameters.AddWithValue("@userId", userId);
+
+                    var joinedAtObj = selectCommand.ExecuteScalar();
+                    if (joinedAtObj == null || joinedAtObj == DBNull.Value)
+                    {
+                        errorMessage = "Активная запись о сотруднике в этой бригаде не найдена";
+                        return false;
+                    }
+
+                    var joinedAt = Convert.ToDateTime(joinedAtObj).Date;
+                    if (leftAt.Date < joinedAt)
+                    {
+                        errorMessage = "Дата выбытия не может быть раньше даты включения";
+                        return false;
+                    }
+
+                    var updateCommand = new SqlCommand(@"
+                        UPDATE CrewMembers
+                        SET LeftAt = @leftAt
+                        WHERE CrewId = @crewId AND UserId = @userId AND JoinedAt = @joinedAt AND LeftAt IS NULL", connection);
+                    updateCommand.Parameters.AddWithValue("@leftAt", leftAt.Date);
+                    updateCommand.Parameters.AddWithValue("@crewId", crewId);
+                    updateCommand.Parameters.AddWithValue("@userId", userId);
+                    updateCommand.Parameters.AddWithValue("@joinedAt", joinedAt);
+
+                    if (updateCommand.ExecuteNonQuery() == 0)
+                    {
+                        errorMessage = "Не удалось обновить запись состава бригады";
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Ошибка при исключении сотрудника: {ex.Message}";
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -389,12 +602,18 @@ namespace praktik.Models
         /// <param name="task">Объект задачи для добавления.</param>
         public void AddTask(Models.Task task)
         {
+            if (!task.CrewId.HasValue)
+            {
+                throw new InvalidOperationException("Для задачи нужно выбрать бригаду.");
+            }
+
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    INSERT INTO Tasks (SiteId, CrewId, Title, Description, StartDate, EndDate, PriorityId, StatusId)
-                    VALUES (@siteId, @crewId, @title, @description, @startDate, @endDate, @priorityId, @statusId)", connection);
+                    INSERT INTO Tasks (SiteId, CrewId, Title, Description, StartDate, EndDate, PriorityId, StatusId, LabelId)
+                    VALUES (@siteId, @crewId, @title, @description, @startDate, @endDate, @priorityId, @statusId, @labelId);
+                    SELECT CAST(SCOPE_IDENTITY() AS INT);", connection);
                 command.Parameters.AddWithValue("@siteId", task.SiteId);
                 command.Parameters.AddWithValue("@crewId", task.CrewId ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("@title", task.Title);
@@ -403,7 +622,12 @@ namespace praktik.Models
                 command.Parameters.AddWithValue("@endDate", task.EndDate);
                 command.Parameters.AddWithValue("@priorityId", task.PriorityId);
                 command.Parameters.AddWithValue("@statusId", task.TaskStatusId);
-                command.ExecuteNonQuery();
+                command.Parameters.AddWithValue("@labelId", task.LabelId ?? (object)DBNull.Value);
+                var createdTaskId = command.ExecuteScalar();
+                if (createdTaskId != null && createdTaskId != DBNull.Value)
+                {
+                    task.TaskId = Convert.ToInt32(createdTaskId);
+                }
             }
         }
 
@@ -413,12 +637,17 @@ namespace praktik.Models
         /// <param name="task">Объект задачи с обновленными данными.</param>
         public void UpdateTask(Models.Task task)
         {
+            if (!task.CrewId.HasValue)
+            {
+                throw new InvalidOperationException("Для задачи нужно выбрать бригаду.");
+            }
+
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"
                     UPDATE Tasks SET SiteId = @siteId, CrewId = @crewId, Title = @title, Description = @description,
-                    StartDate = @startDate, EndDate = @endDate, PriorityId = @priorityId, StatusId = @statusId
+                    StartDate = @startDate, EndDate = @endDate, PriorityId = @priorityId, StatusId = @statusId, LabelId = @labelId
                     WHERE TaskId = @taskId", connection);
                 command.Parameters.AddWithValue("@siteId", task.SiteId);
                 command.Parameters.AddWithValue("@crewId", task.CrewId ?? (object)DBNull.Value);
@@ -428,6 +657,7 @@ namespace praktik.Models
                 command.Parameters.AddWithValue("@endDate", task.EndDate);
                 command.Parameters.AddWithValue("@priorityId", task.PriorityId);
                 command.Parameters.AddWithValue("@statusId", task.TaskStatusId);
+                command.Parameters.AddWithValue("@labelId", task.LabelId ?? (object)DBNull.Value);
                 command.Parameters.AddWithValue("@taskId", task.TaskId);
                 command.ExecuteNonQuery();
             }
@@ -548,27 +778,105 @@ namespace praktik.Models
                     throw new Exception("Пользователь уже зарегистрирован");
                 }
 
-                // Создаем пользователя
+                // Создаем пользователя сразу с ролью в Users.
                 var insertUserCommand = new SqlCommand(@"
-                    INSERT INTO Users (LoginName, PasswordPlain, FullName, IsActive, CreatedAt) 
+                    INSERT INTO Users (LoginName, PasswordPlain, FullName, RoleId, IsActive, CreatedAt) 
                     OUTPUT INSERTED.UserId
-                    VALUES (@login, @password, @fullName, 1, @createdAt)", connection);
+                    VALUES (@login, @password, @fullName, @roleId, 1, @createdAt)", connection);
                 insertUserCommand.Parameters.AddWithValue("@login", loginName);
                 insertUserCommand.Parameters.AddWithValue("@password", password);
                 insertUserCommand.Parameters.AddWithValue("@fullName", fullName);
+                insertUserCommand.Parameters.AddWithValue("@roleId", roleId);
                 insertUserCommand.Parameters.AddWithValue("@createdAt", DateTime.UtcNow);
-                
-                var userId = (int)insertUserCommand.ExecuteScalar();
-
-                // Назначаем роль
-                var insertRoleCommand = new SqlCommand(@"
-                    INSERT INTO UserRoles (UserId, RoleId) VALUES (@userId, @roleId)", connection);
-                insertRoleCommand.Parameters.AddWithValue("@userId", userId);
-                insertRoleCommand.Parameters.AddWithValue("@roleId", roleId);
-                insertRoleCommand.ExecuteNonQuery();
+                insertUserCommand.ExecuteScalar();
                 
                 Logger.Info($"User registered: {loginName}");
             }
+        }
+
+        public bool CreateCrewEmployeeAndAddToCrew(int crewId, string fullName, DateTime joinedAt, out int createdUserId, out string errorMessage)
+        {
+            createdUserId = 0;
+            errorMessage = null;
+
+            fullName = (fullName ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(fullName))
+            {
+                errorMessage = "Введите ФИО сотрудника";
+                return false;
+            }
+
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        var crewExistsCommand = new SqlCommand("SELECT COUNT(1) FROM Crews WHERE CrewId = @crewId", connection, transaction);
+                        crewExistsCommand.Parameters.AddWithValue("@crewId", crewId);
+                        if (Convert.ToInt32(crewExistsCommand.ExecuteScalar()) == 0)
+                        {
+                            errorMessage = "Бригада не найдена";
+                            transaction.Rollback();
+                            return false;
+                        }
+
+                        // Для сотрудников учетные данные создаются автоматически,
+                        // так как они не обязаны иметь доступ в систему.
+                        var loginName = GenerateAutoEmployeeLogin();
+                        var password = GenerateAutoEmployeePassword();
+
+                        // Новые сотрудники состава не логинятся в приложение,
+                        // поэтому сохраняем их неактивными, но с обязательной ролью.
+                        var createUserCommand = new SqlCommand(@"
+                            INSERT INTO Users (LoginName, PasswordPlain, FullName, RoleId, IsActive, CreatedAt)
+                            OUTPUT INSERTED.UserId
+                            VALUES (@login, @password, @fullName, @roleId, 0, @createdAt)", connection, transaction);
+                        createUserCommand.Parameters.AddWithValue("@login", loginName);
+                        createUserCommand.Parameters.AddWithValue("@password", password);
+                        createUserCommand.Parameters.AddWithValue("@fullName", fullName);
+                        createUserCommand.Parameters.AddWithValue("@roleId", DefaultCrewEmployeeRoleId);
+                        createUserCommand.Parameters.AddWithValue("@createdAt", DateTime.UtcNow);
+
+                        createdUserId = Convert.ToInt32(createUserCommand.ExecuteScalar());
+
+                        var addToCrewCommand = new SqlCommand(@"
+                            INSERT INTO CrewMembers (CrewId, UserId, JoinedAt, LeftAt)
+                            VALUES (@crewId, @userId, @joinedAt, NULL)", connection, transaction);
+                        addToCrewCommand.Parameters.AddWithValue("@crewId", crewId);
+                        addToCrewCommand.Parameters.AddWithValue("@userId", createdUserId);
+                        addToCrewCommand.Parameters.AddWithValue("@joinedAt", joinedAt.Date);
+                        addToCrewCommand.ExecuteNonQuery();
+
+                        transaction.Commit();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is SqlException sqlEx && (sqlEx.Number == 2627 || sqlEx.Number == 2601))
+                {
+                    errorMessage = "Не удалось сохранить: дублирующее значение (логин или запись состава).";
+                    return false;
+                }
+
+                errorMessage = $"Ошибка при создании сотрудника: {ex.Message}";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string GenerateAutoEmployeeLogin()
+        {
+            return $"emp_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}".Substring(0, 36);
+        }
+
+        private static string GenerateAutoEmployeePassword()
+        {
+            return $"auto_{Guid.NewGuid():N}".Substring(0, 20);
         }
 
         // Получение отчетов по задачам

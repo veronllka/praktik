@@ -1,4 +1,4 @@
-<Window x:Class="praktik.MainWindow"
+<UserControl x:Class="praktik.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,6 @@
         xmlns:local="clr-namespace:praktik"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Планировщик работ бригад" Height="800" Width="1400" WindowState="Maximized"
         Background="{DynamicResource MaterialDesignPaper}">
     <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}"
                       IsRightDrawerOpen="{Binding ElementName=HelpButton, Path=IsChecked}">
@@ -14,7 +13,7 @@
             <DockPanel Width="350" Margin="16">
                 <TextBlock Text="Справка по функциям" Style="{StaticResource HeaderTextStyle}" DockPanel.Dock="Top"/>
                 <Button x:Name="btnCloseHelp" Content="ЗАКРЫТЬ" 
-                      Click="btnCloseHelp_Click"
+                      Click="BtnCloseHelp_Click"
                       Style="{StaticResource MaterialDesignRaisedButton}"
                       Margin="0,16,0,0"
                       DockPanel.Dock="Bottom"/>
@@ -219,7 +218,7 @@
                         <Button x:Name="btnScanQR" 
                                 ToolTip="Сканировать QR-код"
                                 Margin="0,0,16,0"
-                                Click="btnScanQR_Click"
+                                Click="BtnScanQR_Click"
                                 Background="Transparent"
                                 BorderThickness="0"
                                 Padding="8">
@@ -317,7 +316,7 @@
                         <StackPanel>
                             <TextBlock Text="Стройплощадки" Style="{StaticResource SubHeaderTextStyle}"/>
                             <DataGrid x:Name="dgSites" AutoGenerateColumns="False" IsReadOnly="True" 
-                                    SelectionChanged="dgSites_SelectionChanged">
+                                    SelectionChanged="DgSites_SelectionChanged">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Название" Binding="{Binding SiteName}" Width="*"/>
                                     <DataGridTextColumn Header="Адрес" Binding="{Binding Address}" Width="*"/>
@@ -343,17 +342,17 @@
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Button x:Name="btnAddSite" Content="ДОБАВИТЬ" 
-                                          Click="btnAddSite_Click" 
+                                          Click="BtnAddSite_Click" 
                                           Style="{StaticResource MaterialDesignRaisedButton}"
                                           Width="110"
                                           Margin="0,0,8,0"/>
                                     <Button x:Name="btnUpdateSite" Content="ОБНОВИТЬ" 
-                                          Click="btnUpdateSite_Click" 
+                                          Click="BtnUpdateSite_Click" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
                                           Width="110"/>
                                 </StackPanel>
                                 <Button x:Name="btnDeleteSite" Content="УДАЛИТЬ" 
-                                      Click="btnDeleteSite_Click" 
+                                      Click="BtnDeleteSite_Click" 
                                       Width="110"
                                       HorizontalAlignment="Left"
                                       Style="{StaticResource MaterialDesignOutlinedButton}"/>
@@ -372,7 +371,7 @@
                         <StackPanel>
                             <TextBlock Text="Бригады" Style="{StaticResource SubHeaderTextStyle}"/>
                             <DataGrid x:Name="dgCrews" AutoGenerateColumns="False" IsReadOnly="True" 
-                                    SelectionChanged="dgCrews_SelectionChanged">
+                                    SelectionChanged="DgCrews_SelectionChanged">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Название бригады" Binding="{Binding CrewName}" Width="*"/>
                                     <DataGridTextColumn Header="Бригадир" Binding="{Binding Brigadier.Username}" Width="200"/>
@@ -399,18 +398,24 @@
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Button x:Name="btnAddCrew" Content="ДОБАВИТЬ" 
-                                          Click="btnAddCrew_Click" 
+                                          Click="BtnAddCrew_Click" 
                                           Style="{StaticResource MaterialDesignRaisedButton}"
                                           Width="110"
                                           Margin="0,0,8,0"/>
                                     <Button x:Name="btnUpdateCrew" Content="ОБНОВИТЬ" 
-                                          Click="btnUpdateCrew_Click" 
+                                          Click="BtnUpdateCrew_Click" 
                                           Style="{StaticResource MaterialDesignOutlinedButton}"
                                           Width="110"/>
                                 </StackPanel>
                                 <Button x:Name="btnDeleteCrew" Content="УДАЛИТЬ" 
-                                      Click="btnDeleteCrew_Click" 
+                                      Click="BtnDeleteCrew_Click" 
                                       Width="110"
+                                      HorizontalAlignment="Left"
+                                      Margin="0,0,0,8"
+                                      Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                <Button x:Name="btnCrewMembers" Content="СОСТАВ БРИГАДЫ"
+                                      Click="BtnCrewMembers_Click"
+                                      Width="170"
                                       HorizontalAlignment="Left"
                                       Style="{StaticResource MaterialDesignOutlinedButton}"/>
                             </StackPanel>
@@ -426,33 +431,74 @@
                     </Grid.RowDefinitions>
 
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="0">
-                        <StackPanel Orientation="Horizontal">
+                        <WrapPanel>
+                            <TextBox x:Name="txtTaskSearch"
+                                     materialDesign:HintAssist.Hint="Поиск по названию"
+                                     Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                     Width="220"
+                                     Margin="0,0,12,12"
+                                     TextChanged="TaskSearch_TextChanged"/>
                             <ComboBox x:Name="cbSiteFilter" 
-                                     materialDesign:HintAssist.Hint="Фильтр по объекту"
-                                     Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-                                     DisplayMemberPath="SiteName" 
-                                     Width="200" Margin="0,0,16,0"/>
+                                      materialDesign:HintAssist.Hint="Объект"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      DisplayMemberPath="SiteName"
+                                      Width="180"
+                                      Margin="0,0,12,12"
+                                      SelectionChanged="TaskFilter_Changed"/>
                             <ComboBox x:Name="cbCrewFilter" 
-                                     materialDesign:HintAssist.Hint="Фильтр по бригаде"
-                                     Style="{StaticResource MaterialDesignFloatingHintComboBox}"
-                                     DisplayMemberPath="CrewName" 
-                                     Width="200" Margin="0,0,16,0"/>
-                            <Button x:Name="btnFilterTasks" Content="ПРИМЕНИТЬ ФИЛЬТР" 
-                                  Click="btnFilterTasks_Click" 
-                                  Style="{StaticResource MaterialDesignRaisedButton}"
-                                  Margin="0,0,16,0"/>
-                            <Button x:Name="btnResetTaskFilter" Content="СБРОСИТЬ ФИЛЬТР" 
-                                  Click="btnResetTaskFilter_Click" 
-                                  Style="{StaticResource MaterialDesignOutlinedButton}"/>
-                        </StackPanel>
+                                      materialDesign:HintAssist.Hint="Бригада"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      DisplayMemberPath="CrewName"
+                                      Width="180"
+                                      Margin="0,0,12,12"
+                                      SelectionChanged="TaskFilter_Changed"/>
+                            <ComboBox x:Name="cbStatusFilter" 
+                                      materialDesign:HintAssist.Hint="Статус"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      DisplayMemberPath="TaskStatusName"
+                                      Width="160"
+                                      Margin="0,0,12,12"
+                                      SelectionChanged="TaskFilter_Changed"/>
+                            <ComboBox x:Name="cbPriorityFilter" 
+                                      materialDesign:HintAssist.Hint="Приоритет"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      DisplayMemberPath="PriorityName"
+                                      Width="160"
+                                      Margin="0,0,12,12"
+                                      SelectionChanged="TaskFilter_Changed"/>
+                            <ComboBox x:Name="cbTaskScopeFilter"
+                                      materialDesign:HintAssist.Hint="Тип списка"
+                                      Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                      Width="200"
+                                      Margin="0,0,12,12"
+                                      SelectionChanged="TaskFilter_Changed">
+                                <ComboBoxItem Content="Все задачи" Tag="all" />
+                                <ComboBoxItem Content="Только активные" Tag="active" />
+                                <ComboBoxItem Content="Только завершенные" Tag="completed" />
+                                <ComboBoxItem Content="Только просроченные" Tag="overdue" />
+                            </ComboBox>
+                            <Button x:Name="btnResetTaskFilter" Content="СБРОСИТЬ ФИЛЬТРЫ" 
+                                    Click="BtnResetTaskFilter_Click" 
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,4,0,12"/>
+                        </WrapPanel>
                     </materialDesign:Card>
 
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="1">
-                        <StackPanel>
-                            <TextBlock Text="Задачи" Style="{StaticResource SubHeaderTextStyle}"/>
-                            <DataGrid x:Name="dgTasks" AutoGenerateColumns="False" IsReadOnly="True" 
-                                    SelectionChanged="dgTasks_SelectionChanged" SelectionMode="Extended"
-                                    MouseDoubleClick="dgTasks_MouseDoubleClick">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Задачи" Style="{StaticResource SubHeaderTextStyle}"/>
+                            <DataGrid x:Name="dgTasks" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
+                                    SelectionChanged="DgTasks_SelectionChanged" SelectionMode="Extended"
+                                    MouseDoubleClick="DgTasks_MouseDoubleClick"
+                                    ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                    Margin="0,0,0,8">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="*"/>
                                     <DataGridTextColumn Header="Объект" Binding="{Binding Site.SiteName}" Width="150"/>
@@ -475,34 +521,45 @@
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
-                        </StackPanel>
+                            <TextBlock Grid.Row="2" x:Name="txtTaskFilterNoResults"
+                                       Text="Подходящих задач не найдено"
+                                       Margin="0,4,0,0"
+                                       Foreground="#616161"
+                                       HorizontalAlignment="Center"
+                                       Visibility="Collapsed"/>
+                        </Grid>
                     </materialDesign:Card>
 
                     <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="2">
                         <ScrollViewer HorizontalScrollBarVisibility="Auto">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <Button x:Name="btnAddTask" Content="ДОБАВИТЬ ЗАДАЧУ" 
-                                      Click="btnAddTask_Click" 
+                                      Click="BtnAddTask_Click" 
                                       Style="{StaticResource MaterialDesignRaisedButton}"
                                       Width="180"
                                       Margin="0,0,16,0"/>
                                 <Button x:Name="btnUpdateTask" Content="РЕДАКТИРОВАТЬ" 
-                                      Click="btnUpdateTask_Click" 
+                                      Click="BtnUpdateTask_Click" 
                                       Style="{StaticResource MaterialDesignOutlinedButton}"
                                       Width="180"
                                       Margin="0,0,16,0"/>
+                                <Button x:Name="btnDuplicateTask" Content="ДУБЛИРОВАТЬ" 
+                                      Click="BtnDuplicateTask_Click" 
+                                      Style="{StaticResource MaterialDesignOutlinedButton}"
+                                      Width="160"
+                                      Margin="0,0,16,0"/>
                                 <Button x:Name="btnDeleteTask" Content="УДАЛИТЬ" 
-                                      Click="btnDeleteTask_Click" 
+                                      Click="BtnDeleteTask_Click" 
                                       Style="{StaticResource MaterialDesignOutlinedButton}"
                                       Width="110"
                                       Margin="0,0,16,0"/>
                                 <Button x:Name="btnUpdateStatus" Content="ИЗМЕНИТЬ СТАТУС" 
-                                      Click="btnUpdateStatus_Click" 
+                                      Click="BtnUpdateStatus_Click" 
                                       Width="180"
                                       Margin="0,0,16,0"
                                       Style="{StaticResource MaterialDesignRaisedButton}"/>
                                 <Button x:Name="btnPrintTask" Content="ПЕЧАТЬ" 
-                                      Click="btnPrintTask_Click" 
+                                      Click="BtnPrintTask_Click" 
                                       Width="120"
                                       Style="{StaticResource MaterialDesignOutlinedButton}"/>
                             </StackPanel>
@@ -539,7 +596,7 @@
                                      SelectionChanged="CalendarFilter_Changed"/>
 
                             <Button Content="СБРОСИТЬ ФИЛЬТРЫ" 
-                                  Click="btnResetCalendarFilters_Click"
+                                  Click="BtnResetCalendarFilters_Click"
                                   Style="{StaticResource MaterialDesignOutlinedButton}"/>
                         </StackPanel>
                     </materialDesign:Card>
@@ -577,19 +634,19 @@
 
                             <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                                 <Button x:Name="btnTasksBySite" Content="ЗАДАЧИ ПО ОБЪЕКТАМ" 
-                                      Click="btnTasksBySite_Click" 
+                                      Click="BtnTasksBySite_Click" 
                                       Style="{StaticResource MaterialDesignRaisedButton}"
                                       Margin="0,0,16,0"/>
                                 <Button x:Name="btnTasksByCrew" Content="ВЫПОЛНЕНИЕ ПО БРИГАДАМ" 
-                                      Click="btnTasksByCrew_Click" 
+                                      Click="BtnTasksByCrew_Click" 
                                       Style="{StaticResource MaterialDesignRaisedButton}"
                                       Margin="0,0,16,0"/>
                                 <Button x:Name="btnOverdueTasks" Content="ПРОСРОЧЕННЫЕ ЗАДАЧИ" 
-                                      Click="btnOverdueTasks_Click" 
+                                      Click="BtnOverdueTasks_Click" 
                                       Style="{StaticResource MaterialDesignRaisedButton}"
                                       Margin="0,0,16,0"/>
                                 <Button x:Name="btnOpenReports" Content="ВИЗУАЛИЗАЦИЯ" 
-                                      Click="btnOpenReports_Click" 
+                                      Click="BtnOpenReports_Click" 
                                       Style="{StaticResource MaterialDesignOutlinedButton}"/>
                             </StackPanel>
 
@@ -692,10 +749,10 @@
                                           materialDesign:HintAssist.Hint="Требуется к (от)"
                                           Margin="0,0,8,0" SelectedDateChanged="MRFilter_Changed"/>
                                 <Button x:Name="btnMRResetFilter" Grid.Column="4" Content="Сбросить" 
-                                       Click="btnMRResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Click="BtnMRResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                                        Margin="0,0,8,0" Width="120" Height="40"/>
                                 <Button x:Name="btnMRAddRequest" Grid.Column="5" Content="Добавить заявку" 
-                                       Click="btnMRAddRequest_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Click="BtnMRAddRequest_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                                        Width="180" Height="40"/>
                             </Grid>
                         </StackPanel>
@@ -703,8 +760,8 @@
 
                     <Grid Grid.Row="1" Margin="16,0,16,8">
                         <DataGrid x:Name="dgMaterialRequests" AutoGenerateColumns="False" IsReadOnly="True" 
-                                 SelectionChanged="dgMaterialRequests_SelectionChanged" 
-                                 MouseDoubleClick="dgMaterialRequests_MouseDoubleClick">
+                                 SelectionChanged="DgMaterialRequests_SelectionChanged" 
+                                 MouseDoubleClick="DgMaterialRequests_MouseDoubleClick">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="ID" Binding="{Binding RequestId}" Width="60"/>
                                 <DataGridTextColumn Header="Задача" Binding="{Binding TaskTitle}" Width="*"/>
@@ -773,25 +830,25 @@
 
                             <StackPanel Grid.Column="1" Orientation="Vertical">
                                 <Button x:Name="btnMRApprove" Content="Согласовать" 
-                                       Click="btnMRApprove_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Click="BtnMRApprove_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                                        Margin="0,0,0,8" Width="200" Height="40"/>
                                 <Button x:Name="btnMRReject" Content="Отклонить" 
-                                       Click="btnMRReject_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Click="BtnMRReject_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                                        Margin="0,0,0,8" Width="200" Height="40"/>
                                 <Button x:Name="btnMRIssue" Content="Отметить выдачу" 
-                                       Click="btnMRIssue_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Click="BtnMRIssue_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                                        Margin="0,0,0,8" Width="200" Height="40"/>
                                 <Button x:Name="btnMRDeliver" Content="Отметить доставку" 
-                                       Click="btnMRDeliver_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Click="BtnMRDeliver_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                                        Margin="0,0,0,8" Width="200" Height="40"/>
                                 <Button x:Name="btnMRClose" Content="Закрыть заявку" 
-                                       Click="btnMRClose_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Click="BtnMRClose_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                                        Margin="0,0,0,8" Width="200" Height="40"/>
                                 <Button x:Name="btnMREdit" Content="Редактировать" 
-                                       Click="btnMREdit_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                                       Click="BtnMREdit_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                                        Margin="0,0,0,8" Width="200" Height="40"/>
                                 <Button x:Name="btnMRExport" Content="Экспорт" 
-                                       Click="btnMRExport_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                                       Click="BtnMRExport_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                                        Width="200" Height="40"/>
                             </StackPanel>
                         </Grid>
@@ -800,4 +857,4 @@
             </Grid>
         </DockPanel>
     </materialDesign:DrawerHost>
-</Window>
+</UserControl>

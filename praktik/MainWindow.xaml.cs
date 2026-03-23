@@ -15,20 +15,22 @@ namespace praktik
     /// Главное окно приложения.
     /// Управляет отображением задач, навигацией и взаимодействием ролей пользователей.
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : UserControl
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
-        private readonly WorkPlannerFacade facade; 
+        private readonly WorkPlannerFacade facade;
+        private string roleOverride;
         private Site selectedSite;
         private Crew selectedCrew;
         private Models.Task selectedTask;
+        private List<Models.Task> allTasks = new List<Models.Task>();
+        private bool isUpdatingTaskFilters;
         private System.Collections.ObjectModel.ObservableCollection<MaterialRequestRegistryDisplay> materialRequests;
         private MaterialRequest selectedMaterialRequest;
 
         public MainWindow()
         {
             InitializeComponent();
-            facade = new WorkPlannerFacade(db); 
+            facade = new WorkPlannerFacade();
             LoadData();
             SetupPermissions();
             UpdateUserInfo();
@@ -62,7 +64,7 @@ namespace praktik
             }
         }
 
-        private void btnScanQR_Click(object sender, RoutedEventArgs e)
+        private void BtnScanQR_Click(object sender, RoutedEventArgs e)
         {
             var qrWindow = new QRCodeScannerWindow();
             if (qrWindow.ShowDialog() == true && qrWindow.TaskId.HasValue)
@@ -76,8 +78,7 @@ namespace praktik
         {
             try
             {
-                var tasks = dgTasks.ItemsSource as System.Collections.IList;
-                if (tasks != null)
+                if (dgTasks.ItemsSource is System.Collections.IList tasks)
                 {
                     var task = tasks.Cast<Models.Task>().FirstOrDefault(t => t.TaskId == taskId);
                     if (task != null)
@@ -98,7 +99,7 @@ namespace praktik
             }
         }
 
-        private void dgTasks_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void DgTasks_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (selectedTask != null)
             {
@@ -111,13 +112,48 @@ namespace praktik
         {
             if (LoginWindow.CurrentUser != null)
             {
-                UserInfo.Text = $"{LoginWindow.CurrentUser.Username} ({LoginWindow.CurrentUser.Role})";
+                var role = roleOverride ?? LoginWindow.CurrentUser.Role;
+                UserInfo.Text = $"{LoginWindow.CurrentUser.Username} ({role})";
             }
+        }
+
+        private string GetCurrentRoleNormalized()
+        {
+            var role = roleOverride;
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                role = LoginWindow.CurrentUser?.Role;
+            }
+
+            return (role ?? string.Empty).Trim().ToLowerInvariant();
+        }
+
+        private static bool IsAdminRole(string normalizedRole)
+        {
+            return normalizedRole == "администратор"
+                || normalizedRole == "админ"
+                || normalizedRole == "admin"
+                || normalizedRole == "administrator";
+        }
+
+        private static bool IsDispatcherRole(string normalizedRole)
+        {
+            return normalizedRole == "диспетчер"
+                || normalizedRole == "dispatcher";
+        }
+
+        private static bool CanManageCrewMembersRole(string normalizedRole)
+        {
+            return IsAdminRole(normalizedRole) || IsDispatcherRole(normalizedRole);
         }
 
         private void SetupPermissions()
         {
-            string role = LoginWindow.CurrentUser?.Role;
+            string role = GetCurrentRoleNormalized();
+
+            btnDuplicateTask.Visibility = Visibility.Collapsed;
+            btnCrewMembers.IsEnabled = false;
+            btnCrewMembers.Visibility = Visibility.Collapsed;
             
             foreach (ListBoxItem item in NavigationListBox.Items)
             {
@@ -127,7 +163,13 @@ namespace praktik
             
              switch (role)
             {
-                case "Администратор":
+                case "администратор":
+                case "админ":
+                case "admin":
+                case "administrator":
+                    btnDuplicateTask.Visibility = Visibility.Visible;
+                    btnCrewMembers.IsEnabled = true;
+                    btnCrewMembers.Visibility = Visibility.Visible;
                     foreach (ListBoxItem item in NavigationListBox.Items)
                     {
                         item.Visibility = Visibility.Visible;
@@ -135,7 +177,11 @@ namespace praktik
                      SetHelpSectionsVisibility(true, true, true, true, true, true, true);
                     break;
                     
-                case "Диспетчер":
+                case "диспетчер":
+                case "dispatcher":
+                    btnDuplicateTask.Visibility = Visibility.Visible;
+                    btnCrewMembers.IsEnabled = true;
+                    btnCrewMembers.Visibility = Visibility.Visible;
                      ((ListBoxItem)NavigationListBox.Items[0]).Visibility = Visibility.Visible; 
                     ((ListBoxItem)NavigationListBox.Items[1]).Visibility = Visibility.Visible;  
                     ((ListBoxItem)NavigationListBox.Items[2]).Visibility = Visibility.Visible;  
@@ -147,7 +193,8 @@ namespace praktik
                      SetHelpSectionsVisibility(true, true, true, true, true, true, false);
                     break;
                     
-                case "Бригадир":
+                case "бригадир":
+                case "foreman":
                     ((ListBoxItem)NavigationListBox.Items[3]).Visibility = Visibility.Visible;  
                     ((ListBoxItem)NavigationListBox.Items[4]).Visibility = Visibility.Visible;  
                     
@@ -157,8 +204,11 @@ namespace praktik
                 btnAddCrew.IsEnabled = false;
                 btnUpdateCrew.IsEnabled = false;
                 btnDeleteCrew.IsEnabled = false;
+                    btnCrewMembers.IsEnabled = false;
+                    btnCrewMembers.Visibility = Visibility.Collapsed;
                     btnAddTask.IsEnabled = false;
                     btnDeleteTask.IsEnabled = false;
+                    btnDuplicateTask.Visibility = Visibility.Collapsed;
                      SetHelpSectionsVisibility(false, false, false, true, true, false, false);
                     break;
             }
@@ -171,6 +221,13 @@ namespace praktik
                     break;
                 }
             }
+        }
+
+        public void ApplyRole(string role)
+        {
+            roleOverride = role;
+            SetupPermissions();
+            UpdateUserInfo();
         }
 
         private void SetHelpSectionsVisibility(
@@ -205,15 +262,15 @@ namespace praktik
         }
 
         /// <summary>
-        /// Проверяет задачи на просроченность.
+        /// Проверяет задачи на просрочено.
         /// Если дата окончания задачи прошла, её статус автоматически меняется на "Просрочено".
         /// </summary>
         private void CheckOverdueTasks()
         {
             try
             {
-                var tasks = db.GetTasks();
-                var overdueStatus = db.GetTaskStatuses().FirstOrDefault(s => s.TaskStatusName == "Просрочено");
+                var tasks = facade.GetTasks();
+                var overdueStatus = facade.GetTaskStatuses().FirstOrDefault(s => s.TaskStatusName == "Просрочено");
 
                 if (overdueStatus == null) return;
 
@@ -225,7 +282,7 @@ namespace praktik
                         task.EndDate < DateTime.Now)
                     {
                         task.TaskStatusId = overdueStatus.TaskStatusId;
-                        db.UpdateTask(task);
+                        facade.UpdateTask(task);
                         hasChanges = true;
                     }
                 }
@@ -233,7 +290,7 @@ namespace praktik
                 if (hasChanges)
                 {
                     // No explicit save needed if methods save immediately, but if EF context is shared it might be needed.
-                    // Assuming db.UpdateTask handles saving.
+                    // Assuming facade.UpdateTask handles saving.
                 }
             }
             catch (Exception ex)
@@ -245,20 +302,20 @@ namespace praktik
 
         private void LoadSites()
         {
-            dgSites.ItemsSource = db.GetSites();
+            dgSites.ItemsSource = facade.GetSites();
         }
 
         private void LoadTaskReports()
         {
-            var reports = db.GetTaskReports();
+            var reports = facade.GetTaskReports();
             dgTaskReports.ItemsSource = reports;
             RecentReportsGrid.ItemsSource = reports.Take(5);
         }
 
         private void LoadDashboard()
         {
-            var tasks = db.GetTasks();
-            var crews = db.GetCrews();
+            var tasks = facade.GetTasks();
+            var crews = facade.GetCrews();
 
             TotalTasksCount.Text = tasks.Count.ToString();
             CompletedTasksCount.Text = tasks.Count(t => t.TaskStatus?.TaskStatusName == "Завершено").ToString();
@@ -323,17 +380,21 @@ namespace praktik
             }
         }
 
-         private void dgSites_SelectionChanged(object sender, SelectionChangedEventArgs e)
+         private void DgSites_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            selectedSite = dgSites.SelectedItem as Models.Site;
-            if (selectedSite != null)
+            if (dgSites.SelectedItem is Models.Site site)
             {
-                txtSiteName.Text = selectedSite.SiteName;
-                txtSiteAddress.Text = selectedSite.Address;
+                selectedSite = site;
+                txtSiteName.Text = site.SiteName;
+                txtSiteAddress.Text = site.Address;
+            }
+            else
+            {
+                selectedSite = null;
             }
         }
 
-        private void btnAddSite_Click(object sender, RoutedEventArgs e)
+        private void BtnAddSite_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtSiteName.Text))
             {
@@ -347,12 +408,12 @@ namespace praktik
                 Address = txtSiteAddress.Text
             };
 
-            db.AddSite(site);
+            facade.AddSite(site);
             LoadSites();
             ClearSiteFields();
         }
 
-        private void btnUpdateSite_Click(object sender, RoutedEventArgs e)
+        private void BtnUpdateSite_Click(object sender, RoutedEventArgs e)
         {
             if (selectedSite == null)
             {
@@ -363,11 +424,11 @@ namespace praktik
             selectedSite.SiteName = txtSiteName.Text;
             selectedSite.Address = txtSiteAddress.Text;
 
-            db.UpdateSite(selectedSite);
+            facade.UpdateSite(selectedSite);
             LoadSites();
         }
 
-        private void btnDeleteSite_Click(object sender, RoutedEventArgs e)
+        private void BtnDeleteSite_Click(object sender, RoutedEventArgs e)
         {
             if (selectedSite == null)
             {
@@ -377,7 +438,7 @@ namespace praktik
 
             if (MessageBox.Show("Удалить стройплощадку?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                db.DeleteSite(selectedSite.SiteId);
+                facade.DeleteSite(selectedSite.SiteId);
                 LoadSites();
                 ClearSiteFields();
             }
@@ -400,10 +461,10 @@ namespace praktik
             LoginWindow.CurrentUser = null;
             var loginWindow = new LoginWindow();
             loginWindow.Show();
-            this.Close();
+            Window.GetWindow(this)?.Close();
         }
         
-        private void btnCloseHelp_Click(object sender, RoutedEventArgs e)
+        private void BtnCloseHelp_Click(object sender, RoutedEventArgs e)
         {
             HelpButton.IsChecked = false;
         }
@@ -412,9 +473,16 @@ namespace praktik
         {
             try
             {
-                var crews = db.GetCrews();
+                var crews = facade.GetCrews();
                 dgCrews.ItemsSource = crews;
-                cbBrigadiers.ItemsSource = db.GetUsers().Where(u => u.Role == "Бригадир").ToList();
+                cbBrigadiers.ItemsSource = facade.GetUsers().Where(u => u.Role == "Бригадир").ToList();
+                selectedCrew = null;
+                btnCrewMembers.IsEnabled = CanManageCrewMembersRole(GetCurrentRoleNormalized());
+
+                if (CanManageCrewMembersRole(GetCurrentRoleNormalized()) && crews.Count > 0)
+                {
+                    dgCrews.SelectedIndex = 0;
+                }
                 
                 var children = CrewsContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
@@ -432,17 +500,24 @@ namespace praktik
             }
         }
 
-        private void dgCrews_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void DgCrews_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            selectedCrew = dgCrews.SelectedItem as Models.Crew;
-            if (selectedCrew != null)
+            var canManageMembers = CanManageCrewMembersRole(GetCurrentRoleNormalized());
+            btnCrewMembers.IsEnabled = canManageMembers;
+
+            if (dgCrews.SelectedItem is Models.Crew crew)
             {
-                txtCrewName.Text = selectedCrew.CrewName;
-                cbBrigadiers.SelectedItem = selectedCrew.Brigadier;
+                selectedCrew = crew;
+                txtCrewName.Text = crew.CrewName;
+                cbBrigadiers.SelectedItem = crew.Brigadier;
+            }
+            else
+            {
+                selectedCrew = null;
             }
         }
 
-        private void btnAddCrew_Click(object sender, RoutedEventArgs e)
+        private void BtnAddCrew_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtCrewName.Text) || cbBrigadiers.SelectedItem == null)
             {
@@ -456,12 +531,12 @@ namespace praktik
                 BrigadierId = (cbBrigadiers.SelectedItem as User).UserId
             };
 
-            db.AddCrew(crew);
+            facade.AddCrew(crew);
             LoadCrews();
             ClearCrewFields();
         }
 
-        private void btnUpdateCrew_Click(object sender, RoutedEventArgs e)
+        private void BtnUpdateCrew_Click(object sender, RoutedEventArgs e)
         {
             try
         {
@@ -483,8 +558,7 @@ namespace praktik
                     return;
                 }
                 
-                var brigadier = cbBrigadiers.SelectedItem as User;
-                if (brigadier == null)
+                if (!(cbBrigadiers.SelectedItem is User brigadier))
                 {
                     MessageBox.Show("Ошибка при получении данных бригадира");
                 return;
@@ -493,7 +567,7 @@ namespace praktik
             selectedCrew.CrewName = txtCrewName.Text;
                 selectedCrew.BrigadierId = brigadier.UserId;
 
-            db.UpdateCrew(selectedCrew);
+            facade.UpdateCrew(selectedCrew);
             LoadCrews();
                 MessageBox.Show("Бригада успешно обновлена");
             }
@@ -503,7 +577,7 @@ namespace praktik
             }
         }
 
-        private void btnDeleteCrew_Click(object sender, RoutedEventArgs e)
+        private void BtnDeleteCrew_Click(object sender, RoutedEventArgs e)
         {
             if (selectedCrew == null)
             {
@@ -513,10 +587,36 @@ namespace praktik
 
             if (MessageBox.Show("Удалить бригаду?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                db.DeleteCrew(selectedCrew.CrewId);
+                facade.DeleteCrew(selectedCrew.CrewId);
                 LoadCrews();
                 ClearCrewFields();
             }
+        }
+
+        private void BtnCrewMembers_Click(object sender, RoutedEventArgs e)
+        {
+            var canManage = CanManageCrewMembersRole(GetCurrentRoleNormalized());
+
+            if (!canManage)
+            {
+                MessageBox.Show("Редактирование состава бригады доступно только администратору и диспетчеру");
+                return;
+            }
+
+            if (selectedCrew == null && dgCrews.SelectedItem is Models.Crew crewFromGrid)
+            {
+                selectedCrew = crewFromGrid;
+            }
+
+            if (selectedCrew == null)
+            {
+                MessageBox.Show("Выберите бригаду");
+                return;
+            }
+
+            var window = new CrewMembersWindow(selectedCrew);
+            window.ShowDialog();
+            LoadCrews();
         }
 
         private void ClearCrewFields()
@@ -530,9 +630,9 @@ namespace praktik
         {
             try
             {
-                var tasks = db.GetTasks();
+                var tasks = GetTasksVisibleForCurrentUser(facade.GetTasks());
                 
-                var allReports = db.GetTaskReports();
+                var allReports = facade.GetTaskReports();
                 foreach (var task in tasks)
                 {
                     var lastReport = allReports
@@ -553,8 +653,9 @@ namespace praktik
                         task.LastNoteTooltip = "Заметок нет";
                     }
                 }
-                
-                dgTasks.ItemsSource = tasks;
+
+                allTasks = tasks;
+                ApplyTaskFilters();
                 
                 var children = TasksContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
@@ -574,59 +675,207 @@ namespace praktik
 
         private void LoadFilters()
         {
-            cbSiteFilter.ItemsSource = db.GetSites();
-            cbCrewFilter.ItemsSource = db.GetCrews();
-            cbCalendarSiteFilter.ItemsSource = db.GetSites();
-            cbCalendarCrewFilter.ItemsSource = db.GetCrews();
+            try
+            {
+                isUpdatingTaskFilters = true;
+
+                var sites = facade.GetSites();
+                var crews = GetCrewsVisibleForCurrentUser(facade.GetCrews());
+
+                cbSiteFilter.ItemsSource = sites;
+                cbCrewFilter.ItemsSource = crews;
+                cbStatusFilter.ItemsSource = facade.GetTaskStatuses();
+                cbPriorityFilter.ItemsSource = facade.GetPriorities();
+
+                cbCalendarSiteFilter.ItemsSource = sites;
+                cbCalendarCrewFilter.ItemsSource = crews;
+
+                if (cbTaskScopeFilter.SelectedIndex < 0)
+                {
+                    cbTaskScopeFilter.SelectedIndex = 0;
+                }
+            }
+            finally
+            {
+                isUpdatingTaskFilters = false;
+            }
+
+            ApplyTaskFilters();
         }
 
-        private void dgTasks_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void DgTasks_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             selectedTask = dgTasks.SelectedItem as Models.Task;
         }
 
-        private void btnFilterTasks_Click(object sender, RoutedEventArgs e)
-        {
-            try
-        {
-            var tasks = db.GetTasks();
-
-            if (cbSiteFilter.SelectedItem != null)
-            {
-                var siteId = (cbSiteFilter.SelectedItem as Site).SiteId;
-                tasks = tasks.Where(t => t.SiteId == siteId).ToList();
-            }
-
-            if (cbCrewFilter.SelectedItem != null)
-            {
-                var crewId = (cbCrewFilter.SelectedItem as Crew).CrewId;
-                tasks = tasks.Where(t => t.CrewId == crewId).ToList();
-            }
-
-            dgTasks.ItemsSource = tasks;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при применении фильтра: {ex.Message}");
-            }
-        }
-        
-        private void btnResetTaskFilter_Click(object sender, RoutedEventArgs e)
+        private void BtnResetTaskFilter_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                isUpdatingTaskFilters = true;
+
+                if (txtTaskSearch != null)
+                {
+                    txtTaskSearch.Text = string.Empty;
+                }
+
                 cbSiteFilter.SelectedItem = null;
                 cbCrewFilter.SelectedItem = null;
-                dgTasks.ItemsSource = db.GetTasks();
-                MessageBox.Show("Фильтры сброшены");
+                cbStatusFilter.SelectedItem = null;
+                cbPriorityFilter.SelectedItem = null;
+
+                if (cbTaskScopeFilter != null)
+                {
+                    cbTaskScopeFilter.SelectedIndex = 0;
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при сбросе фильтров: {ex.Message}");
             }
+            finally
+            {
+                isUpdatingTaskFilters = false;
+            }
+
+            ApplyTaskFilters();
         }
 
-        private void btnAddTask_Click(object sender, RoutedEventArgs e)
+        private void TaskSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ApplyTaskFilters();
+        }
+
+        private void TaskFilter_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            ApplyTaskFilters();
+        }
+
+        private void ApplyTaskFilters()
+        {
+            if (isUpdatingTaskFilters)
+            {
+                return;
+            }
+
+            try
+            {
+                IEnumerable<Models.Task> filteredTasks = allTasks ?? new List<Models.Task>();
+
+                var searchText = txtTaskSearch?.Text?.Trim();
+                if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    filteredTasks = filteredTasks.Where(t =>
+                        !string.IsNullOrWhiteSpace(t.Title) &&
+                        t.Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+                }
+
+                if (cbSiteFilter?.SelectedItem is Site selectedSiteFilter)
+                {
+                    filteredTasks = filteredTasks.Where(t => t.SiteId == selectedSiteFilter.SiteId);
+                }
+
+                if (cbCrewFilter?.SelectedItem is Crew selectedCrewFilter)
+                {
+                    filteredTasks = filteredTasks.Where(t => t.CrewId.HasValue && t.CrewId.Value == selectedCrewFilter.CrewId);
+                }
+
+                if (cbStatusFilter?.SelectedItem is TaskStatus selectedStatusFilter)
+                {
+                    filteredTasks = filteredTasks.Where(t => t.TaskStatusId == selectedStatusFilter.TaskStatusId);
+                }
+
+                if (cbPriorityFilter?.SelectedItem is Priority selectedPriorityFilter)
+                {
+                    filteredTasks = filteredTasks.Where(t => t.PriorityId == selectedPriorityFilter.PriorityId);
+                }
+
+                switch (GetTaskScopeFilterValue())
+                {
+                    case "active":
+                        filteredTasks = filteredTasks.Where(IsTaskActive);
+                        break;
+                    case "completed":
+                        filteredTasks = filteredTasks.Where(IsTaskCompleted);
+                        break;
+                    case "overdue":
+                        filteredTasks = filteredTasks.Where(IsTaskOverdue);
+                        break;
+                }
+
+                var result = filteredTasks.ToList();
+                dgTasks.ItemsSource = result;
+                txtTaskFilterNoResults.Visibility = result.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при фильтрации задач: {ex.Message}");
+            }
+        }
+
+        private string GetTaskScopeFilterValue()
+        {
+            if (cbTaskScopeFilter?.SelectedItem is ComboBoxItem selectedItem &&
+                selectedItem.Tag is string scopeValue &&
+                !string.IsNullOrWhiteSpace(scopeValue))
+            {
+                return scopeValue;
+            }
+
+            return "all";
+        }
+
+        private List<Crew> GetCrewsVisibleForCurrentUser(List<Crew> crews)
+        {
+            var role = roleOverride ?? LoginWindow.CurrentUser?.Role;
+            var currentUser = LoginWindow.CurrentUser;
+
+            if (role == "Бригадир" && currentUser != null)
+            {
+                return crews
+                    .Where(c => c.BrigadierId.HasValue && c.BrigadierId.Value == currentUser.UserId)
+                    .ToList();
+            }
+
+            return crews;
+        }
+
+        private List<Models.Task> GetTasksVisibleForCurrentUser(List<Models.Task> tasks)
+        {
+            var role = roleOverride ?? LoginWindow.CurrentUser?.Role;
+            var currentUser = LoginWindow.CurrentUser;
+
+            if (role == "Бригадир" && currentUser != null)
+            {
+                var brigadierCrewIds = new HashSet<int>(
+                    facade.GetCrews()
+                        .Where(c => c.BrigadierId.HasValue && c.BrigadierId.Value == currentUser.UserId)
+                        .Select(c => c.CrewId));
+
+                return tasks
+                    .Where(t => t.CrewId.HasValue && brigadierCrewIds.Contains(t.CrewId.Value))
+                    .ToList();
+            }
+
+            return tasks;
+        }
+
+        private bool IsTaskCompleted(Models.Task task)
+        {
+            return string.Equals(task.TaskStatus?.TaskStatusName, "Завершено", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool IsTaskOverdue(Models.Task task)
+        {
+            return task.EndDate.Date < DateTime.Today && !IsTaskCompleted(task);
+        }
+
+        private bool IsTaskActive(Models.Task task)
+        {
+            return !IsTaskCompleted(task) && !IsTaskOverdue(task);
+        }
+
+        private void BtnAddTask_Click(object sender, RoutedEventArgs e)
         {
             var taskWindow = new TaskWindow(null);
             if (taskWindow.ShowDialog() == true)
@@ -635,7 +884,7 @@ namespace praktik
             }
         }
 
-        private void btnUpdateTask_Click(object sender, RoutedEventArgs e)
+        private void BtnUpdateTask_Click(object sender, RoutedEventArgs e)
         {
             if (selectedTask == null)
             {
@@ -650,7 +899,36 @@ namespace praktik
             }
         }
 
-        private void btnDeleteTask_Click(object sender, RoutedEventArgs e)
+        private void BtnDuplicateTask_Click(object sender, RoutedEventArgs e)
+        {
+            var role = roleOverride ?? LoginWindow.CurrentUser?.Role;
+            var canDuplicate = role == "Администратор" || role == "Админ" || role == "Диспетчер";
+
+            if (!canDuplicate)
+            {
+                MessageBox.Show("Дублирование доступно только администратору и диспетчеру");
+                return;
+            }
+
+            if (selectedTask == null)
+            {
+                MessageBox.Show("Выберите задачу для дублирования");
+                return;
+            }
+
+            var sourceTask = facade.GetTaskById(selectedTask.TaskId) ?? selectedTask;
+            var taskWindow = new TaskWindow(sourceTask, true);
+            if (taskWindow.ShowDialog() == true)
+            {
+                LoadTasks();
+                if (taskWindow.SavedTaskId.HasValue)
+                {
+                    HighlightTask(taskWindow.SavedTaskId.Value);
+                }
+            }
+        }
+
+        private void BtnDeleteTask_Click(object sender, RoutedEventArgs e)
         {
             if (selectedTask == null)
             {
@@ -660,12 +938,12 @@ namespace praktik
 
             if (MessageBox.Show("Удалить задачу?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
-                db.DeleteTask(selectedTask.TaskId);
+                facade.DeleteTask(selectedTask.TaskId);
                 LoadTasks();
             }
         }
 
-        private void btnUpdateStatus_Click(object sender, RoutedEventArgs e)
+        private void BtnUpdateStatus_Click(object sender, RoutedEventArgs e)
         {
             if (selectedTask == null)
             {
@@ -680,7 +958,7 @@ namespace praktik
             }
         }
 
-        private void btnPrintTask_Click(object sender, RoutedEventArgs e)
+        private void BtnPrintTask_Click(object sender, RoutedEventArgs e)
         {
             var selectedTasks = dgTasks.SelectedItems.Cast<Models.Task>().ToList();
             
@@ -710,13 +988,13 @@ namespace praktik
             }
         }
 
-        private void btnQuickNoteInList_Click(object sender, RoutedEventArgs e)
+        private void BtnQuickNoteInList_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as System.Windows.Controls.Button;
-            if (button?.Tag == null) return;
-
-            var taskId = (int)button.Tag;
-            var task = db.GetTaskById(taskId);
+            if (!(sender is System.Windows.Controls.Button button) || !(button.Tag is int taskId))
+            {
+                return;
+            }
+            var task = facade.GetTaskById(taskId);
             
             if (task == null)
             {
@@ -775,7 +1053,7 @@ namespace praktik
             }
         }
 
-        private void btnResetCalendarFilters_Click(object sender, RoutedEventArgs e)
+        private void BtnResetCalendarFilters_Click(object sender, RoutedEventArgs e)
         {
             cbCalendarSiteFilter.SelectedItem = null;
             cbCalendarCrewFilter.SelectedItem = null;
@@ -789,7 +1067,7 @@ namespace praktik
         {
             SelectedDateText.Text = $"Задачи на {date:dd.MM.yyyy}";
             
-            var tasks = db.GetTasks().Where(t => 
+            var tasks = GetTasksVisibleForCurrentUser(facade.GetTasks()).Where(t => 
                 t.StartDate <= date && t.EndDate >= date).ToList();
 
              if (cbCalendarSiteFilter.SelectedItem != null)
@@ -807,13 +1085,13 @@ namespace praktik
             dgCalendarTasks.ItemsSource = tasks;
         }
 
-        private void btnTasksBySite_Click(object sender, RoutedEventArgs e)
+        private void BtnTasksBySite_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 UpdateCurrentReportType("tasks_by_site");
                 
-            var tasks = db.GetTasks();
+            var tasks = facade.GetTasks();
             var report = tasks
                 .GroupBy(t => t.Site.SiteName)
                 .Select(g => new
@@ -845,13 +1123,13 @@ namespace praktik
             }
         }
 
-        private void btnTasksByCrew_Click(object sender, RoutedEventArgs e)
+        private void BtnTasksByCrew_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 UpdateCurrentReportType("tasks_by_crew");
                 
-            var tasks = db.GetTasks();
+            var tasks = facade.GetTasks();
             var report = tasks
                 .Where(t => t.CrewId != null)
                 .GroupBy(t => t.Crew.CrewName)
@@ -884,13 +1162,13 @@ namespace praktik
             }
         }
 
-        private void btnOverdueTasks_Click(object sender, RoutedEventArgs e)
+        private void BtnOverdueTasks_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 UpdateCurrentReportType("overdue_tasks");
                 
-            var tasks = db.GetTasks();
+            var tasks = facade.GetTasks();
             var overdueTasks = tasks
                     .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
                 .Select(t => new
@@ -923,7 +1201,7 @@ namespace praktik
             }
         }
 
-        private void btnOpenReports_Click(object sender, RoutedEventArgs e)
+        private void BtnOpenReports_Click(object sender, RoutedEventArgs e)
         {
             var wnd = new ReportsWindow();
             wnd.ShowDialog();
@@ -966,7 +1244,7 @@ namespace praktik
                 switch (currentReportType)
                 {
                     case "tasks":
-                        var tasks = db.GetTasks();
+                        var tasks = facade.GetTasks();
                         lines.Add("Название;Объект;Бригада;Приоритет;Статус;Начало;Окончание");
                         foreach (var t in tasks)
                         {
@@ -986,7 +1264,7 @@ namespace praktik
                         break;
                         
                     case "tasks_by_site":
-                        var tasksBySite = db.GetTasks()
+                        var tasksBySite = facade.GetTasks()
                             .GroupBy(t => t.Site.SiteName)
                             .Select(g => new
                             {
@@ -1014,7 +1292,7 @@ namespace praktik
                         break;
                         
                     case "tasks_by_crew":
-                        var tasksByCrew = db.GetTasks()
+                        var tasksByCrew = facade.GetTasks()
                             .Where(t => t.CrewId != null)
                             .GroupBy(t => t.Crew.CrewName)
                             .Select(g => new
@@ -1043,7 +1321,7 @@ namespace praktik
                         break;
                         
                     case "overdue_tasks":
-                        var overdueTasks = db.GetTasks()
+                        var overdueTasks = facade.GetTasks()
                             .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
                             .Select(t => new
                             {
@@ -1096,7 +1374,7 @@ namespace praktik
                 switch (currentReportType)
                 {
                     case "tasks":
-                        var tasks = db.GetTasks();
+                        var tasks = facade.GetTasks();
                         lines.Add("Название\tОбъект\tБригада\tПриоритет\tСтатус\tНачало\tОкончание");
                         foreach (var t in tasks)
                         {
@@ -1116,7 +1394,7 @@ namespace praktik
                         break;
                         
                     case "tasks_by_site":
-                        var tasksBySite = db.GetTasks()
+                        var tasksBySite = facade.GetTasks()
                             .GroupBy(t => t.Site.SiteName)
                             .Select(g => new
                             {
@@ -1144,7 +1422,7 @@ namespace praktik
                         break;
                         
                     case "tasks_by_crew":
-                        var tasksByCrew = db.GetTasks()
+                        var tasksByCrew = facade.GetTasks()
                             .Where(t => t.CrewId != null)
                             .GroupBy(t => t.Crew.CrewName)
                             .Select(g => new
@@ -1173,7 +1451,7 @@ namespace praktik
                         break;
                         
                     case "overdue_tasks":
-                        var overdueTasks = db.GetTasks()
+                        var overdueTasks = facade.GetTasks()
                             .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
                             .Select(t => new
                             {
@@ -1227,7 +1505,7 @@ namespace praktik
                 switch (currentReportType)
                 {
                     case "tasks":
-                        var tasks = db.GetTasks();
+                        var tasks = facade.GetTasks();
                         reportTitle = "ОТЧЁТ ПО ЗАДАЧАМ";
                         lines.Add($"=== {reportTitle} ===\n");
                         lines.Add($"Дата формирования: {DateTime.Now:dd.MM.yyyy HH:mm}\n");
@@ -1239,7 +1517,7 @@ namespace praktik
                         break;
                         
                     case "tasks_by_site":
-                        var tasksBySite = db.GetTasks()
+                        var tasksBySite = facade.GetTasks()
                             .GroupBy(t => t.Site.SiteName)
                             .Select(g => new
                             {
@@ -1266,7 +1544,7 @@ namespace praktik
                         break;
                         
                     case "tasks_by_crew":
-                        var tasksByCrew = db.GetTasks()
+                        var tasksByCrew = facade.GetTasks()
                             .Where(t => t.CrewId != null)
                             .GroupBy(t => t.Crew.CrewName)
                             .Select(g => new
@@ -1294,7 +1572,7 @@ namespace praktik
                         break;
                         
                     case "overdue_tasks":
-                        var overdueTasks = db.GetTasks()
+                        var overdueTasks = facade.GetTasks()
                             .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
                             .Select(t => new
                             {
@@ -1343,8 +1621,8 @@ namespace praktik
                 return;
             }
 
-            cbMRSiteFilter.ItemsSource = db.GetSites();
-            cbMRCrewFilter.ItemsSource = db.GetCrews();
+            cbMRSiteFilter.ItemsSource = facade.GetSites();
+            cbMRCrewFilter.ItemsSource = facade.GetCrews();
 
             if (materialRequests == null)
             {
@@ -1354,7 +1632,7 @@ namespace praktik
 
             materialRequests.Clear();
 
-            var allRequests = db.GetMaterialRequests();
+            var allRequests = facade.GetMaterialRequests();
             var filtered = allRequests.AsQueryable();
 
             if (cbMRStatusFilter != null && cbMRStatusFilter.SelectedItem is ComboBoxItem statusItem &&
@@ -1379,12 +1657,26 @@ namespace praktik
                 filtered = filtered.Where(r => r.RequiredDate.HasValue && r.RequiredDate.Value >= date);
             }
 
-            var tasks = db.GetTasks();
+            var tasks = facade.GetTasks();
             foreach (var req in filtered.ToList())
             {
                 var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId);
                 materialRequests.Add(new MaterialRequestRegistryDisplay(req, task));
             }
+
+            UpdateMaterialRequestsPlaceholder();
+        }
+
+        private void UpdateMaterialRequestsPlaceholder()
+        {
+            if (MaterialRequestsPlaceholder == null || materialRequests == null)
+            {
+                return;
+            }
+
+            MaterialRequestsPlaceholder.Visibility = materialRequests.Count == 0
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private void MRFilter_Changed(object sender, EventArgs e)
@@ -1392,7 +1684,7 @@ namespace praktik
             LoadMaterialRequests();
         }
 
-        private void btnMRResetFilter_Click(object sender, RoutedEventArgs e)
+        private void BtnMRResetFilter_Click(object sender, RoutedEventArgs e)
         {
             if (cbMRStatusFilter != null)
                 cbMRStatusFilter.SelectedIndex = 0;
@@ -1405,11 +1697,11 @@ namespace praktik
             LoadMaterialRequests();
         }
 
-        private void dgMaterialRequests_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void DgMaterialRequests_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (dgMaterialRequests.SelectedItem is MaterialRequestRegistryDisplay display)
             {
-                var allRequests = db.GetMaterialRequests();
+                var allRequests = facade.GetMaterialRequests();
                 selectedMaterialRequest = allRequests.FirstOrDefault(r => r.RequestId == display.RequestId);
             }
             else
@@ -1424,13 +1716,13 @@ namespace praktik
             }
         }
 
-        private void dgMaterialRequests_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void DgMaterialRequests_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (dgMaterialRequests.SelectedItem == null) return;
 
             if (dgMaterialRequests.SelectedItem is MaterialRequestRegistryDisplay display)
             {
-                var allRequests = db.GetMaterialRequests();
+                var allRequests = facade.GetMaterialRequests();
                 selectedMaterialRequest = allRequests.FirstOrDefault(r => r.RequestId == display.RequestId);
                 if (selectedMaterialRequest != null)
                 {
@@ -1443,7 +1735,7 @@ namespace praktik
 
         private void ShowMaterialRequestDetails(MaterialRequest request)
         {
-            var task = db.GetTasks().FirstOrDefault(t => t.TaskId == request.TaskId);
+            var task = facade.GetTasks().FirstOrDefault(t => t.TaskId == request.TaskId);
             txtMRSelectedInfo.Text = $"Заявка #{request.RequestId}\n" +
                                     $"Задача: {task?.Title ?? "Не найдена"}\n" +
                                     $"Статус: {GetMRStatusName(request.Status)}\n" +
@@ -1475,12 +1767,11 @@ namespace praktik
             btnMREdit.IsEnabled = selectedMaterialRequest.Status == "Draft" || selectedMaterialRequest.Status == "Submitted" || selectedMaterialRequest.Status == "Approved";
         }
 
-        private void btnMRApprove_Click(object sender, RoutedEventArgs e)
+        private void BtnMRApprove_Click(object sender, RoutedEventArgs e)
         {
             if (selectedMaterialRequest == null) return;
 
-            string errorMessage;
-            if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "approve", LoginWindow.CurrentUser.UserId, out errorMessage))
+            if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "approve", LoginWindow.CurrentUser.UserId, out string errorMessage))
             {
                 MessageBox.Show("Заявка согласована");
                 LoadMaterialRequests();
@@ -1493,7 +1784,7 @@ namespace praktik
             }
         }
 
-        private void btnMRReject_Click(object sender, RoutedEventArgs e)
+        private void BtnMRReject_Click(object sender, RoutedEventArgs e)
         {
             if (selectedMaterialRequest == null) return;
 
@@ -1506,8 +1797,7 @@ namespace praktik
                     return;
                 }
 
-                string errorMessage;
-                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "reject", LoginWindow.CurrentUser.UserId, out errorMessage))
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "reject", LoginWindow.CurrentUser.UserId, out string errorMessage))
                 {
                     MessageBox.Show("Заявка отклонена");
                     LoadMaterialRequests();
@@ -1521,19 +1811,18 @@ namespace praktik
             }
         }
 
-        private void btnMRIssue_Click(object sender, RoutedEventArgs e)
+        private void BtnMRIssue_Click(object sender, RoutedEventArgs e)
         {
             if (selectedMaterialRequest == null) return;
 
             var dialog = new MaterialRequestActionWindow("Выдача материалов", "Номер документа", "Примечание");
             if (dialog.ShowDialog() == true)
             {
-                string errorMessage;
-                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "issue", LoginWindow.CurrentUser.UserId, out errorMessage))
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "issue", LoginWindow.CurrentUser.UserId, out string errorMessage))
                 {
                     if (!string.IsNullOrEmpty(dialog.DocNumber))
                     {
-                        db.AddMaterialDeliveryDoc(selectedMaterialRequest.RequestId, "Issued", dialog.DocNumber, dialog.Note);
+                        facade.AddMaterialDeliveryDoc(selectedMaterialRequest.RequestId, "Issued", dialog.DocNumber, dialog.Note);
                     }
                     MessageBox.Show("Выдача отмечена");
                     LoadMaterialRequests();
@@ -1547,19 +1836,18 @@ namespace praktik
             }
         }
 
-        private void btnMRDeliver_Click(object sender, RoutedEventArgs e)
+        private void BtnMRDeliver_Click(object sender, RoutedEventArgs e)
         {
             if (selectedMaterialRequest == null) return;
 
             var dialog = new MaterialRequestActionWindow("Доставка материалов", "Номер документа", "Примечание");
             if (dialog.ShowDialog() == true)
             {
-                string errorMessage;
-                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "deliver", LoginWindow.CurrentUser.UserId, out errorMessage))
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "deliver", LoginWindow.CurrentUser.UserId, out string errorMessage))
                 {
                     if (!string.IsNullOrEmpty(dialog.DocNumber))
                     {
-                        db.AddMaterialDeliveryDoc(selectedMaterialRequest.RequestId, "Delivered", dialog.DocNumber, dialog.Note);
+                        facade.AddMaterialDeliveryDoc(selectedMaterialRequest.RequestId, "Delivered", dialog.DocNumber, dialog.Note);
                     }
                     MessageBox.Show("Доставка отмечена");
                     LoadMaterialRequests();
@@ -1573,15 +1861,14 @@ namespace praktik
             }
         }
 
-        private void btnMRClose_Click(object sender, RoutedEventArgs e)
+        private void BtnMRClose_Click(object sender, RoutedEventArgs e)
         {
             if (selectedMaterialRequest == null) return;
 
             var result = MessageBox.Show("Закрыть заявку?", "Подтверждение", MessageBoxButton.YesNo);
             if (result == MessageBoxResult.Yes)
             {
-                string errorMessage;
-                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "close", LoginWindow.CurrentUser.UserId, out errorMessage))
+                if (facade.ProcessMaterialRequest(selectedMaterialRequest.RequestId, "close", LoginWindow.CurrentUser.UserId, out string errorMessage))
                 {
                     MessageBox.Show("Заявка закрыта");
                     LoadMaterialRequests();
@@ -1595,7 +1882,7 @@ namespace praktik
             }
         }
 
-        private void btnMREdit_Click(object sender, RoutedEventArgs e)
+        private void BtnMREdit_Click(object sender, RoutedEventArgs e)
         {
             if (selectedMaterialRequest == null) return;
 
@@ -1608,7 +1895,7 @@ namespace praktik
             }
         }
 
-        private void btnMRAddRequest_Click(object sender, RoutedEventArgs e)
+        private void BtnMRAddRequest_Click(object sender, RoutedEventArgs e)
         {
             var taskSelectionWindow = new TaskSelectionWindow();
             if (taskSelectionWindow.ShowDialog() == true && taskSelectionWindow.SelectedTask != null)
@@ -1621,7 +1908,7 @@ namespace praktik
             }
         }
 
-        private void btnMRExport_Click(object sender, RoutedEventArgs e)
+        private void BtnMRExport_Click(object sender, RoutedEventArgs e)
         {
             var saveDialog = new Microsoft.Win32.SaveFileDialog
             {
@@ -1645,9 +1932,9 @@ namespace praktik
 
         private void ExportMaterialRequestsToFile(string fileName)
         {
-            var tasks = db.GetTasks();
-            var sites = db.GetSites();
-            var crews = db.GetCrews();
+            var tasks = facade.GetTasks();
+            var sites = facade.GetSites();
+            var crews = facade.GetCrews();
 
             using (var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
             {

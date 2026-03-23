@@ -31,7 +31,7 @@
                     <ComboBoxItem Content="Круговая"/>
                 </ComboBox>
 
-                <Button Content="Сгенерировать" Click="Generate_Click" Style="{StaticResource ModernButtonStyle}" Height="40" Margin="0,0,0,12"/>
+                <Button Content="Сгенерировать" Click="BtnGenerate_Click" Style="{StaticResource ModernButtonStyle}" Height="40" Margin="0,0,0,12"/>
 
                 <TextBlock Text="Экспортировать как" FontSize="13" Foreground="#7C746A"/>
                 <ComboBox x:Name="cbExportFormat" SelectedIndex="0" Margin="0,4,0,12">
@@ -40,7 +40,7 @@
                     <ComboBoxItem Content="CSV"/>
                 </ComboBox>
 
-                <Button Content="Экспортировать" Click="Export_Click" Style="{StaticResource ModernOutlinedButtonStyle}" Height="40"/>
+                <Button Content="Экспортировать" Click="BtnExport_Click" Style="{StaticResource ModernOutlinedButtonStyle}" Height="40"/>
             </StackPanel>
         </Border>
 

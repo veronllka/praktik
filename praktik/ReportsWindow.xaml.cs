@@ -8,12 +8,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.Win32;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class ReportsWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private readonly List<ChartPoint> currentData = new List<ChartPoint>();
 
         public ReportsWindow()
@@ -23,9 +24,9 @@ namespace praktik
             SizeChanged += (_, __) => RedrawChart();
         }
 
-        private void Generate_Click(object sender, RoutedEventArgs e) => GenerateReport();
+        private void BtnGenerate_Click(object sender, RoutedEventArgs e) => GenerateReport();
 
-        private void Export_Click(object sender, RoutedEventArgs e)
+        private void BtnExport_Click(object sender, RoutedEventArgs e)
         {
             if (currentData == null || currentData.Count == 0)
             {
@@ -103,7 +104,7 @@ namespace praktik
 
         private List<ChartPoint> GetUsersByRole()
         {
-            var users = db.GetUsers() ?? new List<User>();
+            var users = facade.GetUsers() ?? new List<User>();
             return users
                 .GroupBy(u => string.IsNullOrWhiteSpace(u.Role) ? "Не указана" : u.Role)
                 .Select(g => new ChartPoint { Label = g.Key, Value = g.Count() })
@@ -113,7 +114,7 @@ namespace praktik
 
         private List<ChartPoint> GetTasksBySite()
         {
-            var tasks = db.GetTasks() ?? new List<Models.Task>();
+            var tasks = facade.GetTasks() ?? new List<Models.Task>();
             return tasks.GroupBy(t => t.Site?.SiteName ?? "Не указан")
                         .Select(g => new ChartPoint { Label = g.Key, Value = g.Count() })
                         .OrderByDescending(p => p.Value)
@@ -122,7 +123,7 @@ namespace praktik
 
         private List<ChartPoint> GetTasksByCrew()
         {
-            var tasks = db.GetTasks() ?? new List<Models.Task>();
+            var tasks = facade.GetTasks() ?? new List<Models.Task>();
             return tasks.GroupBy(t => t.Crew?.CrewName ?? "Не назначена")
                         .Select(g => new ChartPoint { Label = g.Key, Value = g.Count() })
                         .OrderByDescending(p => p.Value)
@@ -131,7 +132,7 @@ namespace praktik
 
         private List<ChartPoint> GetOverdueTasksBySite()
         {
-            var tasks = db.GetTasks() ?? new List<Models.Task>();
+            var tasks = facade.GetTasks() ?? new List<Models.Task>();
             var now = DateTime.Now;
             return tasks.Where(t => t.EndDate < now && t.TaskStatus?.TaskStatusName != "Завершено")
                         .GroupBy(t => t.Site?.SiteName ?? "Не указан")

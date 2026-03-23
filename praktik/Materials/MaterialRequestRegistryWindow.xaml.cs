@@ -6,12 +6,13 @@ using System.Windows;
 using System.IO;
 using Microsoft.Win32;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class MaterialRequestRegistryWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private ObservableCollection<MaterialRequestRegistryDisplay> requests;
         private MaterialRequest selectedRequest;
 
@@ -60,11 +61,11 @@ namespace praktik
         {
             if (cbSiteFilter != null)
             {
-                cbSiteFilter.ItemsSource = db.GetSites();
+                cbSiteFilter.ItemsSource = facade.GetSites();
             }
             if (cbCrewFilter != null)
             {
-                cbCrewFilter.ItemsSource = db.GetCrews();
+                cbCrewFilter.ItemsSource = facade.GetCrews();
             }
         }
 
@@ -81,7 +82,7 @@ namespace praktik
             
             requests.Clear();
             
-            var allRequests = db.GetMaterialRequests();
+            var allRequests = facade.GetMaterialRequests();
             
             var filtered = allRequests.AsQueryable();
             
@@ -107,7 +108,7 @@ namespace praktik
                 filtered = filtered.Where(r => r.RequiredDate.HasValue && r.RequiredDate.Value >= date);
             }
             
-            var tasks = db.GetTasks();
+            var tasks = facade.GetTasks();
             foreach (var req in filtered.ToList())
             {
                 var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId);
@@ -120,7 +121,7 @@ namespace praktik
             LoadRequests();
         }
 
-        private void btnResetFilter_Click(object sender, RoutedEventArgs e)
+        private void BtnResetFilter_Click(object sender, RoutedEventArgs e)
         {
             if (cbStatusFilter != null)
                 cbStatusFilter.SelectedIndex = 0;
@@ -133,9 +134,9 @@ namespace praktik
             LoadRequests();
         }
 
-        private void dgRequests_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void DgRequests_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            if (dgRequests.SelectedItem == null)
+            if (!(dgRequests.SelectedItem is MaterialRequestRegistryDisplay display))
             {
                 selectedRequest = null;
                 if (detailsPanel != null)
@@ -147,11 +148,7 @@ namespace praktik
 
             try
             {
-                var display = dgRequests.SelectedItem as MaterialRequestRegistryDisplay;
-                if (display != null)
-                {
-                    selectedRequest = db.GetMaterialRequests(null, display.RequestId).FirstOrDefault();
-                }
+                selectedRequest = facade.GetMaterialRequests(null, display.RequestId).FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -159,7 +156,7 @@ namespace praktik
             }
         }
 
-        private void dgRequests_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void DgRequests_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (dgRequests.SelectedItem == null) return;
 
@@ -167,7 +164,7 @@ namespace praktik
             {
                 try
                 {
-                    selectedRequest = db.GetMaterialRequests(null, display.RequestId).FirstOrDefault();
+                    selectedRequest = facade.GetMaterialRequests(null, display.RequestId).FirstOrDefault();
                     if (selectedRequest != null)
                     {
                         detailsPanel.Visibility = Visibility.Visible;
@@ -233,13 +230,13 @@ namespace praktik
             }
         }
 
-        private void btnApprove_Click(object sender, RoutedEventArgs e)
+        private void BtnApprove_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
             
             try
             {
-                db.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Approved", LoginWindow.CurrentUser.UserId);
+                facade.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Approved", LoginWindow.CurrentUser.UserId);
                 MessageBox.Show("Заявка согласована");
                 LoadRequests();
                 selectedRequest = null;
@@ -251,7 +248,7 @@ namespace praktik
             }
         }
 
-        private void btnReject_Click(object sender, RoutedEventArgs e)
+        private void BtnReject_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
             
@@ -266,7 +263,7 @@ namespace praktik
                 
                 try
                 {
-                    db.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Rejected", LoginWindow.CurrentUser.UserId, dialog.Note);
+                    facade.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Rejected", LoginWindow.CurrentUser.UserId, dialog.Note);
                     MessageBox.Show("Заявка отклонена");
                     LoadRequests();
                     selectedRequest = null;
@@ -279,7 +276,7 @@ namespace praktik
             }
         }
 
-        private void btnIssue_Click(object sender, RoutedEventArgs e)
+        private void BtnIssue_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
             
@@ -288,10 +285,10 @@ namespace praktik
             {
                 try
                 {
-                    db.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Issued", LoginWindow.CurrentUser.UserId, dialog.Note);
+                    facade.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Issued", LoginWindow.CurrentUser.UserId, dialog.Note);
                     if (!string.IsNullOrEmpty(dialog.DocNumber))
                     {
-                        db.AddMaterialDeliveryDoc(selectedRequest.RequestId, "Issued", dialog.DocNumber, dialog.Note);
+                        facade.AddMaterialDeliveryDoc(selectedRequest.RequestId, "Issued", dialog.DocNumber, dialog.Note);
                     }
                     MessageBox.Show("Выдача отмечена");
                     LoadRequests();
@@ -305,7 +302,7 @@ namespace praktik
             }
         }
 
-        private void btnDeliver_Click(object sender, RoutedEventArgs e)
+        private void BtnDeliver_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
             
@@ -314,10 +311,10 @@ namespace praktik
             {
                 try
                 {
-                    db.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Delivered", LoginWindow.CurrentUser.UserId, dialog.Note);
+                    facade.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Delivered", LoginWindow.CurrentUser.UserId, dialog.Note);
                     if (!string.IsNullOrEmpty(dialog.DocNumber))
                     {
-                        db.AddMaterialDeliveryDoc(selectedRequest.RequestId, "Delivered", dialog.DocNumber, dialog.Note);
+                        facade.AddMaterialDeliveryDoc(selectedRequest.RequestId, "Delivered", dialog.DocNumber, dialog.Note);
                     }
                     MessageBox.Show("Доставка отмечена");
                     LoadRequests();
@@ -331,7 +328,7 @@ namespace praktik
             }
         }
 
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
             
@@ -340,7 +337,7 @@ namespace praktik
             {
                 try
                 {
-                    db.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Closed", LoginWindow.CurrentUser.UserId);
+                    facade.ChangeMaterialRequestStatus(selectedRequest.RequestId, "Closed", LoginWindow.CurrentUser.UserId);
                     MessageBox.Show("Заявка закрыта");
                     LoadRequests();
                     selectedRequest = null;
@@ -353,7 +350,7 @@ namespace praktik
             }
         }
 
-        private void btnEdit_Click(object sender, RoutedEventArgs e)
+        private void BtnEdit_Click(object sender, RoutedEventArgs e)
         {
             if (selectedRequest == null) return;
             
@@ -366,7 +363,7 @@ namespace praktik
             }
         }
 
-        private void btnAddRequest_Click(object sender, RoutedEventArgs e)
+        private void BtnAddRequest_Click(object sender, RoutedEventArgs e)
         {
             var taskSelectionWindow = new TaskSelectionWindow();
             if (taskSelectionWindow.ShowDialog() == true && taskSelectionWindow.SelectedTask != null)
@@ -379,7 +376,7 @@ namespace praktik
             }
         }
 
-        private void btnExport_Click(object sender, RoutedEventArgs e)
+        private void BtnExport_Click(object sender, RoutedEventArgs e)
         {
             var saveDialog = new SaveFileDialog
             {
@@ -403,9 +400,9 @@ namespace praktik
 
         private void ExportToFile(string fileName, bool isCsv)
         {
-            var tasks = db.GetTasks();
-            var sites = db.GetSites();
-            var crews = db.GetCrews();
+            var tasks = facade.GetTasks();
+            var sites = facade.GetSites();
+            var crews = facade.GetCrews();
             
             using (var writer = new StreamWriter(fileName, false, System.Text.Encoding.UTF8))
             {

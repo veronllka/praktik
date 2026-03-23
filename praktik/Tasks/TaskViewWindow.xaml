@@ -188,12 +188,36 @@
                                          BorderBrush="#BDBDBD"
                                          BorderThickness="1"
                                          Foreground="#212121"
-                                         TextChanged="txtNewNote_TextChanged"
+                                         TextChanged="TxtNewNote_TextChanged"
                                          Margin="0,0,0,10"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                                    <TextBlock Text="Прогресс, %"
+                                               FontSize="13"
+                                               Foreground="#424242"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                                    <TextBox x:Name="txtProgressPercent"
+                                             Width="90"
+                                             Height="32"
+                                             FontSize="14"
+                                             Padding="8,0"
+                                             MaxLength="3"
+                                             VerticalContentAlignment="Center"
+                                             Background="White"
+                                             BorderBrush="#BDBDBD"
+                                             BorderThickness="1"
+                                             PreviewTextInput="ProgressTextBox_PreviewTextInput"
+                                             DataObject.Pasting="ProgressTextBox_Pasting"/>
+                                    <TextBlock Text="Необязательно"
+                                               FontSize="12"
+                                               Foreground="#757575"
+                                               VerticalAlignment="Center"
+                                               Margin="10,0,0,0"/>
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Content="Сохранить" 
                                             x:Name="btnSaveNote"
-                                            Click="btnSaveNote_Click"
+                                            Click="BtnSaveNote_Click"
                                             Width="120" 
                                             Height="35"
                                             FontSize="14"
@@ -231,7 +255,7 @@
                                     </Button>
                                     <Button Content="Отмена" 
                                             x:Name="btnCancelNote"
-                                            Click="btnCancelNote_Click"
+                                            Click="BtnCancelNote_Click"
                                             Width="100" 
                                             Height="35"
                                             FontSize="14"
@@ -280,9 +304,9 @@
                                                        LineHeight="20"
                                                        Margin="0,0,0,8"/>
                                             <TextBlock FontSize="12" Foreground="#757575">
-                                                <Run Text="{Binding ReportDateDisplay}"/>
+                                                <Run Text="{Binding ReportedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"/>
                                                 <Run Text=" • "/>
-                                                <Run Text="{Binding UserName}"/>
+                                                <Run Text="{Binding ReporterName}"/>
                                             </TextBlock>
                                         </StackPanel>
                                     </Border>
@@ -298,7 +322,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="📱 Показать QR-код" 
                         x:Name="btnShowQR"
-                        Click="btnShowQR_Click"
+                        Click="BtnShowQR_Click"
                         Width="180" 
                         Height="40"
                         Background="#4CAF50"
@@ -331,7 +355,7 @@
                 </Button>
                 
                 <Button Content="Закрыть" 
-                        Click="btnClose_Click" 
+                        Click="BtnClose_Click" 
                         Width="120" 
                         Height="40"
                         Background="#1976D2"
@@ -365,4 +389,3 @@
         </Border>
     </Grid>
 </Window>
-

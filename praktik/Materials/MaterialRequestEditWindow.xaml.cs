@@ -3,12 +3,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class MaterialRequestEditWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private MaterialRequest request;
         private int taskId;
         private ObservableCollection<MaterialRequestItem> items;
@@ -36,7 +37,7 @@ namespace praktik
 
         private void LoadMaterials()
         {
-            cbMaterial.ItemsSource = db.GetMaterialCatalog();
+            cbMaterial.ItemsSource = facade.GetMaterialCatalog();
         }
 
         private void LoadRequestData()
@@ -140,7 +141,7 @@ namespace praktik
                         Comment = txtComment.Text,
                         Items = items.ToList()
                     };
-                    db.CreateMaterialRequest(request);
+                    facade.CreateMaterialRequest(request);
                 }
                 else
                 {
@@ -153,7 +154,7 @@ namespace praktik
                     request.RequiredDate = dpRequiredDate.SelectedDate;
                     request.Comment = txtComment.Text;
                     request.Items = items.ToList();
-                    db.UpdateMaterialRequest(request);
+                    facade.UpdateMaterialRequest(request);
                 }
 
                 MessageBox.Show("Заявка сохранена");
@@ -197,8 +198,8 @@ namespace praktik
                         Comment = txtComment.Text,
                         Items = items.ToList()
                     };
-                    var requestId = db.CreateMaterialRequest(request);
-                    db.ChangeMaterialRequestStatus(requestId, "Submitted", LoginWindow.CurrentUser.UserId);
+                    var requestId = facade.CreateMaterialRequest(request);
+                    facade.ChangeMaterialRequestStatus(requestId, "Submitted", LoginWindow.CurrentUser.UserId);
                 }
                 else
                 {
@@ -211,8 +212,8 @@ namespace praktik
                     request.RequiredDate = dpRequiredDate.SelectedDate;
                     request.Comment = txtComment.Text;
                     request.Items = items.ToList();
-                    db.UpdateMaterialRequest(request);
-                    db.ChangeMaterialRequestStatus(request.RequestId, "Submitted", LoginWindow.CurrentUser.UserId);
+                    facade.UpdateMaterialRequest(request);
+                    facade.ChangeMaterialRequestStatus(request.RequestId, "Submitted", LoginWindow.CurrentUser.UserId);
                 }
 
                 MessageBox.Show("Заявка отправлена на согласование");

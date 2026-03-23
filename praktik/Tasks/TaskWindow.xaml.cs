@@ -4,28 +4,36 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class TaskWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private Task task;
+        private readonly Task duplicatedFromTask;
+        private int? copiedLabelId;
         private ObservableCollection<MaterialRequestDisplay> materialRequests;
         private bool hasUnsavedNote = false;
+        public int? SavedTaskId { get; private set; }
 
-        public TaskWindow(Task task = null)
+        public TaskWindow(Task task = null, bool isDuplicateMode = false)
         {
             InitializeComponent();
-            this.task = task;
+            duplicatedFromTask = isDuplicateMode ? task : null;
+            this.task = isDuplicateMode ? null : task;
+            copiedLabelId = task?.LabelId;
+
             materialRequests = new ObservableCollection<MaterialRequestDisplay>();
             dgMaterialRequests.ItemsSource = materialRequests;
             
             LoadData();
 
-            if (task != null)
+            if (this.task != null)
             {
                 LoadTaskData();
                 LoadMaterialRequests();
@@ -33,6 +41,12 @@ namespace praktik
                 btnPrint.Visibility = Visibility.Visible;
                 LoadEvents();
                 CheckQuickNotePermissions();
+            }
+            else if (isDuplicateMode && duplicatedFromTask != null)
+            {
+                LoadTaskData(duplicatedFromTask);
+                ApplyDuplicateDates(duplicatedFromTask);
+                Title = "Дублирование задачи";
             }
             else
             {
@@ -45,26 +59,42 @@ namespace praktik
 
         private void LoadData()
         {
-            cbSites.ItemsSource = db.GetSites();
-            cbCrews.ItemsSource = db.GetCrews();
-            cbPriorities.ItemsSource = db.GetPriorities();
+            cbSites.ItemsSource = facade.GetSites();
+            cbCrews.ItemsSource = facade.GetCrews();
+            cbPriorities.ItemsSource = facade.GetPriorities();
         }
 
         private void LoadTaskData()
         {
-            txtTitle.Text = task.Title;
-            txtDescription.Text = task.Description;
-            dpStartDate.SelectedDate = task.StartDate;
-            dpEndDate.SelectedDate = task.EndDate;
-            cbSites.SelectedItem = task.Site;
-            cbCrews.SelectedItem = task.Crew;
-            cbPriorities.SelectedItem = task.Priority;
+            if (task == null) return;
+
+            LoadTaskData(task);
+        }
+
+        private void LoadTaskData(Task sourceTask)
+        {
+            if (sourceTask == null) return;
+
+            txtTitle.Text = sourceTask.Title;
+            txtDescription.Text = sourceTask.Description;
+            dpStartDate.SelectedDate = sourceTask.StartDate;
+            dpEndDate.SelectedDate = sourceTask.EndDate;
+
+            cbSites.SelectedItem = (cbSites.ItemsSource as IEnumerable<Site>)?
+                .FirstOrDefault(s => s.SiteId == sourceTask.SiteId);
+
+            cbCrews.SelectedItem = sourceTask.CrewId.HasValue
+                ? (cbCrews.ItemsSource as IEnumerable<Crew>)?.FirstOrDefault(c => c.CrewId == sourceTask.CrewId.Value)
+                : null;
+
+            cbPriorities.SelectedItem = (cbPriorities.ItemsSource as IEnumerable<Priority>)?
+                .FirstOrDefault(p => p.PriorityId == sourceTask.PriorityId);
         }
 
         private void LoadMaterialRequests()
         {
             materialRequests.Clear();
-            var requests = db.GetMaterialRequests(task?.TaskId);
+            var requests = facade.GetMaterialRequests(task?.TaskId);
             foreach (var req in requests)
             {
                 materialRequests.Add(new MaterialRequestDisplay(req));
@@ -74,16 +104,45 @@ namespace praktik
         private void CheckAwaitMTSLabel()
         {
             if (task == null) return;
-            
-            var hasAwaitingRequest = materialRequests.Any(r => 
+
+            var hasAwaitingRequest = materialRequests.Any(r =>
                 r.Status == "Submitted" || r.Status == "Approved" || r.Status == "Issued");
-            
+
             borderAwaitMTS.Visibility = hasAwaitingRequest ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void btnSave_Click(object sender, RoutedEventArgs e)
+        private void ApplyDuplicateDates(Task sourceTask)
+        {
+            if (sourceTask == null) return;
+
+            var duration = (sourceTask.EndDate.Date - sourceTask.StartDate.Date).Days;
+            if (duration < 1)
+            {
+                duration = 7;
+            }
+
+            dpStartDate.SelectedDate = DateTime.Today;
+            dpEndDate.SelectedDate = DateTime.Today.AddDays(duration);
+        }
+
+        private int ResolveInitialStatusId()
+        {
+            var statuses = facade.GetTaskStatuses();
+            var newStatus = statuses.FirstOrDefault(s => string.Equals(s.TaskStatusName, "Новая", StringComparison.OrdinalIgnoreCase))
+                         ?? statuses.FirstOrDefault(s => string.Equals(s.TaskStatusName, "New", StringComparison.OrdinalIgnoreCase));
+
+            if (newStatus != null)
+            {
+                return newStatus.TaskStatusId;
+            }
+
+            return facade.GetNewTaskStatusId("Новая");
+        }
+
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtTitle.Text) || cbSites.SelectedItem == null ||
+                cbCrews.SelectedItem == null ||
                 cbPriorities.SelectedItem == null || dpStartDate.SelectedDate == null ||
                 dpEndDate.SelectedDate == null)
             {
@@ -107,15 +166,17 @@ namespace praktik
                         Description = txtDescription.Text,
                         StartDate = dpStartDate.SelectedDate.Value,
                         EndDate = dpEndDate.SelectedDate.Value,
-                        SiteId = (cbSites.SelectedItem as Site).SiteId,
-                        CrewId = cbCrews.SelectedItem != null ? (cbCrews.SelectedItem as Crew).CrewId : (int?)null,
-                        PriorityId = (cbPriorities.SelectedItem as Priority).PriorityId,
-                        TaskStatusId = db.GetNewTaskStatusId("New"),
+                        SiteId = (cbSites.SelectedItem is Site site) ? site.SiteId : 0,
+                        CrewId = cbCrews.SelectedItem is Crew crew ? (int?)crew.CrewId : null,
+                        PriorityId = (cbPriorities.SelectedItem is Priority priority) ? priority.PriorityId : 0,
+                        TaskStatusId = ResolveInitialStatusId(),
+                        LabelId = copiedLabelId,
                         CreatedBy = LoginWindow.CurrentUser.UserId,
                         CreatedAt = DateTime.Now
                     };
 
-                    db.AddTask(task);
+                    facade.AddTask(task);
+                    SavedTaskId = task.TaskId > 0 ? (int?)task.TaskId : null;
                 }
                 else
                 {
@@ -123,12 +184,13 @@ namespace praktik
                     task.Description = txtDescription.Text;
                     task.StartDate = dpStartDate.SelectedDate.Value;
                     task.EndDate = dpEndDate.SelectedDate.Value;
-                    task.SiteId = (cbSites.SelectedItem as Site).SiteId;
-                    task.CrewId = cbCrews.SelectedItem != null ? (cbCrews.SelectedItem as Crew).CrewId : (int?)null;
-                    task.PriorityId = (cbPriorities.SelectedItem as Priority).PriorityId;
+                    task.SiteId = (cbSites.SelectedItem is Site site) ? site.SiteId : 0;
+                    task.CrewId = cbCrews.SelectedItem is Crew crew ? (int?)crew.CrewId : null;
+                    task.PriorityId = (cbPriorities.SelectedItem is Priority priority) ? priority.PriorityId : 0;
                     task.UpdatedAt = DateTime.Now;
 
-                    db.UpdateTask(task);
+                    facade.UpdateTask(task);
+                    SavedTaskId = task.TaskId;
                 }
 
                 DialogResult = true;
@@ -140,13 +202,13 @@ namespace praktik
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
         }
 
-        private void btnNewRequest_Click(object sender, RoutedEventArgs e)
+        private void BtnNewRequest_Click(object sender, RoutedEventArgs e)
         {
             if (task == null)
             {
@@ -162,11 +224,11 @@ namespace praktik
             }
         }
 
-        private void btnEditRequest_Click(object sender, RoutedEventArgs e)
+        private void BtnEditRequest_Click(object sender, RoutedEventArgs e)
         {
             if (dgMaterialRequests.SelectedItem is MaterialRequestDisplay display)
             {
-                var request = db.GetMaterialRequests(task.TaskId, null).FirstOrDefault(r => r.RequestId == display.RequestId);
+                var request = facade.GetMaterialRequests(task.TaskId, null).FirstOrDefault(r => r.RequestId == display.RequestId);
                 if (request == null)
                 {
                     MessageBox.Show("Заявка не найдена");
@@ -192,7 +254,7 @@ namespace praktik
             }
         }
 
-        private void btnViewRequestHistory_Click(object sender, RoutedEventArgs e)
+        private void BtnViewRequestHistory_Click(object sender, RoutedEventArgs e)
         {
             if (task == null)
             {
@@ -200,7 +262,7 @@ namespace praktik
                 return;
             }
 
-            var reports = db.GetTaskReports(task.TaskId);
+            var reports = facade.GetTaskReports(task.TaskId);
             var materialReports = reports.Where(r => 
                 r.ReportText != null && (
                     r.ReportText.Contains("заявк") || 
@@ -220,12 +282,12 @@ namespace praktik
             MessageBox.Show(history, "История по заявкам", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void dgMaterialRequests_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void DgMaterialRequests_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             btnEditRequest.IsEnabled = dgMaterialRequests.SelectedItem != null;
         }
 
-        private void btnPrint_Click(object sender, RoutedEventArgs e)
+        private void BtnPrint_Click(object sender, RoutedEventArgs e)
         {
             if (task == null)
             {
@@ -252,15 +314,15 @@ namespace praktik
         {
             if (task == null) return;
 
-            var reports = db.GetTaskReports(task.TaskId);
+            var reports = facade.GetTaskReports(task.TaskId);
             var events = new List<EventDisplay>();
 
             foreach (var report in reports)
             {
                 events.Add(new EventDisplay
                 {
-                    DisplayText = report.ReportText ?? "Событие",
-                    TimeInfo = $"{report.ReporterName} • {report.ReportedAt:dd.MM.yyyy HH:mm}"
+                    DisplayText = GetEventDisplayText(report),
+                    TimeInfo = $"{report.ReporterName ?? "Система"} • {report.ReportedAt:dd.MM.yyyy HH:mm}"
                 });
             }
 
@@ -291,56 +353,33 @@ namespace praktik
         {
             if (e.Key == System.Windows.Input.Key.Enter && btnSaveNote.IsEnabled)
             {
-                btnSaveNote_Click(sender, e);
+                BtnSaveNote_Click(sender, e);
                 e.Handled = true;
             }
             else if (e.Key == System.Windows.Input.Key.Escape)
             {
-                btnCancelNote_Click(sender, e);
+                BtnCancelNote_Click(sender, e);
                 e.Handled = true;
             }
         }
 
-        private void btnSaveNote_Click(object sender, RoutedEventArgs e)
+        private void BtnSaveNote_Click(object sender, RoutedEventArgs e)
         {
-            if (task == null) return;
-
-            var noteText = txtQuickNote.Text?.Trim() ?? "";
-            
-            if (noteText.Length < 3 || noteText.Length > 200)
-            {
-                MessageBox.Show("Заметка должна содержать от 3 до 200 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                db.AddTaskReport(task.TaskId, userId, noteText);
-
-                ShowToast("Заметка добавлена");
-                
-                txtQuickNote.Text = "";
-                pnlQuickNote.Visibility = Visibility.Collapsed;
-                btnAddQuickNote.Visibility = Visibility.Visible;
-                hasUnsavedNote = false;
-
-                LoadEvents();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            TrySaveQuickNote();
         }
 
-        private void btnCancelNote_Click(object sender, RoutedEventArgs e)
+        private void BtnCancelNote_Click(object sender, RoutedEventArgs e)
         {
             if (hasUnsavedNote)
             {
                 var result = MessageBox.Show("Сохранить черновик?", "Несохраненная заметка", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
-                    btnSaveNote_Click(sender, e);
+                    if (TrySaveQuickNote())
+                    {
+                        return;
+                    }
+
                     return;
                 }
                 else if (result == MessageBoxResult.Cancel)
@@ -349,10 +388,7 @@ namespace praktik
                 }
             }
 
-            txtQuickNote.Text = "";
-            pnlQuickNote.Visibility = Visibility.Collapsed;
-            btnAddQuickNote.Visibility = Visibility.Visible;
-            hasUnsavedNote = false;
+            ResetQuickNoteEditor();
         }
 
         private void BtnAddEventComment_Click(object sender, RoutedEventArgs e)
@@ -377,14 +413,26 @@ namespace praktik
                 return;
             }
 
+            if (!TryGetProgressPercent(txtEventProgressPercent.Text, out var progressPercent))
+            {
+                txtEventProgressPercent.Focus();
+                txtEventProgressPercent.SelectAll();
+                return;
+            }
+
             try
             {
                 var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                db.AddTaskReport(task.TaskId, userId, commentText);
+                if (!facade.AddTaskReport(task.TaskId, userId, commentText, progressPercent))
+                {
+                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
+                }
 
                 ShowToast("Комментарий добавлен");
                 
                 txtEventComment.Text = "";
+                txtEventProgressPercent.Clear();
+                SuggestCompletionIfNeeded(progressPercent);
                 LoadEvents();
             }
             catch (Exception ex)
@@ -402,7 +450,11 @@ namespace praktik
                 {
                     if (task != null && btnSaveNote.IsEnabled)
                     {
-                        btnSaveNote_Click(null, null);
+                        if (!TrySaveQuickNote())
+                        {
+                            e.Cancel = true;
+                            return;
+                        }
                     }
                     else
                     {
@@ -416,6 +468,175 @@ namespace praktik
                     return;
                 }
             }
+        }
+
+        private bool TrySaveQuickNote()
+        {
+            if (task == null)
+            {
+                return false;
+            }
+
+            var noteText = txtQuickNote.Text?.Trim() ?? "";
+            if (noteText.Length < 3 || noteText.Length > 200)
+            {
+                MessageBox.Show("Заметка должна содержать от 3 до 200 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (!TryGetProgressPercent(txtQuickNoteProgressPercent.Text, out var progressPercent))
+            {
+                txtQuickNoteProgressPercent.Focus();
+                txtQuickNoteProgressPercent.SelectAll();
+                return false;
+            }
+
+            try
+            {
+                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                if (!facade.AddTaskReport(task.TaskId, userId, noteText, progressPercent))
+                {
+                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
+                }
+
+                ShowToast("Заметка добавлена");
+
+                ResetQuickNoteEditor();
+                SuggestCompletionIfNeeded(progressPercent);
+                LoadEvents();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+        }
+
+        private void ResetQuickNoteEditor()
+        {
+            txtQuickNote.Clear();
+            txtQuickNoteProgressPercent.Clear();
+            pnlQuickNote.Visibility = Visibility.Collapsed;
+            btnAddQuickNote.Visibility = Visibility.Visible;
+            hasUnsavedNote = false;
+        }
+
+        private void ProgressTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                e.Handled = !IsProgressInputAllowed(textBox, e.Text);
+            }
+        }
+
+        private void ProgressTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!(sender is TextBox textBox))
+            {
+                return;
+            }
+
+            var pastedText = e.DataObject.GetData(typeof(string)) as string;
+            if (!IsProgressInputAllowed(textBox, pastedText))
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private bool TryGetProgressPercent(string text, out int? progressPercent)
+        {
+            progressPercent = null;
+            var trimmedText = text?.Trim();
+
+            if (string.IsNullOrEmpty(trimmedText))
+            {
+                return true;
+            }
+
+            if (int.TryParse(trimmedText, out var value) && value >= 0 && value <= 100)
+            {
+                progressPercent = value;
+                return true;
+            }
+
+            MessageBox.Show("Процент выполнения должен быть числом от 0 до 100", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        private bool IsProgressInputAllowed(TextBox textBox, string newText)
+        {
+            var candidateText = BuildCandidateText(textBox, newText);
+            if (string.IsNullOrWhiteSpace(candidateText))
+            {
+                return true;
+            }
+
+            return int.TryParse(candidateText, out var value) && value >= 0 && value <= 100;
+        }
+
+        private string BuildCandidateText(TextBox textBox, string newText)
+        {
+            var currentText = textBox.Text ?? string.Empty;
+
+            if (textBox.SelectionLength > 0)
+            {
+                currentText = currentText.Remove(textBox.SelectionStart, textBox.SelectionLength);
+            }
+
+            return currentText.Insert(textBox.SelectionStart, newText ?? string.Empty).Trim();
+        }
+
+        private void SuggestCompletionIfNeeded(int? progressPercent)
+        {
+            if (task == null || progressPercent != 100 || IsTaskCompleted())
+            {
+                return;
+            }
+
+            var completedStatus = facade.GetTaskStatuses().FirstOrDefault(status =>
+                string.Equals(status.TaskStatusName, "Завершено", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(status.TaskStatusName, "Completed", StringComparison.OrdinalIgnoreCase));
+
+            if (completedStatus == null)
+            {
+                return;
+            }
+
+            var result = MessageBox.Show(
+                "Указан прогресс 100%. Перевести задачу в статус «Завершено»?",
+                "Завершение задачи",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+            if (!facade.UpdateTaskStatus(task.TaskId, completedStatus.TaskStatusId, userId, out var errorMessage))
+            {
+                MessageBox.Show(errorMessage ?? "Не удалось изменить статус задачи", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            task.TaskStatusId = completedStatus.TaskStatusId;
+            task.TaskStatus = completedStatus;
+        }
+
+        private bool IsTaskCompleted()
+        {
+            return string.Equals(task?.TaskStatus?.TaskStatusName, "Завершено", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(task?.TaskStatus?.TaskStatusName, "Completed", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string GetEventDisplayText(TaskReport report)
+        {
+            var eventText = string.IsNullOrWhiteSpace(report?.ReportText) ? "Событие" : report.ReportText.Trim();
+            return report?.ProgressPercent.HasValue == true
+                ? $"{report.ProgressPercent.Value}% • {eventText}"
+                : eventText;
         }
 
         private void ShowToast(string message)

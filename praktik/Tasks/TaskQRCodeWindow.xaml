@@ -150,7 +150,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Content="💾 Сохранить как изображение" 
                         x:Name="btnSaveImage"
-                        Click="btnSaveImage_Click"
+                        Click="BtnSaveImage_Click"
                         Width="220" 
                         Height="40"
                         Background="#4CAF50"
@@ -183,7 +183,7 @@
                 </Button>
                 
                 <Button Content="Закрыть" 
-                        Click="btnClose_Click" 
+                        Click="BtnClose_Click" 
                         Width="120" 
                         Height="40"
                         Background="#757575"

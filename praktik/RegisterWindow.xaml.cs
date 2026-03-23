@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
@@ -13,7 +14,7 @@ namespace praktik
     /// </summary>
     public partial class RegisterWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private bool isPasswordVisible = false;
         private string currentPassword = string.Empty;
 
@@ -25,12 +26,11 @@ namespace praktik
 
         private void LoadRoles()
         {
-            cbRoles.ItemsSource = db.GetRoles();
+            cbRoles.ItemsSource = facade.GetRoles();
         }
 
         /// <summary>
         /// Обработчик нажатия кнопки регистрации.
-        /// Проверяет введенные данные и создает нового пользователя в базе.
         /// </summary>
         private void BtnRegister_Click(object sender, RoutedEventArgs e)
         {
@@ -46,7 +46,7 @@ namespace praktik
             try
             {
                 var selectedRole = cbRoles.SelectedItem as Role;
-                db.RegisterUser(txtUsername.Text.Trim(), currentPassword, txtFullName.Text.Trim(), selectedRole.RoleId);
+                facade.RegisterUser(txtUsername.Text.Trim(), currentPassword, txtFullName.Text.Trim(), selectedRole.RoleId);
                 
                 DialogResult = true;
                 Close();

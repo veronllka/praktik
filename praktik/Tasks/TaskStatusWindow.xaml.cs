@@ -2,12 +2,13 @@ using System;
 using System.Linq;
 using System.Windows;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class TaskStatusWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private Task task;
 
         public TaskStatusWindow(Task task)
@@ -20,11 +21,11 @@ namespace praktik
         private void LoadData()
         {
             txtTaskInfo.Text = $"Задача: {task.Title}\nТекущий статус: {task.TaskStatus.TaskStatusName}";
-            cbStatuses.ItemsSource = db.GetTaskStatuses();
+            cbStatuses.ItemsSource = facade.GetTaskStatuses();
             cbStatuses.SelectedItem = task.TaskStatus;
         }
 
-        private void btnSave_Click(object sender, RoutedEventArgs e)
+        private void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (cbStatuses.SelectedItem == null)
             {
@@ -34,10 +35,10 @@ namespace praktik
 
             try
             {
-                var newStatus = cbStatuses.SelectedItem as TaskStatus;
+                if (cbStatuses.SelectedItem is TaskStatus newStatus)
 
                 // Обновляем статус задачи
-                db.UpdateTaskStatus(task.TaskId, newStatus.TaskStatusId, LoginWindow.CurrentUser.UserId,
+                facade.UpdateTaskStatus(task.TaskId, newStatus.TaskStatusId, LoginWindow.CurrentUser.UserId,
                     string.IsNullOrWhiteSpace(txtComment.Text) ? "Статус изменен" : txtComment.Text);
 
                 DialogResult = true;
@@ -49,7 +50,7 @@ namespace praktik
             }
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();

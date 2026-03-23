@@ -1,29 +1,21 @@
 using System;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media.Imaging;
-using System.IO;
-using System.Printing;
-using System.Drawing;
-using System.Drawing.Imaging;
 using praktik.Models;
-using ZXing;
-using ZXing.QrCode;
-using System.Text;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class TaskPrintPreviewWindow : Window    
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private Task task;
         private TaskReport lastReport;
 
         public TaskPrintPreviewWindow(int taskId)
         {
             InitializeComponent();
-            task = db.GetTaskById(taskId);
+            task = facade.GetTaskById(taskId);
             
             if (task == null)
             {
@@ -83,7 +75,7 @@ namespace praktik
         {
             if (task == null) return;
 
-            var reports = db.GetTaskReports(task.TaskId);
+            var reports = facade.GetTaskReports(task.TaskId);
             lastReport = reports.Count > 0 ? reports[0] : null;
 
             if (lastReport != null && (!string.IsNullOrEmpty(lastReport.ReportText) || lastReport.ProgressPercent.HasValue))
@@ -149,7 +141,7 @@ namespace praktik
         }
 
 
-        private void btnPrint_Click(object sender, RoutedEventArgs e)
+        private void BtnPrint_Click(object sender, RoutedEventArgs e)
         {
             if (task == null)
             {
@@ -171,7 +163,7 @@ namespace praktik
                 {
                     PrintDocument(printDialog);
 
-                    db.AddTaskReport(task.TaskId, LoginWindow.CurrentUser.UserId, 
+                    facade.AddTaskReport(task.TaskId, LoginWindow.CurrentUser.UserId, 
                         "Задача распечатана");
 
                     MessageBox.Show("Наряд напечатан", "Печать", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -202,7 +194,7 @@ namespace praktik
             printDialog.PrintVisual(printContent, $"Наряд: {task.Title}");
         }
 
-        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();

@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using praktik.Models;
+using praktik.Models.Patterns;
 using praktik.Models.Patterns.Factories;
 
 namespace praktik
@@ -14,6 +15,7 @@ namespace praktik
     public partial class LoginWindow : Window
     {
         public static User CurrentUser { get; set; }
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private bool isPasswordVisible = false;
         private string currentPassword = string.Empty;
 
@@ -72,25 +74,18 @@ namespace praktik
             }
         }
 
-        /// <summary>
-        /// Выполняет попытку входа в систему с указанными учетными данными.
-        /// При успехе открывает главное окно.
-        /// </summary>
         /// <param name="username">Имя пользователя.</param>
         /// <param name="password">Пароль.</param>
         private void TryLogin(string username, string password)
         {
-            using (var context = new WorkPlannerContext())
+            var user = facade.GetUser(username, password);
+            if (user == null)
             {
-                var user = context.GetUser(username, password);
-                if (user == null)
-                {
-                    txtError.Text = "Неверный логин или пароль";
-                    return;
-                }
-
-                OpenMainWindow(user);
+                txtError.Text = "Неверный логин или пароль";
+                return;
             }
+
+            OpenMainWindow(user);
         }
 
         private void OpenMainWindow(User user)

@@ -1,17 +1,18 @@
 using System;
 using System.IO;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
-using QRCoder;
 using praktik.Models;
+using praktik.Models.Patterns;
+using ZXing;
+using ZXing.Common;
 
 namespace praktik
 {
     public partial class TaskQRCodeWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private Models.Task task;
         private BitmapSource qrCodeBitmap;
 
@@ -25,7 +26,7 @@ namespace praktik
         {
             try
             {
-                task = db.GetTaskById(taskId);
+                task = facade.GetTaskById(taskId);
 
                 if (task == null)
                 {
@@ -62,11 +63,29 @@ namespace praktik
             {
                 string qrData = task.GenerateQRData();
                 txtQRData.Text = qrData;
-                QRCodeGenerator qrGenerator = new QRCodeGenerator();
-                QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
-                var qrCode = new QRCode(qrCodeData);
-                var qrCodeImage = qrCode.GetGraphic(20, "#000000", "#FFFFFF", true);
-                qrCodeBitmap = ConvertBitmapToBitmapSource(qrCodeImage);
+
+                var writer = new BarcodeWriterPixelData
+                {
+                    Format = BarcodeFormat.QR_CODE,
+                    Options = new EncodingOptions
+                    {
+                        Width = 280,
+                        Height = 280,
+                        Margin = 1
+                    }
+                };
+
+                var pixelData = writer.Write(qrData);
+                qrCodeBitmap = BitmapSource.Create(
+                    pixelData.Width,
+                    pixelData.Height,
+                    96,
+                    96,
+                    System.Windows.Media.PixelFormats.Bgra32,
+                    null,
+                    pixelData.Pixels,
+                    pixelData.Width * 4);
+
                 imgQRCode.Source = qrCodeBitmap;
             }
             catch (Exception ex)
@@ -75,30 +94,7 @@ namespace praktik
             }
         }
 
-        private BitmapSource ConvertBitmapToBitmapSource(System.Drawing.Bitmap bitmap)
-        {
-            var bitmapData = bitmap.LockBits(
-                new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height),
-                System.Drawing.Imaging.ImageLockMode.ReadOnly,
-                bitmap.PixelFormat);
-
-            var bitmapSource = BitmapSource.Create(
-                bitmapData.Width,
-                bitmapData.Height,
-                96,
-                96,
-                PixelFormats.Bgra32,
-                null,
-                bitmapData.Scan0,
-                bitmapData.Stride * bitmapData.Height,
-                bitmapData.Stride);
-
-            bitmap.UnlockBits(bitmapData);
-
-            return bitmapSource;
-        }
-
-        private void btnSaveImage_Click(object sender, RoutedEventArgs e)
+        private void BtnSaveImage_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -132,7 +128,7 @@ namespace praktik
             }
         }
 
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }

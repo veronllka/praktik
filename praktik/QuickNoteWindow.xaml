@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Быстрая заметка" Height="150" Width="500" WindowStartupLocation="CenterScreen"
+        Title="Быстрая заметка" Height="210" Width="500" WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
     <Grid Margin="20">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -24,7 +25,21 @@
                 VerticalContentAlignment="Center"
                 Margin="0,0,0,15"/>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,15">
+            <TextBlock Text="Прогресс, %" FontSize="13" Foreground="#424242" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtProgressPercent"
+                     Width="90"
+                     Height="30"
+                     FontSize="14"
+                     Padding="8,0"
+                     MaxLength="3"
+                     VerticalContentAlignment="Center"
+                     PreviewTextInput="ProgressTextBox_PreviewTextInput"
+                     DataObject.Pasting="ProgressTextBox_Pasting"/>
+            <TextBlock Text="Необязательно" FontSize="12" Foreground="#757575" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="btnSave" 
                    Content="Сохранить" 
                    Click="BtnSave_Click" 
@@ -40,5 +55,9 @@
         </StackPanel>
     </Grid>
 </Window>
+
+
+
+
 
 

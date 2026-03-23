@@ -3,10 +3,6 @@ using praktik;
 
 namespace praktik.Models.Patterns.Factories
 {
-    /// <summary>
-    /// Фабрика для создания окон приложения в зависимости от роли пользователя.
-    /// Реализует вариацию паттерна Factory Method 
-    /// </summary>
     public static class RoleWindowFactory
     {
         /// <summary>
@@ -21,17 +17,21 @@ namespace praktik.Models.Patterns.Factories
             switch (normalizedRole)
             {
                 case "администратор":
-                    return new MainWindow();
+                case "админ":
+                case "admin":
+                case "administrator":
+                    return new AdminWindow();
 
                 case "диспетчер":
-                    return new MainWindow();
+                case "dispatcher":
+                    return new DispatcherWindow();
 
                 case "бригадир":
-                    return new MainWindow();
+                case "foreman":
+                    return new BrigadierWindow();
 
                 default:
-                    // По умолчанию открываем главное окно для всех, включая обычных пользователей
-                    return new MainWindow();
+                    return new BrigadierWindow();
             }
         }
     }

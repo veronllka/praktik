@@ -14,6 +14,8 @@
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <RuntimeIdentifier>win</RuntimeIdentifier>
+    <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -83,12 +85,6 @@
     <PackageReference Include="MaterialDesignThemes.MahApps">
       <Version>5.2.0</Version>
     </PackageReference>
-    <PackageReference Include="QRCoder">
-      <Version>1.7.0</Version>
-    </PackageReference>
-    <PackageReference Include="QRCoder.Xaml">
-      <Version>1.7.0</Version>
-    </PackageReference>
     <PackageReference Include="WPFAnimatedGif">
       <Version>2.0.2</Version>
     </PackageReference>
@@ -102,6 +98,26 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AdminWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="DispatcherWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="BrigadierWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CrewMembersWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="CrewMemberCreateWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -221,10 +237,31 @@
       <DependentUpon>TaskQRCodeWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AdminWindow.xaml.cs">
+      <DependentUpon>AdminWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DispatcherWindow.xaml.cs">
+      <DependentUpon>DispatcherWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BrigadierWindow.xaml.cs">
+      <DependentUpon>BrigadierWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CrewMembersWindow.xaml.cs">
+      <DependentUpon>CrewMembersWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="CrewMemberCreateWindow.xaml.cs">
+      <DependentUpon>CrewMemberCreateWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Models\Data\WorkPlannerContext.cs" />
     <Compile Include="Models\Entities\User.cs" />
     <Compile Include="Models\Entities\Site.cs" />
     <Compile Include="Models\Entities\Crew.cs" />
+    <Compile Include="Models\Entities\CrewMember.cs" />
     <Compile Include="Models\Entities\Priority.cs" />
     <Compile Include="Models\Entities\TaskStatus.cs" />
     <Compile Include="Models\Entities\Task.cs" />
@@ -251,6 +288,9 @@
     <Compile Include="Models\Patterns\States\IssuedState.cs" />
     <Compile Include="Models\Patterns\States\DeliveredState.cs" />
     <Compile Include="Models\Patterns\States\ClosedState.cs" />
+    <Compile Include="Models\Patterns\Services\TaskService.cs" />
+    <Compile Include="Models\Patterns\Services\MaterialRequestService.cs" />
+    <Compile Include="Models\Patterns\Services\ReportService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -279,5 +319,15 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <Target Name="EnsureDesignTimeXamlFiles" AfterTargets="MarkupCompilePass1">
+    <Copy SourceFiles="$(IntermediateOutputPath)CrewMembersWindow.g.cs"
+          DestinationFiles="$(IntermediateOutputPath)CrewMembersWindow.g.i.cs"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(IntermediateOutputPath)CrewMembersWindow.g.cs')" />
+    <Copy SourceFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs"
+          DestinationFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.i.cs"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs')" />
+  </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

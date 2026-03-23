@@ -1,13 +1,16 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using praktik.Models;
+using praktik.Models.Patterns;
 
 namespace praktik
 {
     public partial class TaskViewWindow : Window
     {
-        private readonly WorkPlannerContext db = new WorkPlannerContext();
+        private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private Task task;
         private TaskReport lastReport;
 
@@ -21,7 +24,7 @@ namespace praktik
         {
             try
             {
-                task = db.GetTaskById(taskId);
+                task = facade.GetTaskById(taskId);
                 
                 if (task == null)
                 {
@@ -86,10 +89,10 @@ namespace praktik
         {
             if (task == null) return;
 
-            var reports = db.GetTaskReports(task.TaskId);
-            lastReport = reports.Count > 0 ? reports[0] : null;
+            var reports = facade.GetTaskReports(task.TaskId);
+            lastReport = reports.FirstOrDefault(r => r.ProgressPercent.HasValue) ?? reports.FirstOrDefault();
 
-            if (lastReport != null && (!string.IsNullOrEmpty(lastReport.ReportText) || lastReport.ProgressPercent.HasValue))
+            if (lastReport != null && (!string.IsNullOrWhiteSpace(lastReport.ReportText) || lastReport.ProgressPercent.HasValue))
             {
                 pnlProgress.Visibility = Visibility.Visible;
                 
@@ -114,18 +117,20 @@ namespace praktik
         {
             if (task == null) return;
 
-            var reports = db.GetTaskReports(task.TaskId);
+            var reports = facade.GetTaskReports(task.TaskId);
             icNotes.ItemsSource = reports;
         }
 
-        private void txtNewNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void TxtNewNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             var text = txtNewNote.Text?.Trim() ?? "";
             btnSaveNote.IsEnabled = text.Length >= 3 && text.Length <= 500;
         }
 
-        private void btnSaveNote_Click(object sender, RoutedEventArgs e)
+        private void BtnSaveNote_Click(object sender, RoutedEventArgs e)
         {
+            if (task == null) return;
+
             var noteText = txtNewNote.Text?.Trim() ?? "";
             
             if (noteText.Length < 3 || noteText.Length > 500)
@@ -134,13 +139,25 @@ namespace praktik
                 return;
             }
 
+            if (!TryGetProgressPercent(txtProgressPercent.Text, out var progressPercent))
+            {
+                txtProgressPercent.Focus();
+                txtProgressPercent.SelectAll();
+                return;
+            }
+
             try
             {
                 var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                db.AddTaskReport(task.TaskId, userId, noteText);
+                if (!facade.AddTaskReport(task.TaskId, userId, noteText, progressPercent))
+                {
+                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
+                }
 
-                txtNewNote.Clear();
+                ClearNoteInputs();
+                SuggestCompletionIfNeeded(progressPercent);
                 LoadNotes();
+                LoadLastReport();
                 
                 MessageBox.Show("Заметка добавлена", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -150,19 +167,135 @@ namespace praktik
             }
         }
 
-        private void btnCancelNote_Click(object sender, RoutedEventArgs e)
+        private void BtnCancelNote_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrWhiteSpace(txtNewNote.Text))
             {
                 var result = MessageBox.Show("Отменить ввод заметки?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
-                    txtNewNote.Clear();
+                    ClearNoteInputs();
                 }
             }
         }
 
-        private void btnShowQR_Click(object sender, RoutedEventArgs e)
+        private void ProgressTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                e.Handled = !IsProgressInputAllowed(textBox, e.Text);
+            }
+        }
+
+        private void ProgressTextBox_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (!(sender is TextBox textBox))
+            {
+                return;
+            }
+
+            var pastedText = e.DataObject.GetData(typeof(string)) as string;
+            if (!IsProgressInputAllowed(textBox, pastedText))
+            {
+                e.CancelCommand();
+            }
+        }
+
+        private bool TryGetProgressPercent(string text, out int? progressPercent)
+        {
+            progressPercent = null;
+            var trimmedText = text?.Trim();
+
+            if (string.IsNullOrEmpty(trimmedText))
+            {
+                return true;
+            }
+
+            if (int.TryParse(trimmedText, out var value) && value >= 0 && value <= 100)
+            {
+                progressPercent = value;
+                return true;
+            }
+
+            MessageBox.Show("Процент выполнения должен быть числом от 0 до 100", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        private bool IsProgressInputAllowed(TextBox textBox, string newText)
+        {
+            var candidateText = BuildCandidateText(textBox, newText);
+            if (string.IsNullOrWhiteSpace(candidateText))
+            {
+                return true;
+            }
+
+            return int.TryParse(candidateText, out var value) && value >= 0 && value <= 100;
+        }
+
+        private string BuildCandidateText(TextBox textBox, string newText)
+        {
+            var currentText = textBox.Text ?? string.Empty;
+
+            if (textBox.SelectionLength > 0)
+            {
+                currentText = currentText.Remove(textBox.SelectionStart, textBox.SelectionLength);
+            }
+
+            return currentText.Insert(textBox.SelectionStart, newText ?? string.Empty).Trim();
+        }
+
+        private void ClearNoteInputs()
+        {
+            txtNewNote.Clear();
+            txtProgressPercent.Clear();
+        }
+
+        private void SuggestCompletionIfNeeded(int? progressPercent)
+        {
+            if (task == null || progressPercent != 100 || IsTaskCompleted())
+            {
+                return;
+            }
+
+            var completedStatus = facade.GetTaskStatuses().FirstOrDefault(status =>
+                string.Equals(status.TaskStatusName, "Завершено", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(status.TaskStatusName, "Completed", StringComparison.OrdinalIgnoreCase));
+
+            if (completedStatus == null)
+            {
+                return;
+            }
+
+            var result = MessageBox.Show(
+                "Указан прогресс 100%. Перевести задачу в статус «Завершено»?",
+                "Завершение задачи",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+            if (!facade.UpdateTaskStatus(task.TaskId, completedStatus.TaskStatusId, userId, out var errorMessage))
+            {
+                MessageBox.Show(errorMessage ?? "Не удалось изменить статус задачи", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            task.TaskStatusId = completedStatus.TaskStatusId;
+            task.TaskStatus = completedStatus;
+            txtStatus.Text = completedStatus.TaskStatusName;
+        }
+
+        private bool IsTaskCompleted()
+        {
+            return string.Equals(task?.TaskStatus?.TaskStatusName, "Завершено", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(task?.TaskStatus?.TaskStatusName, "Completed", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void BtnShowQR_Click(object sender, RoutedEventArgs e)
         {
             if (task != null)
             {
@@ -171,7 +304,7 @@ namespace praktik
             }
         }
 
-        private void btnClose_Click(object sender, RoutedEventArgs e)
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
         }

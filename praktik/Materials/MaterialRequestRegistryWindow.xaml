@@ -46,16 +46,16 @@
                               materialDesign:HintAssist.Hint="Требуется к (от)"
                               Margin="0,0,8,0" SelectedDateChanged="Filter_Changed"/>
                     <Button x:Name="btnResetFilter" Grid.Column="4" Content="Сбросить" 
-                           Click="btnResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Click="BtnResetFilter_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                            Margin="0,0,8,0"/>
                     <Button x:Name="btnAddRequest" Grid.Column="5" Content="Добавить заявку" 
-                           Click="btnAddRequest_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                           Click="BtnAddRequest_Click" Style="{StaticResource MaterialDesignRaisedButton}"/>
                 </Grid>
             </StackPanel>
         </materialDesign:Card>
 
         <DataGrid x:Name="dgRequests" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" 
-                 SelectionChanged="dgRequests_SelectionChanged" MouseDoubleClick="dgRequests_MouseDoubleClick" Margin="0,0,0,16">
+                 SelectionChanged="DgRequests_SelectionChanged" MouseDoubleClick="DgRequests_MouseDoubleClick" Margin="0,0,0,16">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding RequestId}" Width="60"/>
                 <DataGridTextColumn Header="Задача" Binding="{Binding TaskTitle}" Width="*"/>
@@ -113,25 +113,25 @@
 
                 <StackPanel Grid.Column="1" Orientation="Vertical">
                     <Button x:Name="btnApprove" Content="Согласовать" 
-                           Click="btnApprove_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Click="BtnApprove_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                            Margin="0,0,0,8" Width="150"/>
                     <Button x:Name="btnReject" Content="Отклонить" 
-                           Click="btnReject_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Click="BtnReject_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                            Margin="0,0,0,8" Width="150"/>
                     <Button x:Name="btnIssue" Content="Отметить выдачу" 
-                           Click="btnIssue_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Click="BtnIssue_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                            Margin="0,0,0,8" Width="150"/>
                     <Button x:Name="btnDeliver" Content="Отметить доставку" 
-                           Click="btnDeliver_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Click="BtnDeliver_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                            Margin="0,0,0,8" Width="150"/>
                     <Button x:Name="btnClose" Content="Закрыть заявку" 
-                           Click="btnClose_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Click="BtnClose_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                            Margin="0,0,0,8" Width="150"/>
                     <Button x:Name="btnEdit" Content="Редактировать" 
-                           Click="btnEdit_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
+                           Click="BtnEdit_Click" Style="{StaticResource MaterialDesignOutlinedButton}"
                            Margin="0,0,0,8" Width="150"/>
                     <Button x:Name="btnExport" Content="Экспорт" 
-                           Click="btnExport_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                           Click="BtnExport_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                            Width="150"/>
                 </StackPanel>
             </Grid>

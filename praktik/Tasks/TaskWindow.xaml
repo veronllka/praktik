@@ -75,7 +75,7 @@
 
                     <DataGrid x:Name="dgMaterialRequests" Grid.Row="1" 
                              AutoGenerateColumns="False" IsReadOnly="True" 
-                             SelectionChanged="dgMaterialRequests_SelectionChanged" Margin="0,0,0,10">
+                             SelectionChanged="DgMaterialRequests_SelectionChanged" Margin="0,0,0,10">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Статус" Binding="{Binding StatusDisplay}" Width="120"/>
                             <DataGridTextColumn Header="Требуется к" Binding="{Binding RequiredDateDisplay}" Width="120"/>
@@ -86,11 +86,11 @@
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button x:Name="btnNewRequest" Content="Новая заявка" 
-                               Click="btnNewRequest_Click" Margin="0,0,8,0" Width="140"/>
+                               Click="BtnNewRequest_Click" Margin="0,0,8,0" Width="140"/>
                         <Button x:Name="btnEditRequest" Content="Редактировать" 
-                               Click="btnEditRequest_Click" Margin="0,0,8,0" Width="150"/>
+                               Click="BtnEditRequest_Click" Margin="0,0,8,0" Width="150"/>
                         <Button x:Name="btnViewRequestHistory" Content="История" 
-                               Click="btnViewRequestHistory_Click" Width="100"/>
+                               Click="BtnViewRequestHistory_Click" Width="100"/>
                     </StackPanel>
                 </Grid>
             </TabItem>
@@ -129,22 +129,56 @@
                                              MaxHeight="100"
                                              VerticalScrollBarVisibility="Auto"
                                              Margin="0,0,0,8"/>
-                                    <Button Content="Добавить" 
-                                            x:Name="btnAddEventComment"
-                                            Click="BtnAddEventComment_Click"
-                                            Width="100" 
-                                            Height="32"
-                                            HorizontalAlignment="Left"
-                                            Padding="8,0"
-                                            FontSize="12"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="Прогресс, %"
+                                                   FontSize="12"
+                                                   Foreground="#424242"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0"/>
+                                        <TextBox x:Name="txtEventProgressPercent"
+                                                 Grid.Column="1"
+                                                 Height="32"
+                                                 FontSize="12"
+                                                 Padding="8,0"
+                                                 MaxLength="3"
+                                                 VerticalContentAlignment="Center"
+                                                 Background="White"
+                                                 BorderBrush="#E0E0E0"
+                                                 BorderThickness="1"
+                                                 PreviewTextInput="ProgressTextBox_PreviewTextInput"
+                                                 DataObject.Pasting="ProgressTextBox_Pasting"/>
+                                        <TextBlock Grid.Column="2"
+                                                   Text="Необязательно"
+                                                   FontSize="11"
+                                                   Foreground="#666666"
+                                                   VerticalAlignment="Center"
+                                                   Margin="10,0,0,0"/>
+                                        <Button Grid.Column="3"
+                                                Content="Добавить" 
+                                                x:Name="btnAddEventComment"
+                                                Click="BtnAddEventComment_Click"
+                                                Width="100" 
+                                                Height="32"
+                                                HorizontalAlignment="Left"
+                                                Margin="10,0,0,0"
+                                                Padding="8,0"
+                                                FontSize="12"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                             
-                            <StackPanel x:Name="pnlQuickNote" Orientation="Horizontal" Visibility="Collapsed" Margin="0,5,0,0">
+                            <StackPanel x:Name="pnlQuickNote" Visibility="Collapsed" Margin="0,5,0,0">
                                 <TextBox x:Name="txtQuickNote" 
                                         Width="350" 
                                         Height="32" 
-                                        Margin="0,0,10,0"
+                                        Margin="0,0,0,8"
                                         TextChanged="TxtQuickNote_TextChanged"
                                         KeyDown="TxtQuickNote_KeyDown"
                                         VerticalContentAlignment="Center"
@@ -156,22 +190,44 @@
                                         </Style>
                                     </TextBox.Style>
                                 </TextBox>
-                                <Button x:Name="btnSaveNote" 
-                                       Content="Сохранить" 
-                                       Click="btnSaveNote_Click" 
-                                       Width="100" 
-                                       Height="32"
-                                       Margin="0,0,8,0"
-                                       IsEnabled="False"
-                                       Padding="8,0"
-                                       FontSize="13"/>
-                                <Button x:Name="btnCancelNote" 
-                                       Content="Отмена" 
-                                       Click="btnCancelNote_Click" 
-                                       Width="90" 
-                                       Height="32"
-                                       Padding="8,0"
-                                       FontSize="13"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Прогресс, %"
+                                               FontSize="12"
+                                               Foreground="#424242"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,10,0"/>
+                                    <TextBox x:Name="txtQuickNoteProgressPercent"
+                                             Width="70"
+                                             Height="32"
+                                             Margin="0,0,12,0"
+                                             FontSize="12"
+                                             Padding="8,0"
+                                             MaxLength="3"
+                                             VerticalContentAlignment="Center"
+                                             PreviewTextInput="ProgressTextBox_PreviewTextInput"
+                                             DataObject.Pasting="ProgressTextBox_Pasting"/>
+                                    <TextBlock Text="Необязательно"
+                                               FontSize="11"
+                                               Foreground="#666666"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,12,0"/>
+                                    <Button x:Name="btnSaveNote" 
+                                           Content="Сохранить" 
+                                           Click="BtnSaveNote_Click" 
+                                           Width="100" 
+                                           Height="32"
+                                           Margin="0,0,8,0"
+                                           IsEnabled="False"
+                                           Padding="8,0"
+                                           FontSize="13"/>
+                                    <Button x:Name="btnCancelNote" 
+                                           Content="Отмена" 
+                                           Click="BtnCancelNote_Click" 
+                                           Width="90" 
+                                           Height="32"
+                                           Padding="8,0"
+                                           FontSize="13"/>
+                                </StackPanel>
                             </StackPanel>
                             <Button x:Name="btnAddQuickNote" 
                                    Content="+ заметка" 
@@ -203,9 +259,9 @@
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
-            <Button x:Name="btnPrint" Content="Печать" Click="btnPrint_Click" Width="100" Margin="0,0,20,0" Visibility="Collapsed"/>
-            <Button x:Name="btnSave" Content="Сохранить" Click="btnSave_Click" Width="100" Margin="0,0,20,0"/>
-            <Button x:Name="btnCancel" Content="Отмена" Click="btnCancel_Click" Width="100"/>
+            <Button x:Name="btnPrint" Content="Печать" Click="BtnPrint_Click" Width="100" Margin="0,0,20,0" Visibility="Collapsed"/>
+            <Button x:Name="btnSave" Content="Сохранить" Click="BtnSave_Click" Width="100" Margin="0,0,20,0"/>
+            <Button x:Name="btnCancel" Content="Отмена" Click="BtnCancel_Click" Width="100"/>
         </StackPanel>
     </Grid>
 </Window>

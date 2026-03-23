@@ -30,10 +30,10 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="btnSelect" Content="Выбрать" 
-                   Click="btnSelect_Click" Style="{StaticResource MaterialDesignRaisedButton}"
+                   Click="BtnSelect_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                    Margin="0,0,8,0"/>
             <Button x:Name="btnCancel" Content="Отмена" 
-                   Click="btnCancel_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                   Click="BtnCancel_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
         </StackPanel>
     </Grid>
 </Window>

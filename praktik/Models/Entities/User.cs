@@ -14,6 +14,11 @@ namespace praktik.Models
         public string Username { get; set; }
 
         /// <summary>
+        /// Полное имя пользователя (ФИО)
+        /// </summary>
+        public string FullName { get; set; }
+
+        /// <summary>
         /// Пароль пользователя
         /// </summary>
         public string Password { get; set; }
@@ -22,6 +27,17 @@ namespace praktik.Models
         /// Роль пользователя в системе
         /// </summary>
         public string Role { get; set; } 
+
+        /// <summary>
+        /// Отображаемое имя в списках (ФИО + логин, если есть).
+        /// </summary>
+        public string DisplayName
+        {
+            get
+            {
+                return !string.IsNullOrWhiteSpace(FullName) ? FullName : (Username ?? string.Empty);
+            }
+        }
 
         public Crew Crew
         {
