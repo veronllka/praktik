@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32;
 using praktik.Models;
 using praktik.Models.Patterns;
 
@@ -13,15 +14,23 @@ namespace praktik
         private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private Task task;
         private TaskReport lastReport;
+        private string selectedAttachmentPath;
 
         public TaskViewWindow(int taskId)
         {
             InitializeComponent();
+            UpdateSelectedAttachmentState();
             LoadTask(taskId);
         }
 
         private void LoadTask(int taskId)
         {
+            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedAttachmentPath, out var attachmentValidationError))
+            {
+                MessageBox.Show(attachmentValidationError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 task = facade.GetTaskById(taskId);
@@ -35,6 +44,7 @@ namespace praktik
 
                 LoadTaskData();
                 LoadLastReport();
+                LoadPrintJournal();
             }
             catch (Exception ex)
             {
@@ -79,6 +89,7 @@ namespace praktik
 
             txtPriority.Text = task.Priority?.PriorityName ?? "—";
             txtStatus.Text = task.TaskStatus?.TaskStatusName ?? "—";
+            txtLastPrintedSummary.Text = FormatLastPrintedAt(task.LastPrintedAt);
 
             txtDescription.Text = !string.IsNullOrEmpty(task.Description) ? task.Description : "Описание отсутствует";
             
@@ -121,6 +132,47 @@ namespace praktik
             icNotes.ItemsSource = reports;
         }
 
+        private void LoadPrintJournal()
+        {
+            if (task == null || !CanViewPrintJournal())
+            {
+                pnlPrintJournal.Visibility = Visibility.Collapsed;
+                icPrintHistory.ItemsSource = null;
+                return;
+            }
+
+            var printLogs = facade.GetTaskPrintLogs(task.TaskId);
+            var lastPrintedAt = task.LastPrintedAt ?? printLogs.FirstOrDefault()?.PrintedAt;
+
+            pnlPrintJournal.Visibility = Visibility.Visible;
+            txtLastPrintedAt.Text = FormatLastPrintedAt(lastPrintedAt);
+            txtLastPrintedSummary.Text = FormatLastPrintedAt(lastPrintedAt);
+
+            icPrintHistory.ItemsSource = printLogs;
+            txtPrintHistoryEmpty.Visibility = printLogs.Count > 0
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private string FormatLastPrintedAt(DateTime? printedAt)
+        {
+            return printedAt.HasValue
+                ? printedAt.Value.ToString("dd.MM.yyyy HH:mm")
+                : "Не печаталась";
+        }
+
+        private bool CanViewPrintJournal()
+        {
+            var role = (LoginWindow.CurrentUser?.Role ?? string.Empty).Trim().ToLowerInvariant();
+
+            return role == "администратор"
+                || role == "админ"
+                || role == "admin"
+                || role == "administrator"
+                || role == "диспетчер"
+                || role == "dispatcher";
+        }
+
         private void TxtNewNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             var text = txtNewNote.Text?.Trim() ?? "";
@@ -146,10 +198,16 @@ namespace praktik
                 return;
             }
 
+            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedAttachmentPath, out var attachmentValidationError))
+            {
+                MessageBox.Show(attachmentValidationError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             try
             {
                 var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                if (!facade.AddTaskReport(task.TaskId, userId, noteText, progressPercent))
+                if (!facade.AddTaskReport(task.TaskId, userId, noteText, progressPercent, selectedAttachmentPath))
                 {
                     throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
                 }
@@ -176,6 +234,13 @@ namespace praktik
                 {
                     ClearNoteInputs();
                 }
+
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedAttachmentPath))
+            {
+                ClearNoteInputs();
             }
         }
 
@@ -248,6 +313,67 @@ namespace praktik
         {
             txtNewNote.Clear();
             txtProgressPercent.Clear();
+            selectedAttachmentPath = null;
+            UpdateSelectedAttachmentState();
+        }
+
+        private void BtnAttachFile_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Выберите вложение",
+                Filter = TaskReportAttachmentService.BuildFileDialogFilter(),
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            if (!TaskReportAttachmentService.TryValidateSourceFile(dialog.FileName, out var errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            selectedAttachmentPath = dialog.FileName;
+            UpdateSelectedAttachmentState();
+        }
+
+        private void BtnRemoveAttachment_Click(object sender, RoutedEventArgs e)
+        {
+            selectedAttachmentPath = null;
+            UpdateSelectedAttachmentState();
+        }
+
+        private void UpdateSelectedAttachmentState()
+        {
+            if (txtSelectedAttachment == null || btnRemoveAttachment == null)
+            {
+                return;
+            }
+
+            var hasAttachment = !string.IsNullOrWhiteSpace(selectedAttachmentPath);
+            txtSelectedAttachment.Text = hasAttachment
+                ? TaskReportAttachmentService.GetAttachmentFileName(selectedAttachmentPath)
+                : "Вложение не выбрано";
+            txtSelectedAttachment.ToolTip = hasAttachment ? selectedAttachmentPath : null;
+            btnRemoveAttachment.Visibility = hasAttachment ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnOpenAttachment_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement element) || !(element.DataContext is TaskReport report))
+            {
+                return;
+            }
+
+            if (!TaskReportAttachmentService.TryOpenAttachment(report.AttachmentUrl, out var errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Вложение", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
 
         private void SuggestCompletionIfNeeded(int? progressPercent)

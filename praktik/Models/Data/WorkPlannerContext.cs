@@ -2,6 +2,7 @@ using System;
 using System.Data.SqlClient;
 using System.Configuration;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 namespace praktik.Models
@@ -10,9 +11,11 @@ namespace praktik.Models
     /// Контекст базы данных для планировщика работ.
     /// Отвечает за взаимодействие с базой данных, включая CRUD операции для пользователей, задач, бригад и объектов.
     /// </summary>
-    public class WorkPlannerContext : IDisposable
+    public class WorkPlannerContext : IDisposable, IWorkPlannerContext
     {
         private const int DefaultCrewEmployeeRoleId = 3;
+        private static readonly object RoleSecuritySchemaSync = new object();
+        private static bool roleSecuritySchemaEnsured;
         private string connectionString;
         private SqlConnection connection;
 
@@ -29,6 +32,110 @@ namespace praktik.Models
         {
             var cs = ConfigurationManager.ConnectionStrings["WorkPlannerConnection"];
             connectionString = cs != null ? cs.ConnectionString : "Server=WIN-IT3KG728UQJ\\SQLEXPRESS;Database=BrigadePlanner;Trusted_Connection=True;MultipleActiveResultSets=True;";
+            EnsureRoleSecuritySchema();
+        }
+
+        private void EnsureRoleSecuritySchema()
+        {
+            if (roleSecuritySchemaEnsured)
+            {
+                return;
+            }
+
+            lock (RoleSecuritySchemaSync)
+            {
+                if (roleSecuritySchemaEnsured)
+                {
+                    return;
+                }
+
+                using (var schemaConnection = new SqlConnection(connectionString))
+                {
+                    schemaConnection.Open();
+                    var command = new SqlCommand(@"
+                        IF OBJECT_ID('dbo.RolePermissions', 'U') IS NULL
+                        BEGIN
+                            CREATE TABLE dbo.RolePermissions (
+                                RoleId TINYINT NOT NULL,
+                                PermissionCode NVARCHAR(100) NOT NULL,
+                                CONSTRAINT PK_RolePermissions PRIMARY KEY (RoleId, PermissionCode),
+                                CONSTRAINT FK_RolePermissions_Roles FOREIGN KEY (RoleId) REFERENCES dbo.Roles(RoleId) ON DELETE CASCADE
+                            );
+                        END", schemaConnection);
+                    command.ExecuteNonQuery();
+
+                    SeedDefaultRolePermissions(schemaConnection);
+                }
+
+                roleSecuritySchemaEnsured = true;
+            }
+        }
+
+        private void SeedDefaultRolePermissions(SqlConnection schemaConnection)
+        {
+            var roleIdsWithoutPermissions = new List<Role>();
+            var command = new SqlCommand(@"
+                SELECT r.RoleId, r.RoleName
+                FROM Roles r
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM RolePermissions rp
+                    WHERE rp.RoleId = r.RoleId
+                )", schemaConnection);
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    roleIdsWithoutPermissions.Add(new Role
+                    {
+                        RoleId = Convert.ToInt32(reader["RoleId"]),
+                        RoleName = reader["RoleName"] as string
+                    });
+                }
+            }
+
+            foreach (var role in roleIdsWithoutPermissions)
+            {
+                var defaultPermissions = RolePermissionCatalog.GetDefaultPermissions(role.RoleName);
+                if (defaultPermissions.Count == 0)
+                {
+                    continue;
+                }
+
+                SaveRolePermissions(role.RoleId, defaultPermissions, schemaConnection, null);
+            }
+        }
+
+        private static void SaveRolePermissions(int roleId, IEnumerable<string> permissionCodes, SqlConnection sqlConnection, SqlTransaction transaction)
+        {
+            var sanitizedPermissions = RolePermissionCatalog.Sanitize(permissionCodes);
+
+            var deleteCommand = new SqlCommand("DELETE FROM RolePermissions WHERE RoleId = @roleId", sqlConnection, transaction);
+            deleteCommand.Parameters.AddWithValue("@roleId", roleId);
+            deleteCommand.ExecuteNonQuery();
+
+            foreach (var permissionCode in sanitizedPermissions)
+            {
+                var insertCommand = new SqlCommand(
+                    "INSERT INTO RolePermissions (RoleId, PermissionCode) VALUES (@roleId, @permissionCode)",
+                    sqlConnection,
+                    transaction);
+                insertCommand.Parameters.AddWithValue("@roleId", roleId);
+                insertCommand.Parameters.AddWithValue("@permissionCode", permissionCode);
+                insertCommand.ExecuteNonQuery();
+            }
+        }
+
+        private static void EnsureRoleExists(int roleId, SqlConnection sqlConnection, SqlTransaction transaction)
+        {
+            var roleExistsCommand = new SqlCommand("SELECT COUNT(1) FROM Roles WHERE RoleId = @roleId", sqlConnection, transaction);
+            roleExistsCommand.Parameters.AddWithValue("@roleId", roleId);
+
+            if (Convert.ToInt32(roleExistsCommand.ExecuteScalar()) == 0)
+            {
+                throw new InvalidOperationException("Выбранная роль не найдена.");
+            }
         }
 
         /// <summary>
@@ -41,7 +148,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"SELECT u.UserId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                var command = new SqlCommand(@"SELECT u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
                                               FROM Users u
                                               LEFT JOIN Roles r ON r.RoleId = u.RoleId
                                               WHERE u.IsActive = 1
@@ -53,6 +160,7 @@ namespace praktik.Models
                         users.Add(new User
                         {
                             UserId = (int)reader["UserId"],
+                            RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
                             Username = (string)reader["LoginName"],
                             FullName = reader["FullName"] != DBNull.Value ? (string)reader["FullName"] : null,
                             Password = (string)reader["PasswordPlain"],
@@ -76,7 +184,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
                                               FROM Users u
                                               LEFT JOIN Roles r ON r.RoleId = u.RoleId
                                               WHERE u.LoginName = @username
@@ -91,6 +199,7 @@ namespace praktik.Models
                         return new User
                         {
                             UserId = (int)reader["UserId"],
+                            RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
                             Username = (string)reader["LoginName"],
                             FullName = reader["FullName"] != DBNull.Value ? (string)reader["FullName"] : null,
                             Password = (string)reader["PasswordPlain"],
@@ -251,7 +360,7 @@ namespace praktik.Models
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    SELECT u.UserId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                    SELECT u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
                     FROM Users u
                     LEFT JOIN Roles r ON r.RoleId = u.RoleId
                     WHERE u.IsActive = 1
@@ -273,6 +382,7 @@ namespace praktik.Models
                         users.Add(new User
                         {
                             UserId = Convert.ToInt32(reader["UserId"]),
+                            RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
                             Username = reader["LoginName"] as string ?? string.Empty,
                             FullName = reader["FullName"] as string,
                             Password = reader["PasswordPlain"] as string,
@@ -412,7 +522,7 @@ namespace praktik.Models
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    SELECT t.TaskId, t.SiteId, t.CrewId, t.Title, t.Description, t.StartDate, t.EndDate, t.PriorityId, t.StatusId, t.LabelId,
+                    SELECT t.TaskId, t.SiteId, t.CrewId, t.Title, t.Description, t.StartDate, t.EndDate, t.PriorityId, t.StatusId, t.LabelId, t.LastPrintedAt,
                            s.SiteName, c.CrewName, p.PriorityName, ts.StatusName AS TaskStatusName
                     FROM Tasks t
                     LEFT JOIN Sites s ON t.SiteId = s.SiteId
@@ -435,6 +545,7 @@ namespace praktik.Models
                             PriorityId = Convert.ToInt32(reader["PriorityId"]),
                             TaskStatusId = Convert.ToInt32(reader["StatusId"]),
                             LabelId = reader["LabelId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["LabelId"]) : null,
+                            LastPrintedAt = reader["LastPrintedAt"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["LastPrintedAt"]) : null,
                             Site = new Site { SiteName = reader["SiteName"] as string ?? string.Empty },
                             Crew = reader["CrewName"] != DBNull.Value ? new Crew { CrewName = reader["CrewName"] as string } : null,
                             Priority = new Priority { PriorityName = reader["PriorityName"] as string ?? string.Empty },
@@ -459,7 +570,7 @@ namespace praktik.Models
                 connection.Open();
                 var command = new SqlCommand(@"
                     SELECT t.TaskId, t.SiteId, t.CrewId, t.Title, t.Description, t.StartDate, t.EndDate, 
-                           t.PriorityId, t.StatusId, t.LabelId,
+                           t.PriorityId, t.StatusId, t.LabelId, t.LastPrintedAt,
                            s.SiteName, s.Address,
                            c.CrewName, c.ForemanUserId,
                            u.LoginName as BrigadierName,
@@ -493,6 +604,7 @@ namespace praktik.Models
                             CreatedBy = 0,
                             CreatedAt = DateTime.Now,
                             UpdatedAt = null,
+                            LastPrintedAt = reader["LastPrintedAt"] != DBNull.Value ? (DateTime?)Convert.ToDateTime(reader["LastPrintedAt"]) : null,
                             Site = new Site 
                             { 
                                 SiteName = reader["SiteName"] as string ?? string.Empty,
@@ -663,6 +775,82 @@ namespace praktik.Models
             }
         }
 
+        public void RecordTaskPrint(int taskId, int userId, string templateName, DateTime printedAt)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        var updateCommand = new SqlCommand(@"
+                            UPDATE Tasks
+                            SET LastPrintedAt = @printedAt
+                            WHERE TaskId = @taskId", connection, transaction);
+                        updateCommand.Parameters.AddWithValue("@printedAt", printedAt);
+                        updateCommand.Parameters.AddWithValue("@taskId", taskId);
+
+                        if (updateCommand.ExecuteNonQuery() == 0)
+                        {
+                            throw new InvalidOperationException("Задача не найдена");
+                        }
+
+                        var insertCommand = new SqlCommand(@"
+                            INSERT INTO TaskPrintLogs (TaskId, PrintedByUserId, PrintedAt, TemplateName)
+                            VALUES (@taskId, @userId, @printedAt, @templateName)", connection, transaction);
+                        insertCommand.Parameters.AddWithValue("@taskId", taskId);
+                        insertCommand.Parameters.AddWithValue("@userId", userId);
+                        insertCommand.Parameters.AddWithValue("@printedAt", printedAt);
+                        insertCommand.Parameters.AddWithValue("@templateName", (object)templateName ?? DBNull.Value);
+                        insertCommand.ExecuteNonQuery();
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        public List<TaskPrintLog> GetTaskPrintLogs(int taskId)
+        {
+            var logs = new List<TaskPrintLog>();
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"
+                    SELECT tpl.LogId, tpl.TaskId, tpl.PrintedByUserId, tpl.PrintedAt, tpl.TemplateName,
+                           COALESCE(NULLIF(u.FullName, ''), u.LoginName) AS PrintedByName
+                    FROM TaskPrintLogs tpl
+                    LEFT JOIN Users u ON tpl.PrintedByUserId = u.UserId
+                    WHERE tpl.TaskId = @taskId
+                    ORDER BY tpl.PrintedAt DESC, tpl.LogId DESC", connection);
+                command.Parameters.AddWithValue("@taskId", taskId);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        logs.Add(new TaskPrintLog
+                        {
+                            LogId = Convert.ToInt32(reader["LogId"]),
+                            TaskId = Convert.ToInt32(reader["TaskId"]),
+                            PrintedByUserId = Convert.ToInt32(reader["PrintedByUserId"]),
+                            PrintedAt = Convert.ToDateTime(reader["PrintedAt"]),
+                            TemplateName = reader["TemplateName"] as string,
+                            PrintedByName = reader["PrintedByName"] as string
+                        });
+                    }
+                }
+            }
+
+            return logs;
+        }
+
         public void UpdateTaskStatus(int taskId, int statusId, int userId, string comment)
         {
             using (var connection = new SqlConnection(connectionString))
@@ -739,7 +927,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand("SELECT RoleId, RoleName FROM Roles", connection);
+                var command = new SqlCommand("SELECT RoleId, RoleName FROM Roles ORDER BY RoleName", connection);
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -753,6 +941,129 @@ namespace praktik.Models
                 }
             }
             return roles;
+        }
+
+        public List<string> GetRolePermissionCodes(int roleId)
+        {
+            var permissionCodes = new List<string>();
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(
+                    "SELECT PermissionCode FROM RolePermissions WHERE RoleId = @roleId ORDER BY PermissionCode",
+                    connection);
+                command.Parameters.AddWithValue("@roleId", roleId);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        permissionCodes.Add(reader["PermissionCode"] as string);
+                    }
+                }
+            }
+
+            return permissionCodes
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .ToList();
+        }
+
+        public List<string> GetRolePermissionCodes(string roleName)
+        {
+            roleName = (roleName ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                return new List<string>();
+            }
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var roleCommand = new SqlCommand("SELECT TOP 1 RoleId FROM Roles WHERE RoleName = @roleName", connection);
+                roleCommand.Parameters.AddWithValue("@roleName", roleName);
+                var roleId = roleCommand.ExecuteScalar();
+
+                return roleId != null && roleId != DBNull.Value
+                    ? GetRolePermissionCodes(Convert.ToInt32(roleId))
+                    : new List<string>();
+            }
+        }
+
+        public int CreateRole(string roleName, IEnumerable<string> permissionCodes)
+        {
+            roleName = (roleName ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                throw new InvalidOperationException("Введите название роли.");
+            }
+
+            var sanitizedPermissions = RolePermissionCatalog.Sanitize(permissionCodes);
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var duplicateCommand = new SqlCommand("SELECT COUNT(1) FROM Roles WHERE RoleName = @roleName", connection, transaction);
+                    duplicateCommand.Parameters.AddWithValue("@roleName", roleName);
+                    if (Convert.ToInt32(duplicateCommand.ExecuteScalar()) > 0)
+                    {
+                        throw new InvalidOperationException("Роль с таким названием уже существует.");
+                    }
+
+                    var nextRoleIdCommand = new SqlCommand("SELECT ISNULL(MAX(CAST(RoleId AS INT)), 0) + 1 FROM Roles", connection, transaction);
+                    var nextRoleId = Convert.ToInt32(nextRoleIdCommand.ExecuteScalar());
+                    if (nextRoleId > byte.MaxValue)
+                    {
+                        throw new InvalidOperationException("Достигнут лимит количества ролей.");
+                    }
+
+                    var insertCommand = new SqlCommand("INSERT INTO Roles (RoleId, RoleName) VALUES (@roleId, @roleName)", connection, transaction);
+                    insertCommand.Parameters.AddWithValue("@roleId", nextRoleId);
+                    insertCommand.Parameters.AddWithValue("@roleName", roleName);
+                    insertCommand.ExecuteNonQuery();
+
+                    SaveRolePermissions(nextRoleId, sanitizedPermissions, connection, transaction);
+                    transaction.Commit();
+
+                    return nextRoleId;
+                }
+            }
+        }
+
+        public void UpdateUserRole(int userId, int roleId)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                EnsureRoleExists(roleId, connection, null);
+
+                var userExistsCommand = new SqlCommand("SELECT COUNT(1) FROM Users WHERE UserId = @userId AND IsActive = 1", connection);
+                userExistsCommand.Parameters.AddWithValue("@userId", userId);
+                if (Convert.ToInt32(userExistsCommand.ExecuteScalar()) == 0)
+                {
+                    throw new InvalidOperationException("Пользователь не найден.");
+                }
+
+                var updateCommand = new SqlCommand("UPDATE Users SET RoleId = @roleId WHERE UserId = @userId", connection);
+                updateCommand.Parameters.AddWithValue("@roleId", roleId);
+                updateCommand.Parameters.AddWithValue("@userId", userId);
+                updateCommand.ExecuteNonQuery();
+            }
+        }
+
+        public void UpdateRolePermissions(int roleId, IEnumerable<string> permissionCodes)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    EnsureRoleExists(roleId, connection, transaction);
+                    SaveRolePermissions(roleId, permissionCodes, connection, transaction);
+                    transaction.Commit();
+                }
+            }
         }
 
         /// <summary>
@@ -888,7 +1199,7 @@ namespace praktik.Models
                 connection.Open();
                 var sql = @"
                     SELECT tr.ReportId, tr.TaskId, tr.ReportedByUserId, tr.ReportedAt, tr.ReportText, tr.ProgressPercent,
-                           t.Title as TaskTitle, u.LoginName as ReporterName
+                           tr.AttachmentUrl, t.Title as TaskTitle, u.LoginName as ReporterName
                     FROM TaskReports tr
                     LEFT JOIN Tasks t ON tr.TaskId = t.TaskId
                     LEFT JOIN Users u ON tr.ReportedByUserId = u.UserId";
@@ -918,6 +1229,7 @@ namespace praktik.Models
                             ReportedAt = (DateTime)reader["ReportedAt"],
                             ReportText = reader["ReportText"] as string,
                             ProgressPercent = reader["ProgressPercent"] != DBNull.Value ? (int?)Convert.ToInt32(reader["ProgressPercent"]) : null,
+                            AttachmentUrl = reader["AttachmentUrl"] as string,
                             TaskTitle = reader["TaskTitle"] as string,
                             ReporterName = reader["ReporterName"] as string
                         });
@@ -927,19 +1239,20 @@ namespace praktik.Models
             return reports;
         }
 
-        public void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null)
+        public void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null, string attachmentUrl = null)
         {
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    INSERT INTO TaskReports (TaskId, ReportedByUserId, ReportedAt, ReportText, ProgressPercent)
-                    VALUES (@taskId, @userId, @reportedAt, @text, @progress)", connection);
+                    INSERT INTO TaskReports (TaskId, ReportedByUserId, ReportedAt, ReportText, ProgressPercent, AttachmentUrl)
+                    VALUES (@taskId, @userId, @reportedAt, @text, @progress, @attachmentUrl)", connection);
                 command.Parameters.AddWithValue("@taskId", taskId);
                 command.Parameters.AddWithValue("@userId", userId);
                 command.Parameters.AddWithValue("@reportedAt", DateTime.UtcNow);
                 command.Parameters.AddWithValue("@text", (object)reportText ?? DBNull.Value);
                 command.Parameters.AddWithValue("@progress", (object)progressPercent ?? DBNull.Value);
+                command.Parameters.AddWithValue("@attachmentUrl", (object)attachmentUrl ?? DBNull.Value);
                 command.ExecuteNonQuery();
             }
         }

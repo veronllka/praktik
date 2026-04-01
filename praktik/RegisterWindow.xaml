@@ -313,6 +313,11 @@
                                  Style="{StaticResource ModernComboBoxStyle}"
                                  DisplayMemberPath="RoleName"
                                  Height="45"/>
+                        <TextBlock x:Name="txtRoleHint"
+                                  Margin="0,8,0,0"
+                                  FontSize="12"
+                                  Foreground="#718096"
+                                  TextWrapping="Wrap"/>
                     </StackPanel>
                     
                     <Button x:Name="btnRegister" 

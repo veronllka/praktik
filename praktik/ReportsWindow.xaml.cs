@@ -194,7 +194,7 @@ namespace praktik
                     Height = barHeight,
                     RadiusX = 4,
                     RadiusY = 4,
-                    Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#B08968")
+                    Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#C48E45")
                 };
                 Canvas.SetLeft(rect, padding);
                 Canvas.SetTop(rect, y);
@@ -237,7 +237,7 @@ namespace praktik
 
             double total = Math.Max(1, currentData.Sum(p => p.Value));
             double startAngle = 0;
-            var colors = new[] { "#B08968", "#C2B39A", "#8C7A68", "#A78F73", "#D0C7B8" };
+            var colors = new[] { "#C48E45", "#466A58", "#C05C45", "#8A7E6A", "#D7B87D" };
             int colorIndex = 0;
 
             foreach (var point in currentData)
@@ -287,7 +287,7 @@ namespace praktik
                     Height = normalizedHeight,
                     RadiusX = 4,
                     RadiusY = 4,
-                    Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#B08968")
+                    Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#C48E45")
                 };
                 Canvas.SetLeft(rect, x);
                 Canvas.SetTop(rect, y);

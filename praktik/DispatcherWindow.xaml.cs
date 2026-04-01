@@ -2,17 +2,24 @@ using System.Windows;
 
 namespace praktik
 {
-    /// <summary>
-    /// Окно для роли "Диспетчер".
-    /// Предоставляет доступ к управлению задачами, площадками, бригадами и материалами.
-    /// Реализует паттерн Фабричный метод - создается через RoleWindowFactory.
-    /// </summary>
     public partial class DispatcherWindow : Window
     {
         public DispatcherWindow()
         {
             InitializeComponent();
-            MainView.ApplyRole("Диспетчер");
+            ApplyCurrentRole("Диспетчер");
+        }
+
+        private void ApplyCurrentRole(string fallbackRole)
+        {
+            var role = LoginWindow.CurrentUser?.Role;
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                role = fallbackRole;
+            }
+
+            Title = $"Планировщик работ бригад - {role}";
+            MainView.ApplyRole(role);
         }
     }
 }

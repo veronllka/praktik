@@ -20,7 +20,26 @@
                         <TextBox x:Name="txtTitle" Margin="0,0,0,10"/>
 
                         <TextBlock Text="Описание:" Margin="0,0,0,5"/>
+                        <Grid Margin="0,0,0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="РћРїРёСЃР°РЅРёРµ:" VerticalAlignment="Center"/>
+                            <Button x:Name="btnGenerateDescription"
+                                    Grid.Column="1"
+                                    Content="AI-РѕРїРёСЃР°РЅРёРµ"
+                                    Click="BtnGenerateDescription_Click"
+                                    Padding="12,4"
+                                    MinWidth="150"
+                                    Margin="10,0,0,0"/>
+                        </Grid>
                         <TextBox x:Name="txtDescription" Margin="0,0,0,10" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
+                        <TextBlock x:Name="txtAiHint"
+                                   Text="Р“РµРЅРµСЂР°С†РёСЏ РѕРїРёСЃР°РЅРёСЏ С‡РµСЂРµР· LM Studio РїРѕ РЅР°Р·РІР°РЅРёСЋ Р·Р°РґР°С‡Рё."
+                                   Margin="0,-6,0,10"
+                                   Foreground="#666666"
+                                   FontSize="11"/>
 
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
@@ -113,7 +132,7 @@
                                     Background="#F5F5F5"
                                     Margin="0,0,0,10">
                                 <StackPanel>
-                                    <TextBlock Text="Добавить комментарий" 
+                                    <TextBlock Text="Добавить отчет по задаче" 
                                                FontSize="12" 
                                                FontWeight="SemiBold"
                                                Foreground="#424242"
@@ -161,16 +180,44 @@
                                                    VerticalAlignment="Center"
                                                    Margin="10,0,0,0"/>
                                         <Button Grid.Column="3"
-                                                Content="Добавить" 
+                                                Content="Добавить отчет" 
                                                 x:Name="btnAddEventComment"
                                                 Click="BtnAddEventComment_Click"
-                                                Width="100" 
+                                                Width="130" 
                                                 Height="32"
                                                 HorizontalAlignment="Left"
                                                 Margin="10,0,0,0"
                                                 Padding="8,0"
                                                 FontSize="12"/>
                                     </Grid>
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="txtEventAttachment"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="#666666"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <Button Grid.Column="1"
+                                                Content="Прикрепить файл"
+                                                Click="BtnAttachEventFile_Click"
+                                                Padding="10,4"
+                                                Margin="12,0,0,0"/>
+                                        <Button x:Name="btnRemoveEventAttachment"
+                                                Grid.Column="2"
+                                                Content="Удалить"
+                                                Click="BtnRemoveEventAttachment_Click"
+                                                Padding="10,4"
+                                                Margin="8,0,0,0"
+                                                Visibility="Collapsed"/>
+                                    </Grid>
+                                    <TextBlock Text="Файл будет сохранен после кнопки «Добавить отчет» и появится ниже в списке вложений."
+                                               FontSize="11"
+                                               Foreground="#777777"
+                                               Margin="0,6,0,0"
+                                               TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
                             
@@ -204,6 +251,7 @@
                                              Padding="8,0"
                                              MaxLength="3"
                                              VerticalContentAlignment="Center"
+                                             TextChanged="TxtQuickNoteProgressPercent_TextChanged"
                                              PreviewTextInput="ProgressTextBox_PreviewTextInput"
                                              DataObject.Pasting="ProgressTextBox_Pasting"/>
                                     <TextBlock Text="Необязательно"
@@ -228,6 +276,29 @@
                                            Padding="8,0"
                                            FontSize="13"/>
                                 </StackPanel>
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="txtQuickNoteAttachment"
+                                               VerticalAlignment="Center"
+                                               Foreground="#666666"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <Button Grid.Column="1"
+                                            Content="Прикрепить файл"
+                                            Click="BtnAttachQuickNoteFile_Click"
+                                            Padding="10,4"
+                                            Margin="12,0,0,0"/>
+                                    <Button x:Name="btnRemoveQuickNoteAttachment"
+                                            Grid.Column="2"
+                                            Content="Удалить"
+                                            Click="BtnRemoveQuickNoteAttachment_Click"
+                                            Padding="10,4"
+                                            Margin="8,0,0,0"
+                                            Visibility="Collapsed"/>
+                                </Grid>
                             </StackPanel>
                             <Button x:Name="btnAddQuickNote" 
                                    Content="+ заметка" 
@@ -240,20 +311,107 @@
                         </StackPanel>
                     </Border>
 
-                    <ListBox x:Name="lbEvents" Grid.Row="1" 
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            BorderThickness="0">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8,0,8" Margin="0,0,0,5">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" FontSize="13"/>
-                                        <TextBlock Text="{Binding TimeInfo}" FontSize="11" Foreground="#666666" Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                BorderBrush="#E0E0E0"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Background="#FAFAFA"
+                                Padding="10"
+                                Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="Вложения задачи"
+                                           FontWeight="SemiBold"
+                                           FontSize="12"
+                                           Foreground="#424242"
+                                           Margin="0,0,0,8"/>
+                                <TextBlock x:Name="txtNoTaskAttachments"
+                                           Text="Пока нет сохраненных вложений."
+                                           FontSize="12"
+                                           Foreground="#777777"/>
+                                <ItemsControl x:Name="icTaskAttachments">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#E6E6E6"
+                                                    BorderThickness="0,1,0,0"
+                                                    Padding="0,8,0,0"
+                                                    Margin="0,8,0,0">
+                                                <DockPanel LastChildFill="False">
+                                                    <StackPanel DockPanel.Dock="Left" Margin="0,0,12,0">
+                                                        <TextBlock Text="{Binding FileName}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#333333"/>
+                                                        <TextBlock Text="{Binding MetaText}"
+                                                                   FontSize="11"
+                                                                   Foreground="#777777"
+                                                                   Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                    <Button DockPanel.Dock="Right"
+                                                            Content="Открыть"
+                                                            Click="BtnOpenTaskAttachmentFromList_Click"
+                                                            Padding="10,3"
+                                                            VerticalAlignment="Center"/>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <ListBox x:Name="lbEvents"
+                                Grid.Row="1"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8,0,8" Margin="0,0,0,5">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" FontSize="13"/>
+                                            <TextBlock Text="{Binding TimeInfo}" FontSize="11" Foreground="#666666" Margin="0,4,0,0"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="{Binding AttachmentFileName}"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="#666666">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasAttachment}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button Content="Открыть вложение"
+                                                        Click="BtnOpenEventAttachment_Click"
+                                                        Margin="12,0,0,0"
+                                                        Padding="10,3">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasAttachment}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
                 </Grid>
             </TabItem>
         </TabControl>

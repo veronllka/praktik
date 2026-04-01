@@ -10,6 +10,7 @@ namespace praktik.Models.Patterns
     {
         private readonly WorkPlannerContext db;
         private readonly TaskService taskService;
+        private readonly LmStudioTaskDescriptionService taskDescriptionService;
         private readonly MaterialRequestService materialRequestService;
         private readonly ReportService reportService;
 
@@ -20,6 +21,7 @@ namespace praktik.Models.Patterns
         {
             db = new WorkPlannerContext();
             taskService = new TaskService(db);
+            taskDescriptionService = new LmStudioTaskDescriptionService();
             materialRequestService = new MaterialRequestService(db);
             reportService = new ReportService(db);
         }
@@ -28,6 +30,7 @@ namespace praktik.Models.Patterns
         {
             db = context;
             taskService = new TaskService(db);
+            taskDescriptionService = new LmStudioTaskDescriptionService();
             materialRequestService = new MaterialRequestService(db);
             reportService = new ReportService(db);
         }
@@ -47,9 +50,34 @@ namespace praktik.Models.Patterns
             return db.GetRoles();
         }
 
+        public List<string> GetRolePermissionCodes(string roleName)
+        {
+            return db.GetRolePermissionCodes(roleName);
+        }
+
+        public List<string> GetRolePermissionCodes(int roleId)
+        {
+            return db.GetRolePermissionCodes(roleId);
+        }
+
         public void RegisterUser(string loginName, string password, string fullName, int roleId)
         {
             db.RegisterUser(loginName, password, fullName, roleId);
+        }
+
+        public int CreateRole(string roleName, IEnumerable<string> permissionCodes)
+        {
+            return db.CreateRole(roleName, permissionCodes);
+        }
+
+        public void UpdateUserRole(int userId, int roleId)
+        {
+            db.UpdateUserRole(userId, roleId);
+        }
+
+        public void UpdateRolePermissions(int roleId, IEnumerable<string> permissionCodes)
+        {
+            db.UpdateRolePermissions(roleId, permissionCodes);
         }
 
         public bool CreateCrewEmployeeAndAddToCrew(int crewId, string fullName, DateTime joinedAt, out int createdUserId, out string errorMessage)
@@ -172,17 +200,19 @@ namespace praktik.Models.Patterns
         /// <summary>
         /// Добавляет отчет по задаче.
         /// </summary>
-        public bool AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null)
+        public bool RecordTaskPrint(int taskId, int userId, string templateName, DateTime printedAt, out string errorMessage)
         {
-            try
-            {
-                db.AddTaskReport(taskId, userId, reportText, progressPercent);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return taskService.RecordTaskPrint(taskId, userId, templateName, printedAt, out errorMessage);
+        }
+
+        public List<TaskPrintLog> GetTaskPrintLogs(int taskId)
+        {
+            return taskService.GetTaskPrintLogs(taskId);
+        }
+
+        public bool AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null, string attachmentSourcePath = null)
+        {
+            return reportService.AddTaskReport(taskId, userId, reportText, progressPercent, attachmentSourcePath);
         }
 
         /// <summary>
@@ -192,6 +222,13 @@ namespace praktik.Models.Patterns
         public List<Task> GetTasksByDate(DateTime date)
         {
             return taskService.GetTasksByDate(date);
+        }
+
+        public bool CanGenerateTaskDescription => taskDescriptionService.IsEnabled;
+
+        public System.Threading.Tasks.Task<TaskDescriptionGenerationResult> GenerateTaskDescriptionAsync(TaskDescriptionGenerationRequest request)
+        {
+            return taskDescriptionService.GenerateDescriptionAsync(request);
         }
 
         #endregion

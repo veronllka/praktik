@@ -5,65 +5,86 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Отчёты" Height="600" Width="900" WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="320"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        Title="Отчёты" Height="600" Width="900" WindowStartupLocation="CenterScreen"
+        Background="#ECE4D7">
+    <Border Margin="16"
+            Background="#FBF7F1"
+            BorderBrush="#E1D5C3"
+            BorderThickness="1"
+            CornerRadius="32">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <Border Background="#F7F4EF" BorderBrush="#E4DCCF" BorderThickness="0,0,1,0">
-            <StackPanel Margin="16">
-                <TextBlock Text="Выбор отчёта" FontSize="18" FontWeight="SemiBold" Foreground="#6D5E4F" Margin="0,0,0,12"/>
+            <Border BorderBrush="#E4D4BB" BorderThickness="0,0,1,0" CornerRadius="32,0,0,32">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#F3E3C8" Offset="0"/>
+                        <GradientStop Color="#E7D1AC" Offset="0.58"/>
+                        <GradientStop Color="#DEC291" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackPanel Margin="22">
+                    <Border Background="#FFF8EE" Padding="10,5" CornerRadius="999" HorizontalAlignment="Left" Margin="0,0,0,16">
+                        <TextBlock Text="REPORTS STUDIO" FontSize="11" FontWeight="Bold" Foreground="#7B5A2D"/>
+                    </Border>
+                    <TextBlock Text="Выбор отчёта" FontSize="24" FontWeight="Bold" Foreground="#2F2924" Margin="0,0,0,8"/>
+                    <TextBlock Text="Подготовьте диаграмму в том формате, который удобен для экспорта и быстрого просмотра."
+                               TextWrapping="Wrap"
+                               Foreground="#6F655B"
+                               Margin="0,0,0,18"/>
 
-                <TextBlock Text="Тип отчёта" FontSize="13" Foreground="#7C746A"/>
-                <ComboBox x:Name="cbReportType" SelectedIndex="0" Margin="0,4,0,12">
-                    <ComboBoxItem Content="Пользователи по ролям"/>
-                    <ComboBoxItem Content="Задачи по объектам"/>
-                    <ComboBoxItem Content="Задачи по бригадам"/>
-                    <ComboBoxItem Content="Просроченные задачи"/>
-                </ComboBox>
+                    <TextBlock Text="Тип отчёта" FontSize="13" Foreground="#6F655B"/>
+                    <ComboBox x:Name="cbReportType" SelectedIndex="0" Margin="0,4,0,12">
+                        <ComboBoxItem Content="Пользователи по ролям"/>
+                        <ComboBoxItem Content="Задачи по объектам"/>
+                        <ComboBoxItem Content="Задачи по бригадам"/>
+                        <ComboBoxItem Content="Просроченные задачи"/>
+                    </ComboBox>
 
-                <TextBlock Text="Тип диаграммы" FontSize="13" Foreground="#7C746A"/>
-                <ComboBox x:Name="cbChartType" SelectedIndex="0" Margin="0,4,0,16">
-                    <ComboBoxItem Content="Гистограмма (горизонтальная)"/>
-                    <ComboBoxItem Content="Гистограмма (вертикальная)"/>
-                    <ComboBoxItem Content="Круговая"/>
-                </ComboBox>
+                    <TextBlock Text="Тип диаграммы" FontSize="13" Foreground="#6F655B"/>
+                    <ComboBox x:Name="cbChartType" SelectedIndex="0" Margin="0,4,0,16">
+                        <ComboBoxItem Content="Гистограмма (горизонтальная)"/>
+                        <ComboBoxItem Content="Гистограмма (вертикальная)"/>
+                        <ComboBoxItem Content="Круговая"/>
+                    </ComboBox>
 
-                <Button Content="Сгенерировать" Click="BtnGenerate_Click" Style="{StaticResource ModernButtonStyle}" Height="40" Margin="0,0,0,12"/>
+                    <Button Content="Сгенерировать" Click="BtnGenerate_Click" Style="{StaticResource ModernButtonStyle}" Height="42" Margin="0,0,0,18"/>
 
-                <TextBlock Text="Экспортировать как" FontSize="13" Foreground="#7C746A"/>
-                <ComboBox x:Name="cbExportFormat" SelectedIndex="0" Margin="0,4,0,12">
-                    <ComboBoxItem Content="PNG"/>
-                    <ComboBoxItem Content="JPEG"/>
-                    <ComboBoxItem Content="CSV"/>
-                </ComboBox>
+                    <TextBlock Text="Экспортировать как" FontSize="13" Foreground="#6F655B"/>
+                    <ComboBox x:Name="cbExportFormat" SelectedIndex="0" Margin="0,4,0,12">
+                        <ComboBoxItem Content="PNG"/>
+                        <ComboBoxItem Content="JPEG"/>
+                        <ComboBoxItem Content="CSV"/>
+                    </ComboBox>
 
-                <Button Content="Экспортировать" Click="BtnExport_Click" Style="{StaticResource ModernOutlinedButtonStyle}" Height="40"/>
-            </StackPanel>
-        </Border>
-
-        <Grid Grid.Column="1" Background="#FDFBF7">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock x:Name="txtTitle" Text="Отображение отчёта" FontSize="20" FontWeight="SemiBold" Foreground="#6D5E4F"
-                       Margin="16,12,16,8"/>
-
-            <Border Grid.Row="1" x:Name="ChartBorder" Margin="16" Padding="24"
-                    Background="White" BorderBrush="#E4DCCF" BorderThickness="1" CornerRadius="10">
-                <Grid>
-                    <Canvas x:Name="ChartCanvas"/>
-                    <StackPanel x:Name="EmptyState" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="HardHat" Width="64" Height="64" Foreground="#B08968" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Нет данных для отображения" FontSize="16" FontWeight="SemiBold" Foreground="#6D5E4F" HorizontalAlignment="Center" Margin="0,8,0,4"/>
-                        <TextBlock Text="Добавьте данные или выберите другой отчёт" Foreground="#8C7A68" TextAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
+                    <Button Content="Экспортировать" Click="BtnExport_Click" Style="{StaticResource ModernOutlinedButtonStyle}" Height="42"/>
+                </StackPanel>
             </Border>
+
+            <Grid Grid.Column="1" Background="Transparent">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="txtTitle" Text="Отображение отчёта" FontSize="24" FontWeight="Bold" Foreground="#2F2924"
+                           Margin="24,18,24,10"/>
+
+                <Border Grid.Row="1" x:Name="ChartBorder" Margin="24,0,24,24" Padding="28"
+                        Background="#FFFDF8" BorderBrush="#E4DCCF" BorderThickness="1" CornerRadius="24">
+                    <Grid>
+                        <Canvas x:Name="ChartCanvas"/>
+                        <StackPanel x:Name="EmptyState" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="HardHat" Width="64" Height="64" Foreground="#B98545" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Нет данных для отображения" FontSize="16" FontWeight="SemiBold" Foreground="#5F5245" HorizontalAlignment="Center" Margin="0,8,0,4"/>
+                            <TextBlock Text="Добавьте данные или выберите другой отчёт" Foreground="#8C7A68" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
-    </Grid>
+    </Border>
 </Window>

@@ -26,7 +26,48 @@ namespace praktik
 
         private void LoadRoles()
         {
-            cbRoles.ItemsSource = facade.GetRoles();
+            var roles = facade.GetRoles();
+            cbRoles.ItemsSource = roles;
+
+            var normalizedCurrentRole = RolePermissionCatalog.NormalizeRoleName(LoginWindow.CurrentUser?.Role);
+            var isAdminSession = normalizedCurrentRole == "администратор"
+                || normalizedCurrentRole == "админ"
+                || normalizedCurrentRole == "admin"
+                || normalizedCurrentRole == "administrator";
+
+            if (isAdminSession)
+            {
+                cbRoles.IsEnabled = true;
+                cbRoles.SelectedItem = roles.FirstOrDefault();
+                txtRoleHint.Text = "Администратор может назначить роль сразу при создании пользователя.";
+                return;
+            }
+
+            var defaultRole = roles.FirstOrDefault(role =>
+            {
+                var normalizedRole = RolePermissionCatalog.NormalizeRoleName(role.RoleName);
+                return normalizedRole != "администратор"
+                    && normalizedRole != "админ"
+                    && normalizedRole != "admin"
+                    && normalizedRole != "administrator"
+                    && normalizedRole != "диспетчер"
+                    && normalizedRole != "dispatcher";
+            })
+            ?? roles.FirstOrDefault(role =>
+            {
+                var normalizedRole = RolePermissionCatalog.NormalizeRoleName(role.RoleName);
+                return normalizedRole != "администратор"
+                    && normalizedRole != "админ"
+                    && normalizedRole != "admin"
+                    && normalizedRole != "administrator";
+            })
+            ?? roles.FirstOrDefault();
+
+            cbRoles.SelectedItem = defaultRole;
+            cbRoles.IsEnabled = false;
+            txtRoleHint.Text = defaultRole != null
+                ? $"Роль при регистрации назначается автоматически: {defaultRole.RoleName}. Изменить её может администратор."
+                : "Нет доступных ролей для регистрации.";
         }
 
         /// <summary>

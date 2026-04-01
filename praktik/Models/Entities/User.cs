@@ -7,6 +7,7 @@ namespace praktik.Models
     public class User
     {
         public int UserId { get; set; }
+        public int? RoleId { get; set; }
 
         /// <summary>
         /// Логин пользователя

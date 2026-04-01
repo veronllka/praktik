@@ -2,17 +2,24 @@ using System.Windows;
 
 namespace praktik
 {
-    /// <summary>
-    /// Окно для роли "Администратор".
-    /// Предоставляет полный доступ ко всем функциям системы.
-    /// Реализует паттерн Фабричный метод - создается через RoleWindowFactory.
-    /// </summary>
     public partial class AdminWindow : Window
     {
         public AdminWindow()
         {
             InitializeComponent();
-            MainView.ApplyRole("Администратор");
+            ApplyCurrentRole("Администратор");
+        }
+
+        private void ApplyCurrentRole(string fallbackRole)
+        {
+            var role = LoginWindow.CurrentUser?.Role;
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                role = fallbackRole;
+            }
+
+            Title = $"Планировщик работ бригад - {role}";
+            MainView.ApplyRole(role);
         }
     }
 }

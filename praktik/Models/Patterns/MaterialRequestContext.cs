@@ -7,11 +7,11 @@ namespace praktik.Models.Patterns
     {
         private IMaterialRequestState currentState;
         private readonly MaterialRequest request;
-        private readonly WorkPlannerContext db;
+        private readonly IWorkPlannerContext db;
 
         public MaterialRequest Request => request;
 
-        public MaterialRequestContext(MaterialRequest request, WorkPlannerContext db)
+        public MaterialRequestContext(MaterialRequest request, IWorkPlannerContext db)
         {
             this.request = request;
             this.db = db;

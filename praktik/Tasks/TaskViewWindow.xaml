@@ -54,6 +54,62 @@
                     </StackPanel>
                 </Border>
 
+                <Border x:Name="pnlPrintJournal"
+                        BorderBrush="#E0E0E0"
+                        BorderThickness="0,0,0,1"
+                        Padding="0,15,0,15"
+                        Margin="0,0,0,20"
+                        Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock Text="ЖУРНАЛ ПЕЧАТИ"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Margin="0,0,0,12"
+                                   Foreground="#424242"/>
+                        <TextBlock Text="Последняя печать"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Margin="0,0,0,6"
+                                   Foreground="#616161"/>
+                        <TextBlock x:Name="txtLastPrintedAt"
+                                   FontSize="14"
+                                   Foreground="#212121"
+                                   Margin="0,0,0,14"/>
+                        <TextBlock Text="История печати"
+                                   FontWeight="SemiBold"
+                                   FontSize="13"
+                                   Margin="0,0,0,8"
+                                   Foreground="#616161"/>
+                        <TextBlock x:Name="txtPrintHistoryEmpty"
+                                   Text="Печать по задаче еще не выполнялась"
+                                   FontSize="13"
+                                   Foreground="#757575"
+                                   Margin="0,0,0,8"/>
+                        <ItemsControl x:Name="icPrintHistory">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#E0E0E0"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="0,0,0,10"
+                                            Margin="0,0,0,10">
+                                        <StackPanel>
+                                            <TextBlock FontSize="14" Foreground="#212121">
+                                                <Run Text="{Binding PrintedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"/>
+                                                <Run Text=" • "/>
+                                                <Run Text="{Binding DisplayPrintedByName}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding DisplayTemplateName}"
+                                                       FontSize="12"
+                                                       Foreground="#757575"
+                                                       Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
                 <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
                         <TextBlock Text="БРИГАДА" 
@@ -118,6 +174,19 @@
                         </StackPanel>
                     </Border>
                 </Grid>
+
+                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="ДАТА ПОСЛЕДНЕЙ ПЕЧАТИ"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Margin="0,0,0,8"
+                                   Foreground="#424242"/>
+                        <TextBlock x:Name="txtLastPrintedSummary"
+                                   FontSize="15"
+                                   Foreground="#212121"/>
+                    </StackPanel>
+                </Border>
 
                 <StackPanel x:Name="pnlProgress" Visibility="Collapsed" Margin="0,0,0,20">
                     <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
@@ -214,6 +283,36 @@
                                                VerticalAlignment="Center"
                                                Margin="10,0,0,0"/>
                                 </StackPanel>
+                                <Border BorderBrush="#E0E0E0"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="10"
+                                        Background="White"
+                                        Margin="0,0,0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="txtSelectedAttachment"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="#616161"
+                                                   TextTrimming="CharacterEllipsis"/>
+                                        <Button Grid.Column="1"
+                                                Content="РџСЂРёРєСЂРµРїРёС‚СЊ С„Р°Р№Р»"
+                                                Click="BtnAttachFile_Click"
+                                                Margin="12,0,0,0"
+                                                Padding="10,4"/>
+                                        <Button x:Name="btnRemoveAttachment"
+                                                Grid.Column="2"
+                                                Content="РЈРґР°Р»РёС‚СЊ"
+                                                Click="BtnRemoveAttachment_Click"
+                                                Margin="8,0,0,0"
+                                                Padding="10,4"
+                                                Visibility="Collapsed"/>
+                                    </Grid>
+                                </Border>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Content="Сохранить" 
                                             x:Name="btnSaveNote"
@@ -308,6 +407,37 @@
                                                 <Run Text=" • "/>
                                                 <Run Text="{Binding ReporterName}"/>
                                             </TextBlock>
+                                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                                <TextBlock Text="{Binding AttachmentFileName}"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="#616161">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasAttachment}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <Button Content="РћС‚РєСЂС‹С‚СЊ РІР»РѕР¶РµРЅРёРµ"
+                                                        Click="BtnOpenAttachment_Click"
+                                                        Margin="12,0,0,0"
+                                                        Padding="10,3">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasAttachment}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>

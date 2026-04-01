@@ -66,6 +66,7 @@ namespace praktik.Models
         /// Дата последнего обновления задачи.
         /// </summary>
         public DateTime? UpdatedAt { get; set; }
+        public DateTime? LastPrintedAt { get; set; }
 
         public Site Site { get; set; }
         public Crew Crew { get; set; }

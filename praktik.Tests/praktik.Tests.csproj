@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.5.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\praktik\Models\Data\IWorkPlannerContext.cs" Link="Source\Models\Data\IWorkPlannerContext.cs" />
+    <Compile Include="..\praktik\Models\Entities\Crew.cs" Link="Source\Models\Entities\Crew.cs" />
+    <Compile Include="..\praktik\Models\Entities\MaterialCatalog.cs" Link="Source\Models\Entities\MaterialCatalog.cs" />
+    <Compile Include="..\praktik\Models\Entities\MaterialRequest.cs" Link="Source\Models\Entities\MaterialRequest.cs" />
+    <Compile Include="..\praktik\Models\Entities\MaterialRequestItem.cs" Link="Source\Models\Entities\MaterialRequestItem.cs" />
+    <Compile Include="..\praktik\Models\Entities\Priority.cs" Link="Source\Models\Entities\Priority.cs" />
+    <Compile Include="..\praktik\Models\Entities\Role.cs" Link="Source\Models\Entities\Role.cs" />
+    <Compile Include="..\praktik\Models\Entities\Site.cs" Link="Source\Models\Entities\Site.cs" />
+    <Compile Include="..\praktik\Models\Entities\Task.cs" Link="Source\Models\Entities\Task.cs" />
+    <Compile Include="..\praktik\Models\Entities\TaskReport.cs" Link="Source\Models\Entities\TaskReport.cs" />
+    <Compile Include="..\praktik\Models\Entities\TaskStatus.cs" Link="Source\Models\Entities\TaskStatus.cs" />
+    <Compile Include="..\praktik\Models\Entities\User.cs" Link="Source\Models\Entities\User.cs" />
+    <Compile Include="..\praktik\Models\Patterns\IMaterialRequestState.cs" Link="Source\Models\Patterns\IMaterialRequestState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\MaterialRequestContext.cs" Link="Source\Models\Patterns\MaterialRequestContext.cs" />
+    <Compile Include="..\praktik\Models\Patterns\Services\MaterialRequestService.cs" Link="Source\Models\Patterns\Services\MaterialRequestService.cs" />
+    <Compile Include="..\praktik\Models\Patterns\Services\ReportService.cs" Link="Source\Models\Patterns\Services\ReportService.cs" />
+    <Compile Include="..\praktik\Models\Patterns\Services\TaskService.cs" Link="Source\Models\Patterns\Services\TaskService.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\ApprovedState.cs" Link="Source\Models\Patterns\States\ApprovedState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\BaseState.cs" Link="Source\Models\Patterns\States\BaseState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\ClosedState.cs" Link="Source\Models\Patterns\States\ClosedState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\DeliveredState.cs" Link="Source\Models\Patterns\States\DeliveredState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\DraftState.cs" Link="Source\Models\Patterns\States\DraftState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\IssuedState.cs" Link="Source\Models\Patterns\States\IssuedState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\RejectedState.cs" Link="Source\Models\Patterns\States\RejectedState.cs" />
+    <Compile Include="..\praktik\Models\Patterns\States\SubmittedState.cs" Link="Source\Models\Patterns\States\SubmittedState.cs" />
+  </ItemGroup>
+</Project>

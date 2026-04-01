@@ -91,14 +91,6 @@
                             </TextBlock>
                         </Expander>
 
-                        <Expander x:Name="HelpJournalExpander" Header="Журнал" IsExpanded="False" Margin="0,0,0,8">
-                            <TextBlock TextWrapping="Wrap">
-                                Журнал отчетов и комментариев по задачам:<LineBreak/>
-                                • Просмотр всех комментариев и отчетов<LineBreak/>
-                                • Отслеживание изменений статусов задач<LineBreak/>
-                                • История работы с задачами
-                            </TextBlock>
-                        </Expander>
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
@@ -136,52 +128,52 @@
                             IsChecked="{Binding ElementName=MenuToggleButton, Path=IsChecked, Mode=TwoWay}" />
 
                 <ListBox x:Name="NavigationListBox" SelectionChanged="NavigationListBox_SelectionChanged" Margin="0,16,0,16">
-                    <ListBoxItem>
+                    <ListBoxItem x:Name="DashboardMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ViewDashboard" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Главная" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
+                    <ListBoxItem x:Name="SitesMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Domain" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Стройплощадки" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
+                    <ListBoxItem x:Name="CrewsMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Бригады" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
+                    <ListBoxItem x:Name="TasksMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ClipboardList" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Задачи" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
+                    <ListBoxItem x:Name="CalendarMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Calendar" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Календарь" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
+                    <ListBoxItem x:Name="ReportsMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="FileDocument" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Отчёты" Margin="16,0" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="MessageText" Width="24" Height="24" VerticalAlignment="Center"/>
-                            <TextBlock Text="Журнал" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
                     <ListBoxItem x:Name="MaterialRequestsMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="PackageVariant" Width="24" Height="24" VerticalAlignment="Center"/>
                             <TextBlock Text="Заявки на материалы" Margin="16,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem x:Name="RolesMenuItem">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ShieldAccount" Width="24" Height="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="Управление ролями" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
                 </ListBox>
@@ -298,6 +290,26 @@
                                             <DataGridTextColumn Header="Автор" Binding="{Binding ReporterName}" Width="150"/>
                                             <DataGridTextColumn Header="Дата" Binding="{Binding ReportedAt, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
                                             <DataGridTextColumn Header="Комментарий" Binding="{Binding ReportText}" Width="*"/>
+                                            <DataGridTemplateColumn Header="Вложение" Width="160">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="Открыть вложение"
+                                                                Click="BtnOpenTaskReportAttachment_Click"
+                                                                Padding="8,3">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasAttachment}" Value="True">
+                                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
                                 </StackPanel>
@@ -496,9 +508,93 @@
                             <DataGrid x:Name="dgTasks" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
                                     SelectionChanged="DgTasks_SelectionChanged" SelectionMode="Extended"
                                     MouseDoubleClick="DgTasks_MouseDoubleClick"
+                                    ContextMenuOpening="DgTasks_ContextMenuOpening"
                                     ScrollViewer.VerticalScrollBarVisibility="Visible"
                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                     Margin="0,0,0,8">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <EventSetter Event="PreviewMouseRightButtonDown" Handler="DgTasksRow_PreviewMouseRightButtonDown"/>
+                                    </Style>
+                                </DataGrid.RowStyle>
+                                <DataGrid.ContextMenu>
+                                    <ContextMenu Background="#FFFFFF"
+                                                 BorderBrush="#D7D7D7"
+                                                 BorderThickness="1"
+                                                 Padding="6"
+                                                 HasDropShadow="True">
+                                        <ContextMenu.Template>
+                                            <ControlTemplate TargetType="{x:Type ContextMenu}">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="8"
+                                                        Padding="{TemplateBinding Padding}">
+                                                    <StackPanel IsItemsHost="True"
+                                                                KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </ContextMenu.Template>
+                                        <ContextMenu.Resources>
+                                            <Style x:Key="CompactTaskMenuItemStyle" TargetType="{x:Type MenuItem}">
+                                                <Setter Property="Background" Value="Transparent"/>
+                                                <Setter Property="Foreground" Value="#2F2F2F"/>
+                                                <Setter Property="FontSize" Value="13"/>
+                                                <Setter Property="FontFamily" Value="Segoe UI"/>
+                                                <Setter Property="Padding" Value="12,7"/>
+                                                <Setter Property="Margin" Value="0"/>
+                                                <Setter Property="BorderThickness" Value="0"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="{x:Type MenuItem}">
+                                                            <Border x:Name="MenuItemBorder"
+                                                                    Background="{TemplateBinding Background}"
+                                                                    CornerRadius="5"
+                                                                    Padding="{TemplateBinding Padding}">
+                                                                <Grid>
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <ContentPresenter Grid.Column="0"
+                                                                                      ContentSource="Icon"
+                                                                                      VerticalAlignment="Center"
+                                                                                      Margin="0,0,10,0"/>
+                                                                    <ContentPresenter Grid.Column="1"
+                                                                                      ContentSource="Header"
+                                                                                      RecognizesAccessKey="True"
+                                                                                      VerticalAlignment="Center"/>
+                                                                </Grid>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsHighlighted" Value="True">
+                                                                    <Setter TargetName="MenuItemBorder" Property="Background" Value="#F4EFE7"/>
+                                                                    <Setter Property="Foreground" Value="#1F1F1F"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsEnabled" Value="False">
+                                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ContextMenu.Resources>
+                                        <MenuItem Style="{StaticResource CompactTaskMenuItemStyle}"
+                                                  Click="TaskQrMenuItem_Click">
+                                            <MenuItem.Icon>
+                                                <materialDesign:PackIcon Kind="Qrcode"
+                                                                         Width="15"
+                                                                         Height="15"
+                                                                         Foreground="#5F574C"/>
+                                            </MenuItem.Icon>
+                                            <MenuItem.Header>
+                                                <TextBlock Text="&#x41E;&#x442;&#x43A;&#x440;&#x44B;&#x442;&#x44C; QR-&#x43A;&#x43E;&#x434;"/>
+                                            </MenuItem.Header>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </DataGrid.ContextMenu>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="*"/>
                                     <DataGridTextColumn Header="Объект" Binding="{Binding Site.SiteName}" Width="150"/>
@@ -623,90 +719,301 @@
                 </Grid>
 
                 <Grid x:Name="ReportsContent" Visibility="Collapsed" Grid.ColumnSpan="2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                    <Border Margin="24"
+                            Padding="18"
+                            CornerRadius="26"
+                            Background="#F2E7DA"
+                            BorderBrush="#D7C5B3"
+                            BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="18"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
 
-                    <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="0">
-                        <StackPanel>
-                            <TextBlock Text="Отчёты и аналитика" Style="{StaticResource SubHeaderTextStyle}"/>
+                            <Border Padding="12,10"
+                                    CornerRadius="16"
+                                    Background="#FFF9F1"
+                                    BorderBrush="#E2D5C6"
+                                    BorderThickness="1">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="ChartBar" Width="18" Height="18" Margin="0,0,10,0" Foreground="#7A5338"/>
+                                    <TextBlock Text="Аналитика по задачам"
+                                               FontSize="18"
+                                               FontWeight="SemiBold"
+                                               Foreground="#7A5338"/>
+                                </StackPanel>
+                            </Border>
 
-                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                                <Button x:Name="btnTasksBySite" Content="ЗАДАЧИ ПО ОБЪЕКТАМ" 
-                                      Click="BtnTasksBySite_Click" 
-                                      Style="{StaticResource MaterialDesignRaisedButton}"
-                                      Margin="0,0,16,0"/>
-                                <Button x:Name="btnTasksByCrew" Content="ВЫПОЛНЕНИЕ ПО БРИГАДАМ" 
-                                      Click="BtnTasksByCrew_Click" 
-                                      Style="{StaticResource MaterialDesignRaisedButton}"
-                                      Margin="0,0,16,0"/>
-                                <Button x:Name="btnOverdueTasks" Content="ПРОСРОЧЕННЫЕ ЗАДАЧИ" 
-                                      Click="BtnOverdueTasks_Click" 
-                                      Style="{StaticResource MaterialDesignRaisedButton}"
-                                      Margin="0,0,16,0"/>
-                                <Button x:Name="btnOpenReports" Content="ВИЗУАЛИЗАЦИЯ" 
-                                      Click="BtnOpenReports_Click" 
-                                      Style="{StaticResource MaterialDesignOutlinedButton}"/>
-                            </StackPanel>
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="250"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <Separator Margin="0,16"/>
+                            <Border Grid.Column="0"
+                                    Padding="24"
+                                    CornerRadius="18"
+                                    Background="#FFF9F1"
+                                    BorderBrush="#E2D5C6"
+                                    BorderThickness="1">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                            <TextBlock Text="Экспорт данных" Style="{StaticResource SubHeaderTextStyle}"/>
-                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <Button Click="ExportCsv_Click" 
-                                      Style="{StaticResource MaterialDesignOutlinedButton}"
-                                      Margin="0,0,16,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileDelimited" Margin="0,0,8,0"/>
-                                        <TextBlock Text="CSV"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Выбор отчёта"
+                                                   FontSize="15"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#5B3E2C"/>
+                                        <TextBlock Text="Тип отчёта:"
+                                                   Margin="0,16,0,6"
+                                                   FontSize="12"
+                                                   Foreground="#8E7A69"/>
+                                        <ComboBox x:Name="cbReportTypeSelector"
+                                                  Height="36"
+                                                  SelectedIndex="0"
+                                                  Background="#FFFBF6"
+                                                  BorderBrush="#D6C3AF"
+                                                  BorderThickness="1"
+                                                  Foreground="#4A3326"
+                                                  Padding="8,4">
+                                            <ComboBoxItem Content="Общий список задач" Tag="tasks"/>
+                                            <ComboBoxItem Content="Задачи по объектам" Tag="tasks_by_site"/>
+                                            <ComboBoxItem Content="Выполнение по бригадам" Tag="tasks_by_crew"/>
+                                            <ComboBoxItem Content="Просроченные задачи" Tag="overdue_tasks"/>
+                                        </ComboBox>
+
+                                        <TextBlock Text="Тип диаграммы:"
+                                                   Margin="0,14,0,6"
+                                                   FontSize="12"
+                                                   Foreground="#8E7A69"/>
+                                        <ComboBox x:Name="cbReportChartType"
+                                                  Height="36"
+                                                  SelectedIndex="0"
+                                                  Background="#FFFBF6"
+                                                  BorderBrush="#D6C3AF"
+                                                  BorderThickness="1"
+                                                  Foreground="#4A3326"
+                                                  Padding="8,4">
+                                            <ComboBoxItem Content="Гистограмма" Tag="bar"/>
+                                            <ComboBoxItem Content="Круговая диаграмма" Tag="pie"/>
+                                            <ComboBoxItem Content="Линейный график" Tag="line"/>
+                                        </ComboBox>
+
+                                        <Button x:Name="btnGenerateSelectedReport"
+                                                Content="Сгенерировать отчёт"
+                                                Click="BtnGenerateSelectedReport_Click"
+                                                Height="38"
+                                                Margin="0,16,0,0"
+                                                Background="#9B6A49"
+                                                BorderBrush="#9B6A49"
+                                                BorderThickness="1"
+                                                Foreground="White"
+                                                FontWeight="SemiBold"/>
                                     </StackPanel>
-                                </Button>
-                                <Button Click="ExportExcel_Click" 
-                                      Style="{StaticResource MaterialDesignOutlinedButton}"
-                                      Margin="0,0,16,0">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="MicrosoftExcel" Margin="0,0,8,0"/>
-                                        <TextBlock Text="EXCEL"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button Click="ExportPdf_Click" 
-                                      Style="{StaticResource MaterialDesignOutlinedButton}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileDocument" Margin="0,0,8,0"/>
-                                        <TextBlock Text="PDF"/>
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </StackPanel>
-                    </materialDesign:Card>
 
-                    <materialDesign:Card Style="{StaticResource CardStyle}" Grid.Row="1">
-                        <StackPanel>
-                            <TextBlock x:Name="ReportTitle" Text="Выберите тип отчёта" 
-                                     Style="{StaticResource SubHeaderTextStyle}"/>
-                            <DataGrid x:Name="dgReports" AutoGenerateColumns="True" 
-                                    CanUserAddRows="False" Margin="0,16,0,0"/>
-                        </StackPanel>
-                    </materialDesign:Card>
-                </Grid>
+                                    <Border Grid.Row="1"
+                                            Margin="0,24,0,0"
+                                            Padding="16"
+                                            CornerRadius="16"
+                                            Background="#F8EFE4"
+                                            BorderBrush="#E1D1BF"
+                                            BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="Экспорт"
+                                                       FontSize="15"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="#5B3E2C"/>
+                                            <TextBlock Text="Экспортировать как:"
+                                                       Margin="0,12,0,6"
+                                                       FontSize="12"
+                                                       Foreground="#8E7A69"/>
+                                            <ComboBox x:Name="cbReportExportFormat"
+                                                      Height="36"
+                                                      SelectedIndex="0"
+                                                      Background="#FFFBF6"
+                                                      BorderBrush="#D6C3AF"
+                                                      BorderThickness="1"
+                                                      Foreground="#4A3326"
+                                                      Padding="8,4">
+                                                <ComboBoxItem Content="PNG" Tag="png"/>
+                                                <ComboBoxItem Content="CSV" Tag="csv"/>
+                                                <ComboBoxItem Content="Excel" Tag="excel"/>
+                                                <ComboBoxItem Content="PDF" Tag="pdf"/>
+                                            </ComboBox>
 
-                <Grid x:Name="JournalContent" Visibility="Collapsed" Grid.ColumnSpan="2">
-                    <materialDesign:Card Style="{StaticResource CardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Журнал отчётов по задачам" Style="{StaticResource SubHeaderTextStyle}"/>
-                            <DataGrid x:Name="dgTaskReports" AutoGenerateColumns="False" 
-                                    CanUserAddRows="False" Margin="0,16,0,0">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Задача" Binding="{Binding TaskTitle}" Width="*"/>
-                                    <DataGridTextColumn Header="Автор" Binding="{Binding ReporterName}" Width="150"/>
-                                    <DataGridTextColumn Header="Дата" Binding="{Binding ReportedAt, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
-                                    <DataGridTextColumn Header="Прогресс %" Binding="{Binding ProgressPercent}" Width="100"/>
-                                    <DataGridTextColumn Header="Комментарий" Binding="{Binding ReportText}" Width="*"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </StackPanel>
-                    </materialDesign:Card>
+                                            <Button x:Name="btnExportSelectedReport"
+                                                    Content="Экспортировать"
+                                                    Click="BtnExportSelectedReport_Click"
+                                                    Height="38"
+                                                    Margin="0,16,0,0"
+                                                    Background="#B5804B"
+                                                    BorderBrush="#B5804B"
+                                                    BorderThickness="1"
+                                                    Foreground="White"
+                                                    FontWeight="SemiBold"/>
+
+                                            <TextBlock Text="Справа показывается текущий график по выбранному срезу. Экспорт сохраняет именно эту выборку."
+                                                       Margin="0,18,0,0"
+                                                       TextWrapping="Wrap"
+                                                       FontSize="11"
+                                                        Foreground="#866F5E"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Column="2"
+                                    Padding="20"
+                                    CornerRadius="18"
+                                    Background="#FFF9F1"
+                                    BorderBrush="#E2D5C6"
+                                    BorderThickness="1">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="0"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock x:Name="ReportTitle"
+                                               Text="Общий список задач"
+                                               HorizontalAlignment="Center"
+                                               FontSize="20"
+                                               FontWeight="SemiBold"
+                                               Foreground="#5B3E2C"/>
+                                    <TextBlock x:Name="ReportSubtitle"
+                                               Grid.Row="1"
+                                               Margin="0,6,0,0"
+                                               HorizontalAlignment="Center"
+                                               FontSize="12"
+                                               Foreground="#866F5E"
+                                               Text="Сводка по задачам и текущему состоянию исполнения."/>
+                                    <TextBlock x:Name="ReportTableCaption"
+                                               Grid.Row="2"
+                                               Margin="0,8,0,0"
+                                               HorizontalAlignment="Center"
+                                               FontSize="11"
+                                               Foreground="#A18A78"
+                                               Text="Выберите параметры слева и сформируйте отчёт."/>
+
+                                    <Border x:Name="ReportPreviewHost"
+                                            Grid.Row="3"
+                                            Margin="0,18,0,0"
+                                            Padding="14"
+                                            MinHeight="320"
+                                            CornerRadius="18"
+                                            Background="#FCF6EE"
+                                            BorderBrush="#E5D8CB"
+                                            BorderThickness="1"
+                                            SizeChanged="ReportPreviewHost_SizeChanged">
+                                        <Canvas x:Name="ReportPreviewCanvas"/>
+                                    </Border>
+
+                                    <UniformGrid Grid.Row="4" Columns="3" Margin="0,18,0,0">
+                                        <Border Margin="0,0,10,0"
+                                                Padding="12"
+                                                CornerRadius="14"
+                                                Background="#F1E3D2"
+                                                BorderBrush="#DDCCB8"
+                                                BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock x:Name="ReportMetricPrimaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="#6A4834"/>
+                                                <TextBlock x:Name="ReportMetricPrimaryLabel" Text="Всего записей" Margin="0,4,0,0" Foreground="#8E7A69"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Margin="0,0,10,0"
+                                                Padding="12"
+                                                CornerRadius="14"
+                                                Background="#F7E9D5"
+                                                BorderBrush="#E5D0B0"
+                                                BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock x:Name="ReportMetricSecondaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="#A16A32"/>
+                                                <TextBlock x:Name="ReportMetricSecondaryLabel" Text="Ключевой показатель" Margin="0,4,0,0" Foreground="#8E7A69"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Padding="12"
+                                                CornerRadius="14"
+                                                Background="#EFE0D4"
+                                                BorderBrush="#DBC8BA"
+                                                BorderThickness="1">
+                                            <StackPanel>
+                                                <TextBlock x:Name="ReportMetricTertiaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="#835844"/>
+                                                <TextBlock x:Name="ReportMetricTertiaryLabel" Text="Доп. показатель" Margin="0,4,0,0" Foreground="#8E7A69"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+
+                                    <WrapPanel x:Name="ReportLegendPanel" Grid.Row="5" Margin="0,18,0,0">
+                                        <Border x:Name="ReportLegendRow1"
+                                                Margin="0,0,10,10"
+                                                Padding="10,6"
+                                                CornerRadius="14"
+                                                Background="#FAF2E8"
+                                                BorderBrush="#E6D8C7"
+                                                BorderThickness="1">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border x:Name="ReportLegendSwatch1" Width="10" Height="10" CornerRadius="5" Background="#B47A4F" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendLabel1" Text="Сегмент 1" Foreground="#715D4F" VerticalAlignment="Center"/>
+                                                <TextBlock Text="  "/>
+                                                <TextBlock x:Name="ReportLegendValue1" Text="0" Foreground="#5B3E2C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border x:Name="ReportLegendRow2"
+                                                Margin="0,0,10,10"
+                                                Padding="10,6"
+                                                CornerRadius="14"
+                                                Background="#FAF2E8"
+                                                BorderBrush="#E6D8C7"
+                                                BorderThickness="1">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border x:Name="ReportLegendSwatch2" Width="10" Height="10" CornerRadius="5" Background="#D1A16A" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendLabel2" Text="Сегмент 2" Foreground="#715D4F" VerticalAlignment="Center"/>
+                                                <TextBlock Text="  "/>
+                                                <TextBlock x:Name="ReportLegendValue2" Text="0" Foreground="#5B3E2C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border x:Name="ReportLegendRow3"
+                                                Margin="0,0,10,10"
+                                                Padding="10,6"
+                                                CornerRadius="14"
+                                                Background="#FAF2E8"
+                                                BorderBrush="#E6D8C7"
+                                                BorderThickness="1">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border x:Name="ReportLegendSwatch3" Width="10" Height="10" CornerRadius="5" Background="#8B5C43" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendLabel3" Text="Сегмент 3" Foreground="#715D4F" VerticalAlignment="Center"/>
+                                                <TextBlock Text="  "/>
+                                                <TextBlock x:Name="ReportLegendValue3" Text="0" Foreground="#5B3E2C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </WrapPanel>
+
+                                    <DataGrid Grid.Row="6"
+                                              x:Name="dgReports"
+                                              Visibility="Collapsed"
+                                              AutoGenerateColumns="True"
+                                              AutoGeneratedColumns="DgReports_AutoGeneratedColumns"
+                                              CanUserAddRows="False"
+                                              CanUserResizeRows="False"
+                                              CanUserReorderColumns="False"
+                                              IsReadOnly="True"
+                                              HeadersVisibility="Column"/>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                    </Border>
                 </Grid>
 
                 <Grid x:Name="MaterialRequestsContent" Visibility="Collapsed" Grid.ColumnSpan="2">
@@ -850,6 +1157,132 @@
                                 <Button x:Name="btnMRExport" Content="Экспорт" 
                                        Click="BtnMRExport_Click" Style="{StaticResource MaterialDesignRaisedButton}"
                                        Width="200" Height="40"/>
+                            </StackPanel>
+                        </Grid>
+                    </materialDesign:Card>
+                </Grid>
+
+                <Grid x:Name="RolesContent" Visibility="Collapsed" Grid.ColumnSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <materialDesign:Card Grid.Row="0" Margin="16,16,16,8">
+                        <Grid Margin="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="3*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Пользователи" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
+                                <DataGrid x:Name="dgRoleUsers"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionChanged="DgRoleUsers_SelectionChanged"
+                                          Height="260">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
+                                        <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="160"/>
+                                        <DataGridTextColumn Header="Текущая роль" Binding="{Binding Role}" Width="170"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Назначение роли" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
+                                <TextBlock x:Name="txtSelectedRoleUserInfo"
+                                           Text="Выберите пользователя для смены роли"
+                                           TextWrapping="Wrap"
+                                           Margin="0,0,0,12"/>
+                                <ComboBox x:Name="cbRoleAssignment"
+                                          DisplayMemberPath="RoleName"
+                                          materialDesign:HintAssist.Hint="Новая роль"
+                                          Margin="0,0,0,12"/>
+                                <Button x:Name="btnApplyUserRole"
+                                        Content="Назначить роль"
+                                        Click="BtnApplyUserRole_Click"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Width="180"
+                                        Height="40"
+                                        HorizontalAlignment="Left"/>
+                                <Separator Margin="0,16,0,16"/>
+                                <TextBlock Text="Создание роли" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
+                                <TextBox x:Name="txtNewRoleName"
+                                         materialDesign:HintAssist.Hint="Название роли"
+                                         Margin="0,0,0,12"/>
+                                <TextBlock Text="Новая роль создается с текущим набором отмеченных разрешений."
+                                           TextWrapping="Wrap"
+                                           Foreground="#666666"
+                                           Margin="0,0,0,12"/>
+                                <Button x:Name="btnCreateRole"
+                                        Content="Создать роль"
+                                        Click="BtnCreateRole_Click"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Width="180"
+                                        Height="40"
+                                        HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Grid>
+                    </materialDesign:Card>
+
+                    <materialDesign:Card Grid.Row="1" Margin="16,0,16,16">
+                        <Grid Margin="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="280"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Роли" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
+                                <DataGrid x:Name="dgRoles"
+                                          AutoGenerateColumns="False"
+                                          IsReadOnly="True"
+                                          SelectionChanged="DgRoles_SelectionChanged"
+                                          Height="360">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ID" Binding="{Binding RoleId}" Width="60"/>
+                                        <DataGridTextColumn Header="Название" Binding="{Binding RoleName}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock x:Name="txtSelectedRoleInfo"
+                                           Text="Выберите роль для настройки прав"
+                                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                                           Margin="0,0,0,12"/>
+                                <DataGrid x:Name="dgRolePermissions"
+                                          AutoGenerateColumns="False"
+                                          CanUserAddRows="False"
+                                          CanUserDeleteRows="False"
+                                          HeadersVisibility="Column"
+                                          Height="360">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="140" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Разрешение" Binding="{Binding DisplayName}" Width="220" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
+                                        <DataGridCheckBoxColumn Header="Разрешено" Binding="{Binding IsGranted, Mode=TwoWay}" Width="100"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                    <Button x:Name="btnSaveRolePermissions"
+                                            Content="Сохранить права"
+                                            Click="BtnSaveRolePermissions_Click"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Width="180"
+                                            Height="40"
+                                            Margin="0,0,12,0"/>
+                                    <Button x:Name="btnReloadRoleManagement"
+                                            Content="Обновить"
+                                            Click="BtnReloadRoleManagement_Click"
+                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                            Width="140"
+                                            Height="40"/>
+                                </StackPanel>
                             </StackPanel>
                         </Grid>
                     </materialDesign:Card>

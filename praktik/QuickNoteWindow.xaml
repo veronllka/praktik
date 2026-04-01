@@ -39,7 +39,7 @@
             <TextBlock Text="Необязательно" FontSize="12" Foreground="#757575" VerticalAlignment="Center" Margin="10,0,0,0"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="3">
             <Button x:Name="btnSave" 
                    Content="Сохранить" 
                    Click="BtnSave_Click" 

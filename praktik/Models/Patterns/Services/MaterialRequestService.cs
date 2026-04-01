@@ -12,9 +12,9 @@ namespace praktik.Models.Patterns
     /// </summary>
     public class MaterialRequestService
     {
-        private readonly WorkPlannerContext db;
+        private readonly IWorkPlannerContext db;
 
-        public MaterialRequestService(WorkPlannerContext context)
+        public MaterialRequestService(IWorkPlannerContext context)
         {
             db = context;
         }

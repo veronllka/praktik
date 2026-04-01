@@ -42,6 +42,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Printing" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -55,6 +56,14 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="zxing">
+      <HintPath>$(NuGetPackageRoot)zxing.net\0.16.9\lib\net47\zxing.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="zxing.presentation">
+      <HintPath>$(NuGetPackageRoot)zxing.net\0.16.9\lib\net47\zxing.presentation.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="EntityFramework">
@@ -257,6 +266,7 @@
       <DependentUpon>CrewMemberCreateWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Models\Data\IWorkPlannerContext.cs" />
     <Compile Include="Models\Data\WorkPlannerContext.cs" />
     <Compile Include="Models\Entities\User.cs" />
     <Compile Include="Models\Entities\Site.cs" />
