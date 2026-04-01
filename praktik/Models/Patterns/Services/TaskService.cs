@@ -203,7 +203,7 @@ namespace praktik.Models.Patterns
             };
         }
     }
-
+    
     public class LmStudioTaskDescriptionService
     {
         private const string ModelsEndpoint = "api/v1/models";
