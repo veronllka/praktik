@@ -193,7 +193,7 @@ namespace praktik.Models.Patterns
                 Description = description
             };
         }
-
+        
         public static TaskDescriptionGenerationResult Fail(string errorMessage)
         {
             return new TaskDescriptionGenerationResult
