@@ -1,4 +1,4 @@
-<Window x:Class="praktik.RegisterWindow"
+﻿<Window x:Class="praktik.RegisterWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:praktik"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Регистрация пользователя" Width="460"
+        Title="Р РµРіРёСЃС‚СЂР°С†РёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ" Width="460"
         SizeToContent="Height"
         MinHeight="440"
         WindowStartupLocation="CenterScreen"
@@ -178,33 +178,33 @@
         </Style>
     </Window.Resources>
     
-    <Grid Background="#F4ECE5">
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
         <Border Margin="16"
                 Padding="20"
-                Background="#FFFDFC"
-                BorderBrush="#E3D4C7"
+                Background="{DynamicResource AppSurfaceBrush}"
+                BorderBrush="{DynamicResource AppBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="10">
             <StackPanel>
                 <TextBlock x:Name="txtHeaderTitle"
-                           Text="Регистрация пользователя"
+                           Text="Р РµРіРёСЃС‚СЂР°С†РёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"
                            FontSize="22"
                            FontWeight="SemiBold"
-                           Foreground="#5F4336"
+                           Foreground="{DynamicResource AppTextBrush}"
                            Visibility="Collapsed"/>
 
                 <TextBlock x:Name="txtHeaderSubtitle"
-                           Text="Заполните данные новой учетной записи."
+                           Text="Р—Р°РїРѕР»РЅРёС‚Рµ РґР°РЅРЅС‹Рµ РЅРѕРІРѕР№ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё."
                            Margin="0,6,0,18"
-                           Foreground="#7A6A60"
+                           Foreground="{DynamicResource AppMutedTextBrush}"
                            TextWrapping="Wrap"
                            Visibility="Collapsed"/>
 
                 <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="Логин"
+                    <TextBlock Text="Р›РѕРіРёРЅ"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
-                               Foreground="#5F4336"/>
+                               Foreground="{DynamicResource AppTextBrush}"/>
                     <TextBox x:Name="txtUsername"
                              Height="34"
                              Padding="8,4"
@@ -212,10 +212,10 @@
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="Пароль"
+                    <TextBlock Text="РџР°СЂРѕР»СЊ"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
-                               Foreground="#5F4336"/>
+                               Foreground="{DynamicResource AppTextBrush}"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -237,16 +237,16 @@
                                 Grid.Column="1"
                                 Width="90"
                                 Margin="8,0,0,0"
-                                Content="Показать"
+                                Content="РџРѕРєР°Р·Р°С‚СЊ"
                                 Click="BtnTogglePassword_Click"/>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="Полное имя"
+                    <TextBlock Text="РџРѕР»РЅРѕРµ РёРјСЏ"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
-                               Foreground="#5F4336"/>
+                               Foreground="{DynamicResource AppTextBrush}"/>
                     <TextBox x:Name="txtFullName"
                              Height="34"
                              Padding="8,4"
@@ -254,10 +254,10 @@
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Роль"
+                    <TextBlock Text="Р РѕР»СЊ"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
-                               Foreground="#5F4336"/>
+                               Foreground="{DynamicResource AppTextBrush}"/>
                     <ComboBox x:Name="cbRoles"
                               Height="34"
                               Padding="6,2"
@@ -266,33 +266,33 @@
 
                 <TextBlock x:Name="txtRoleHint"
                            Margin="0,0,0,10"
-                           Foreground="#7A6A60"
+                           Foreground="{DynamicResource AppMutedTextBrush}"
                            TextWrapping="Wrap"/>
 
                 <TextBlock x:Name="txtError"
                            Margin="0,0,0,12"
-                           Foreground="#C2410C"
+                           Foreground="{DynamicResource AppDangerBrush}"
                            TextWrapping="Wrap"
                            MinHeight="18"/>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="btnRegister"
-                            Content="Зарегистрироваться"
+                            Content="Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ"
                             Click="BtnRegister_Click"
                             MinWidth="180"
                             Height="34"
                             Margin="0,0,10,0"
-                            Background="#8A6250"
-                            Foreground="White"
-                            BorderBrush="#8A6250"/>
+                            Style="{StaticResource ModernButtonStyle}"/>
 
                     <Button x:Name="btnCancel"
-                            Content="Отмена"
+                            Content="РћС‚РјРµРЅР°"
                             Click="BtnCancel_Click"
                             MinWidth="110"
-                            Height="34"/>
+                            Height="34"
+                            Style="{StaticResource ModernOutlinedButtonStyle}"/>
                 </StackPanel>
             </StackPanel>
         </Border>
     </Grid>
 </Window>
+

@@ -5,78 +5,56 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Действие с заявкой" Height="320" Width="450" WindowStartupLocation="CenterScreen" 
-        ResizeMode="NoResize">
+        Title="Действие с заявкой"
+        Height="320"
+        Width="450"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="{DynamicResource AppBackgroundBrush}">
     <DockPanel Margin="16">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button x:Name="btnOk" Content="Подтвердить" Click="BtnOk_Click" 
-                    Width="140" Height="40" Margin="0,0,8,0" 
-                    Background="#C2B39A" Foreground="White" 
-                    BorderThickness="0" FontSize="14" FontWeight="Medium"
-                    Cursor="Hand">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="4" 
-                                Padding="12,8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="#C2B39A"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#B6A588"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#A78F73"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
-            <Button x:Name="btnCancel" Content="Отмена" Click="BtnCancel_Click" 
-                    Width="140" Height="40"
-                    Background="Transparent" Foreground="#7C746A" 
-                    BorderThickness="1" BorderBrush="#7C746A" FontSize="14" FontWeight="Medium"
-                    Cursor="Hand">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4" 
-                                Padding="12,8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Button.Template>
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="Transparent"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#F2ECE3"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#E4DCCF"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
+        <StackPanel DockPanel.Dock="Bottom"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button x:Name="btnOk"
+                    Content="Подтвердить"
+                    Click="BtnOk_Click"
+                    Width="140"
+                    Height="40"
+                    Margin="0,0,8,0"
+                    FontSize="14"
+                    FontWeight="Medium"
+                    Style="{StaticResource ModernButtonStyle}"/>
+            <Button x:Name="btnCancel"
+                    Content="Отмена"
+                    Click="BtnCancel_Click"
+                    Width="140"
+                    Height="40"
+                    FontSize="14"
+                    FontWeight="Medium"
+                    Style="{StaticResource ModernOutlinedButtonStyle}"/>
         </StackPanel>
 
         <StackPanel>
-            <TextBlock x:Name="txtTitle" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"/>
+            <TextBlock x:Name="txtTitle"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Margin="0,0,0,16"/>
 
-            <TextBlock x:Name="lblDocNumber" Text="Номер документа:" Margin="0,0,0,5"/>
-            <TextBox x:Name="txtDocNumber" Margin="0,0,0,16" Height="30"/>
+            <TextBlock x:Name="lblDocNumber"
+                       Text="Номер документа:"
+                       Margin="0,0,0,5"/>
+            <TextBox x:Name="txtDocNumber"
+                     Margin="0,0,0,16"
+                     Height="30"/>
 
-            <TextBlock x:Name="lblNote" Text="Примечание:" Margin="0,0,0,5"/>
-            <TextBox x:Name="txtNote" TextWrapping="Wrap" AcceptsReturn="True" Height="60" Margin="0,0,0,0"/>
+            <TextBlock x:Name="lblNote"
+                       Text="Примечание:"
+                       Margin="0,0,0,5"/>
+            <TextBox x:Name="txtNote"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"
+                     Height="60"/>
         </StackPanel>
     </DockPanel>
 </Window>

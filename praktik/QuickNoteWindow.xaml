@@ -6,7 +6,7 @@
         mc:Ignorable="d"
         Title="Быстрая заметка" Height="210" Width="500" WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize">
-    <Grid Margin="20">
+    <Grid Margin="20" Background="{DynamicResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -14,7 +14,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Короткая пометка…" FontSize="12" Foreground="#666666" Margin="0,0,0,8"/>
+        <TextBlock Grid.Row="0" Text="Короткая пометка…" FontSize="12" Foreground="{DynamicResource AppSubtleTextBrush}" Margin="0,0,0,8"/>
 
         <TextBox x:Name="txtNote" 
                 Grid.Row="1" 
@@ -26,7 +26,7 @@
                 Margin="0,0,0,15"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,15">
-            <TextBlock Text="Прогресс, %" FontSize="13" Foreground="#424242" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock Text="Прогресс, %" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <TextBox x:Name="txtProgressPercent"
                      Width="90"
                      Height="30"
@@ -36,13 +36,14 @@
                      VerticalContentAlignment="Center"
                      PreviewTextInput="ProgressTextBox_PreviewTextInput"
                      DataObject.Pasting="ProgressTextBox_Pasting"/>
-            <TextBlock Text="Необязательно" FontSize="12" Foreground="#757575" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <TextBlock Text="Необязательно" FontSize="12" Foreground="{DynamicResource AppSubtleTextBrush}" VerticalAlignment="Center" Margin="10,0,0,0"/>
         </StackPanel>
 
         <StackPanel Grid.Row="3">
             <Button x:Name="btnSave" 
                    Content="Сохранить" 
                    Click="BtnSave_Click" 
+                   Style="{StaticResource ModernButtonStyle}"
                    Width="100" 
                    Height="30"
                    Margin="0,0,10,0"
@@ -50,6 +51,7 @@
             <Button x:Name="btnCancel" 
                    Content="Отмена" 
                    Click="BtnCancel_Click" 
+                   Style="{StaticResource ModernOutlinedButtonStyle}"
                    Width="80" 
                    Height="30"/>
         </StackPanel>

@@ -5,19 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Выбор задачи" Height="500" Width="800" WindowStartupLocation="CenterScreen">
-    <Grid Margin="16">
+        Title="Выбор задачи"
+        Height="500"
+        Width="800"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="16" Background="{DynamicResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Выберите задачу для создания заявки на материалы" 
-                  Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,16"/>
+        <TextBlock Grid.Row="0"
+                   Text="Выберите задачу для создания заявки на материалы"
+                   Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
+                   Margin="0,0,0,16"/>
 
-        <DataGrid x:Name="dgTasks" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" 
-                 SelectionMode="Single" Margin="0,0,0,16">
+        <DataGrid x:Name="dgTasks"
+                  Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  Margin="0,0,0,16">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="*"/>
                 <DataGridTextColumn Header="Объект" Binding="{Binding Site.SiteName}" Width="150"/>
@@ -29,12 +39,15 @@
         </DataGrid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="btnSelect" Content="Выбрать" 
-                   Click="BtnSelect_Click" Style="{StaticResource MaterialDesignRaisedButton}"
-                   Margin="0,0,8,0"/>
-            <Button x:Name="btnCancel" Content="Отмена" 
-                   Click="BtnCancel_Click" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+            <Button x:Name="btnSelect"
+                    Content="Выбрать"
+                    Click="BtnSelect_Click"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="0,0,8,0"/>
+            <Button x:Name="btnCancel"
+                    Content="Отмена"
+                    Click="BtnCancel_Click"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"/>
         </StackPanel>
     </Grid>
 </Window>
-

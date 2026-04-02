@@ -13,20 +13,157 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
                 
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Brown" SecondaryColor="Amber" />
+                <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="Brown" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
                 
                 <ResourceDictionary>
+                    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#111318"/>
+                    <SolidColorBrush x:Key="AppNavigationBrush" Color="#191D24"/>
+                    <SolidColorBrush x:Key="AppSurfaceBrush" Color="#1C2027"/>
+                    <SolidColorBrush x:Key="AppSurfaceAltBrush" Color="#242A33"/>
+                    <SolidColorBrush x:Key="AppPanelBrush" Color="#2A313C"/>
+                    <SolidColorBrush x:Key="AppInputBackgroundBrush" Color="#20252D"/>
+                    <SolidColorBrush x:Key="AppBorderBrush" Color="#343C49"/>
+                    <SolidColorBrush x:Key="AppTextBrush" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="AppMutedTextBrush" Color="#ADB6C3"/>
+                    <SolidColorBrush x:Key="AppSubtleTextBrush" Color="#7E8896"/>
+                    <SolidColorBrush x:Key="AppAccentBrush" Color="#8D6E63"/>
+                    <SolidColorBrush x:Key="AppAccentHoverBrush" Color="#9B7A6E"/>
+                    <SolidColorBrush x:Key="AppAccentSoftBrush" Color="#3B332F"/>
+                    <SolidColorBrush x:Key="AppAccentTextBrush" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="AppPrimaryButtonBrush" Color="#8D6E63"/>
+                    <SolidColorBrush x:Key="AppPrimaryButtonHoverBrush" Color="#9B7A6E"/>
+                    <SolidColorBrush x:Key="AppPrimaryButtonTextBrush" Color="#FFFFFF"/>
+                    <SolidColorBrush x:Key="AppButtonDarkBrush" Color="#0D1015"/>
+                    <SolidColorBrush x:Key="AppButtonDarkHoverBrush" Color="#171B23"/>
+                    <SolidColorBrush x:Key="AppSelectionBrush" Color="#43352F"/>
+                    <SolidColorBrush x:Key="AppSelectionTextBrush" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="AppSuccessBrush" Color="#34C759"/>
+                    <SolidColorBrush x:Key="AppWarningBrush" Color="#F5A524"/>
+                    <SolidColorBrush x:Key="AppDangerBrush" Color="#FF6B6B"/>
+                    <SolidColorBrush x:Key="AppChartBrush1" Color="#8D6E63"/>
+                    <SolidColorBrush x:Key="AppChartBrush2" Color="#B88B5B"/>
+                    <SolidColorBrush x:Key="AppChartBrush3" Color="#A9877D"/>
+                    <SolidColorBrush x:Key="AppChartBrush4" Color="#6A5148"/>
+                    <SolidColorBrush x:Key="AppChartBrush5" Color="#8E765E"/>
+                    <SolidColorBrush x:Key="AppChartBrush6" Color="#C7A88D"/>
+
+                    <SolidColorBrush x:Key="MaterialDesignPaper" Color="#1C2027"/>
+                    <SolidColorBrush x:Key="MaterialDesignCardBackground" Color="#1C2027"/>
+                    <SolidColorBrush x:Key="MaterialDesignBody" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="MaterialDesignDivider" Color="#343C49"/>
+                    <SolidColorBrush x:Key="MaterialDesignToolBackground" Color="#2A313C"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#1C2027"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#1C2027"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#43352F"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#242A33"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.MenuBrushKey}" Color="#1C2027"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}" Color="#F5F7FB"/>
+                    <SolidColorBrush x:Key="{x:Static SystemColors.GrayTextBrushKey}" Color="#7E8896"/>
+
+                    <Style TargetType="Window">
+                        <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="FontFamily" Value="Segoe UI"/>
+                        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+                        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+                    </Style>
+
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                    </Style>
+
+                    <Style TargetType="ListBox">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                    </Style>
+
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Padding" Value="12,10"/>
+                        <Setter Property="Margin" Value="8,0,8,6"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="ListBoxItemBorder"
+                                            Background="{TemplateBinding Background}"
+                                            CornerRadius="14"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ListBoxItemBorder" Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="ListBoxItemBorder" Property="Background" Value="{DynamicResource AppSelectionBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource AppSelectionTextBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="Opacity" Value="0.45"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="{DynamicResource AppButtonDarkBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Padding" Value="14,8"/>
+                        <Setter Property="MinHeight" Value="36"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="Cursor" Value="Hand"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="ButtonBorder"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="10"
+                                            SnapsToDevicePixels="True">
+                                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.88"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AppButtonDarkHoverBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
                     <Style x:Key="ModernCardStyle" TargetType="Border">
                         <Setter Property="Margin" Value="8"/>
-                        <Setter Property="Padding" Value="16"/>
-                        <Setter Property="Background" Value="#FFFFFF"/>
-                        <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                        <Setter Property="Padding" Value="18"/>
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
                         <Setter Property="BorderThickness" Value="1"/>
-                        <Setter Property="CornerRadius" Value="8"/>
+                        <Setter Property="CornerRadius" Value="18"/>
                         <Setter Property="Effect">
                             <Setter.Value>
-                                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.2" Color="#000000"/>
+                                <DropShadowEffect BlurRadius="18" ShadowDepth="2" Opacity="0.22" Color="#000000"/>
                             </Setter.Value>
                         </Setter>
                     </Style>
@@ -35,7 +172,7 @@
                         <Setter Property="FontSize" Value="22"/>
                         <Setter Property="FontWeight" Value="SemiBold"/>
                         <Setter Property="Margin" Value="0,0,0,16"/>
-                        <Setter Property="Foreground" Value="#212121"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
                         <Setter Property="FontFamily" Value="Segoe UI"/>
                     </Style>
                     
@@ -43,76 +180,85 @@
                         <Setter Property="FontSize" Value="16"/>
                         <Setter Property="FontWeight" Value="Medium"/>
                         <Setter Property="Margin" Value="0,8,0,4"/>
-                        <Setter Property="Foreground" Value="#424242"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
                         <Setter Property="FontFamily" Value="Segoe UI"/>
                     </Style>
                     
-                    <Style x:Key="ModernButtonStyle" TargetType="Button">
-                        <Setter Property="Padding" Value="16,8"/>
-                        <Setter Property="Background" Value="#C2B39A"/>
-                        <Setter Property="Foreground" Value="White"/>
-                        <Setter Property="BorderThickness" Value="0"/>
-                        <Setter Property="FontWeight" Value="Medium"/>
+                    <Style x:Key="ModernButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="{DynamicResource AppPrimaryButtonBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppPrimaryButtonTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryButtonBrush}"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
                         <Setter Property="FontSize" Value="13"/>
-                        <Setter Property="Height" Value="40"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="4">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
+                        <Setter Property="MinHeight" Value="40"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#B6A588"/>
-                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Background" Value="{DynamicResource AppPrimaryButtonHoverBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource AppPrimaryButtonHoverBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#A78F73"/>
+                                <Setter Property="Opacity" Value="0.9"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
                     
-                    <Style x:Key="ModernOutlinedButtonStyle" TargetType="Button">
-                        <Setter Property="Padding" Value="16,8"/>
+                    <Style x:Key="ModernOutlinedButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                         <Setter Property="Background" Value="Transparent"/>
-                        <Setter Property="Foreground" Value="#7C746A"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
                         <Setter Property="BorderThickness" Value="1"/>
-                        <Setter Property="BorderBrush" Value="#7C746A"/>
-                        <Setter Property="FontWeight" Value="Medium"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
                         <Setter Property="FontSize" Value="13"/>
-                        <Setter Property="Height" Value="40"/>
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="4">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
+                        <Setter Property="MinHeight" Value="40"/>
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#F2ECE3"/>
-                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Background" Value="{DynamicResource AppSurfaceAltBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#E4DCCF"/>
+                                <Setter Property="Opacity" Value="0.88"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>
+
+                    <Style x:Key="AppAttachmentButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="{DynamicResource AppButtonDarkBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="MinWidth" Value="168"/>
+                        <Setter Property="MinHeight" Value="32"/>
+                        <Setter Property="Padding" Value="14,4"/>
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="FontWeight" Value="Medium"/>
+                    </Style>
+
+                    <Style x:Key="ModernTextButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="10,6"/>
+                        <Setter Property="MinHeight" Value="34"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AppSurfaceAltBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
+                    <Style x:Key="MaterialDesignRaisedButton" TargetType="Button" BasedOn="{StaticResource ModernButtonStyle}"/>
+                    <Style x:Key="MaterialDesignOutlinedButton" TargetType="Button" BasedOn="{StaticResource ModernOutlinedButtonStyle}"/>
+                    <Style x:Key="MaterialDesignFlatButton" TargetType="Button" BasedOn="{StaticResource ModernTextButtonStyle}"/>
                     
                     <Style x:Key="CardStyle" TargetType="materialDesign:Card">
                         <Setter Property="Margin" Value="8"/>
                         <Setter Property="Padding" Value="16"/>
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
                         <Setter Property="materialDesign:ElevationAssist.Elevation" Value="Dp4"/>
                     </Style>
                     
@@ -120,15 +266,144 @@
                         <Setter Property="FontSize" Value="20"/>
                         <Setter Property="FontWeight" Value="Medium"/>
                         <Setter Property="Margin" Value="0,0,0,16"/>
-                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
                     </Style>
                     
                     <Style x:Key="SubHeaderTextStyle" TargetType="TextBlock">
                         <Setter Property="FontSize" Value="14"/>
                         <Setter Property="FontWeight" Value="Medium"/>
                         <Setter Property="Margin" Value="0,8,0,4"/>
-                        <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
                     </Style>
+
+                    <Style TargetType="ContextMenu">
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Padding" Value="8"/>
+                    </Style>
+
+                    <Style TargetType="MenuItem">
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                    </Style>
+
+                    <Style TargetType="TabControl">
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                    </Style>
+
+                    <Style TargetType="TabItem">
+                        <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+                        <Setter Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="Padding" Value="18,10"/>
+                        <Setter Property="Margin" Value="0,0,8,0"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabItem">
+                                    <Border x:Name="TabBorder"
+                                            Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="12,12,0,0"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter ContentSource="Header"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource AppSurfaceAltBrush}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                                            <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+
+                    <Style TargetType="GroupBox">
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                    </Style>
+
+                    <Style x:Key="AppDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="Padding" Value="16,10"/>
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                    </Style>
+
+                    <Style x:Key="AppDataGridCellStyle" TargetType="DataGridCell">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Padding" Value="16,10"/>
+                        <Setter Property="TextBlock.TextWrapping" Value="Wrap"/>
+                        <Setter Property="TextBlock.TextTrimming" Value="CharacterEllipsis"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AppSelectionBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AppSelectionTextBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
+                    <Style x:Key="AppDataGridRowStyle" TargetType="DataGridRow">
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Style.Triggers>
+                            <Trigger Property="AlternationIndex" Value="1">
+                                <Setter Property="Background" Value="{DynamicResource AppSurfaceAltBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AppSelectionBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource AppSelectionTextBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
+                    <Style x:Key="AppDataGridRowHeaderStyle" TargetType="DataGridRowHeader">
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+                    </Style>
+
+                    <Style TargetType="DataGrid">
+                        <Setter Property="Background" Value="{DynamicResource AppSurfaceBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+                        <Setter Property="CanUserResizeRows" Value="False"/>
+                        <Setter Property="AlternationCount" Value="2"/>
+                        <Setter Property="RowHeaderWidth" Value="24"/>
+                        <Setter Property="HeadersVisibility" Value="Column"/>
+                        <Setter Property="RowStyle" Value="{StaticResource AppDataGridRowStyle}"/>
+                        <Setter Property="CellStyle" Value="{StaticResource AppDataGridCellStyle}"/>
+                        <Setter Property="ColumnHeaderStyle" Value="{StaticResource AppDataGridColumnHeaderStyle}"/>
+                        <Setter Property="RowHeaderStyle" Value="{StaticResource AppDataGridRowHeaderStyle}"/>
+                    </Style>
+
+                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource AppDataGridColumnHeaderStyle}"/>
+                    <Style TargetType="DataGridCell" BasedOn="{StaticResource AppDataGridCellStyle}"/>
+                    <Style TargetType="DataGridRow" BasedOn="{StaticResource AppDataGridRowStyle}"/>
+                    <Style TargetType="DataGridRowHeader" BasedOn="{StaticResource AppDataGridRowHeaderStyle}"/>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

@@ -174,6 +174,7 @@ namespace praktik
             double padding = 40;
             double barHeight = 32;
             double gap = 14;
+            var palette = GetChartPalette();
 
             double maxVal = Math.Max(1, currentData.Max(p => p.Value));
             double chartHeight = currentData.Count * (barHeight + gap);
@@ -194,7 +195,7 @@ namespace praktik
                     Height = barHeight,
                     RadiusX = 4,
                     RadiusY = 4,
-                    Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#C48E45")
+                    Fill = palette[index % palette.Length]
                 };
                 Canvas.SetLeft(rect, padding);
                 Canvas.SetTop(rect, y);
@@ -203,7 +204,7 @@ namespace praktik
                 var label = new TextBlock
                 {
                     Text = point.Label,
-                    Foreground = Brushes.Black,
+                    Foreground = GetThemeBrush("AppTextBrush", "#F5F7FB"),
                     FontSize = 13,
                     VerticalAlignment = VerticalAlignment.Center
                 };
@@ -214,7 +215,7 @@ namespace praktik
                 var valueText = new TextBlock
                 {
                     Text = point.Value.ToString(),
-                    Foreground = Brushes.White,
+                    Foreground = GetThemeBrush("AppAccentTextBrush", "#FFFFFF"),
                     FontWeight = FontWeights.Bold,
                     FontSize = 12
                 };
@@ -231,25 +232,25 @@ namespace praktik
             double size = Math.Min(Math.Max(ChartBorder.ActualWidth - 48, 340), Math.Max(ChartBorder.ActualHeight - 48, 340));
             double radius = (size - 80) / 2;
             Point center = new Point(size / 2, size / 2);
+            var palette = GetChartPalette();
 
             ChartCanvas.Width = size;
             ChartCanvas.Height = size;
 
             double total = Math.Max(1, currentData.Sum(p => p.Value));
             double startAngle = 0;
-            var colors = new[] { "#C48E45", "#466A58", "#C05C45", "#8A7E6A", "#D7B87D" };
-            int colorIndex = 0;
 
-            foreach (var point in currentData)
+            for (int colorIndex = 0; colorIndex < currentData.Count; colorIndex++)
             {
+                var point = currentData[colorIndex];
                 double sweep = (point.Value / total) * 360;
-                var path = CreatePieSlice(center, radius, startAngle, sweep, colors[colorIndex % colors.Length]);
+                var path = CreatePieSlice(center, radius, startAngle, sweep, palette[colorIndex % palette.Length]);
                 ChartCanvas.Children.Add(path);
 
                 var label = new TextBlock
                 {
                     Text = $"{point.Label} ({point.Value})",
-                    Foreground = Brushes.Black,
+                    Foreground = GetThemeBrush("AppTextBrush", "#F5F7FB"),
                     FontSize = 12
                 };
                 double midAngle = (startAngle + sweep / 2) * Math.PI / 180;
@@ -259,7 +260,6 @@ namespace praktik
                 ChartCanvas.Children.Add(label);
 
                 startAngle += sweep;
-                colorIndex++;
             }
         }
 
@@ -270,6 +270,7 @@ namespace praktik
             double padding = 50;
             double barWidth = Math.Max(24, (width - padding * 2) / Math.Max(1, currentData.Count) - 16);
             double maxVal = Math.Max(1, currentData.Max(p => p.Value));
+            var palette = GetChartPalette();
 
             ChartCanvas.Width = width;
             ChartCanvas.Height = height;
@@ -287,7 +288,7 @@ namespace praktik
                     Height = normalizedHeight,
                     RadiusX = 4,
                     RadiusY = 4,
-                    Fill = (SolidColorBrush)new BrushConverter().ConvertFrom("#C48E45")
+                    Fill = palette[i % palette.Length]
                 };
                 Canvas.SetLeft(rect, x);
                 Canvas.SetTop(rect, y);
@@ -296,7 +297,7 @@ namespace praktik
                 var valueText = new TextBlock
                 {
                     Text = point.Value.ToString(),
-                    Foreground = Brushes.White,
+                    Foreground = GetThemeBrush("AppAccentTextBrush", "#FFFFFF"),
                     FontWeight = FontWeights.Bold,
                     FontSize = 12
                 };
@@ -307,7 +308,7 @@ namespace praktik
                 var label = new TextBlock
                 {
                     Text = point.Label,
-                    Foreground = Brushes.Black,
+                    Foreground = GetThemeBrush("AppTextBrush", "#F5F7FB"),
                     FontSize = 12,
                     TextAlignment = TextAlignment.Center,
                     TextWrapping = TextWrapping.Wrap,
@@ -319,7 +320,7 @@ namespace praktik
             }
         }
 
-        private Path CreatePieSlice(Point center, double radius, double startAngle, double sweepAngle, string color)
+        private Path CreatePieSlice(Point center, double radius, double startAngle, double sweepAngle, Brush fill)
         {
             double startRad = startAngle * Math.PI / 180;
             double endRad = (startAngle + sweepAngle) * Math.PI / 180;
@@ -345,9 +346,29 @@ namespace praktik
 
             return new Path
             {
-                Fill = (SolidColorBrush)new BrushConverter().ConvertFrom(color),
+                Fill = fill,
+                Stroke = GetThemeBrush("AppSurfaceBrush", "#1C2027"),
+                StrokeThickness = 2,
                 Data = geometry
             };
+        }
+
+        private SolidColorBrush[] GetChartPalette()
+        {
+            return new[]
+            {
+                GetThemeBrush("AppChartBrush1", "#8D6E63"),
+                GetThemeBrush("AppChartBrush2", "#B88B5B"),
+                GetThemeBrush("AppChartBrush3", "#A9877D"),
+                GetThemeBrush("AppChartBrush4", "#6A5148"),
+                GetThemeBrush("AppChartBrush5", "#8E765E"),
+                GetThemeBrush("AppChartBrush6", "#C7A88D")
+            };
+        }
+
+        private SolidColorBrush GetThemeBrush(string resourceKey, string fallbackHex)
+        {
+            return AppThemeManager.ResolveBrush(resourceKey, fallbackHex);
         }
 
         private void ExportToImage(string path, bool jpeg)

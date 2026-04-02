@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:praktik"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Background="{DynamicResource MaterialDesignPaper}">
+        Background="{DynamicResource AppBackgroundBrush}">
     <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}"
                       IsRightDrawerOpen="{Binding ElementName=HelpButton, Path=IsChecked}">
         <materialDesign:DrawerHost.RightDrawerContent>
@@ -97,31 +97,7 @@
         </materialDesign:DrawerHost.RightDrawerContent>
 
         <materialDesign:DrawerHost.LeftDrawerContent>
-            <DockPanel MinWidth="220">
-                <Grid DockPanel.Dock="Bottom" Height="250">
-                    <Rectangle Fill="#F5F7FA" Width="220" Height="250"/>
-
-                    <Border Width="120" Height="160" Background="#E1F5FE" BorderBrush="#B3E5FC" BorderThickness="1" 
-                           CornerRadius="2,2,0,0" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                        <Grid>
-                            <UniformGrid Rows="4" Columns="2" Margin="10">
-                                <Border Margin="5" Background="#1976D2" CornerRadius="2"/>
-                                <Border Margin="5" Background="#64B5F6" CornerRadius="2"/>
-                                <Border Margin="5" Background="#64B5F6" CornerRadius="2"/>
-                                <Border Margin="5" Background="#1976D2" CornerRadius="2"/>
-                                <Border Margin="5" Background="#1976D2" CornerRadius="2"/>
-                                <Border Margin="5" Background="#64B5F6" CornerRadius="2"/>
-                                <Border Margin="5" Background="#64B5F6" CornerRadius="2"/>
-                                <Border Margin="5" Background="#1976D2" CornerRadius="2"/>
-                            </UniformGrid>
-                        </Grid>
-                    </Border>
-
-                    <Ellipse Width="40" Height="40" Fill="#FFEB3B" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,20,0,0"/>
-
-                    <Rectangle Fill="#8BC34A" Height="30" VerticalAlignment="Bottom" Width="220"/>
-                </Grid>
-
+            <DockPanel MinWidth="220" Background="{DynamicResource AppNavigationBrush}">
                 <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}" 
                             DockPanel.Dock="Top"
                             HorizontalAlignment="Right" Margin="16"
@@ -310,14 +286,14 @@
                                             <DataGridTextColumn Header="Автор" Binding="{Binding ReporterName}" Width="150"/>
                                             <DataGridTextColumn Header="Дата" Binding="{Binding ReportedAt, StringFormat=dd.MM.yyyy HH:mm}" Width="130"/>
                                             <DataGridTextColumn Header="Комментарий" Binding="{Binding ReportText}" Width="*"/>
-                                            <DataGridTemplateColumn Header="Вложение" Width="160">
+                                            <DataGridTemplateColumn Header="Вложение" Width="200" MinWidth="200">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
                                                         <Button Content="Открыть вложение"
                                                                 Click="BtnOpenTaskReportAttachment_Click"
-                                                                Padding="8,3">
+                                                                HorizontalAlignment="Center">
                                                             <Button.Style>
-                                                                <Style TargetType="Button">
+                                                                <Style TargetType="Button" BasedOn="{StaticResource AppAttachmentButtonStyle}">
                                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding HasAttachment}" Value="True">
@@ -533,13 +509,13 @@
                                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                     Margin="0,0,0,8">
                                 <DataGrid.RowStyle>
-                                    <Style TargetType="DataGridRow">
+                                    <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                                         <EventSetter Event="PreviewMouseRightButtonDown" Handler="DgTasksRow_PreviewMouseRightButtonDown"/>
                                     </Style>
                                 </DataGrid.RowStyle>
                                 <DataGrid.ContextMenu>
-                                    <ContextMenu Background="#FFFFFF"
-                                                 BorderBrush="#D7D7D7"
+                                    <ContextMenu Background="{DynamicResource AppSurfaceBrush}"
+                                                 BorderBrush="{DynamicResource AppBorderBrush}"
                                                  BorderThickness="1"
                                                  Padding="6"
                                                  HasDropShadow="True">
@@ -558,7 +534,7 @@
                                         <ContextMenu.Resources>
                                             <Style x:Key="CompactTaskMenuItemStyle" TargetType="{x:Type MenuItem}">
                                                 <Setter Property="Background" Value="Transparent"/>
-                                                <Setter Property="Foreground" Value="#2F2F2F"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
                                                 <Setter Property="FontSize" Value="13"/>
                                                 <Setter Property="FontFamily" Value="Segoe UI"/>
                                                 <Setter Property="Padding" Value="12,7"/>
@@ -589,8 +565,8 @@
                                                             </Border>
                                                             <ControlTemplate.Triggers>
                                                                 <Trigger Property="IsHighlighted" Value="True">
-                                                                    <Setter TargetName="MenuItemBorder" Property="Background" Value="#F4EFE7"/>
-                                                                    <Setter Property="Foreground" Value="#1F1F1F"/>
+                                                                    <Setter TargetName="MenuItemBorder" Property="Background" Value="{DynamicResource AppSelectionBrush}"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource AppSelectionTextBrush}"/>
                                                                 </Trigger>
                                                                 <Trigger Property="IsEnabled" Value="False">
                                                                     <Setter Property="Opacity" Value="0.55"/>
@@ -607,7 +583,7 @@
                                                 <materialDesign:PackIcon Kind="Qrcode"
                                                                          Width="15"
                                                                          Height="15"
-                                                                         Foreground="#5F574C"/>
+                                                                         Foreground="{DynamicResource AppMutedTextBrush}"/>
                                             </MenuItem.Icon>
                                             <MenuItem.Header>
                                                 <TextBlock Text="&#x41E;&#x442;&#x43A;&#x440;&#x44B;&#x442;&#x44C; QR-&#x43A;&#x43E;&#x434;"/>
@@ -629,7 +605,7 @@
                                                 <TextBlock Text="{Binding LastNoteText}" 
                                                           TextWrapping="Wrap" 
                                                           FontSize="11"
-                                                          Foreground="#424242"
+                                                          Foreground="{DynamicResource AppMutedTextBrush}"
                                                           Padding="4,2"
                                                           ToolTip="{Binding LastNoteTooltip}"/>
                                             </DataTemplate>
@@ -640,7 +616,7 @@
                             <TextBlock Grid.Row="2" x:Name="txtTaskFilterNoResults"
                                        Text="Подходящих задач не найдено"
                                        Margin="0,4,0,0"
-                                       Foreground="#616161"
+                                       Foreground="{DynamicResource AppMutedTextBrush}"
                                        HorizontalAlignment="Center"
                                        Visibility="Collapsed"/>
                         </Grid>
@@ -742,8 +718,8 @@
                     <Border Margin="24"
                             Padding="18"
                             CornerRadius="26"
-                            Background="#F2E7DA"
-                            BorderBrush="#D7C5B3"
+                            Background="{DynamicResource AppSurfaceBrush}"
+                            BorderBrush="{DynamicResource AppBorderBrush}"
                             BorderThickness="1">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -754,15 +730,15 @@
 
                             <Border Padding="12,10"
                                     CornerRadius="16"
-                                    Background="#FFF9F1"
-                                    BorderBrush="#E2D5C6"
+                                    Background="{DynamicResource AppPanelBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
                                     BorderThickness="1">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="ChartBar" Width="18" Height="18" Margin="0,0,10,0" Foreground="#7A5338"/>
+                                    <materialDesign:PackIcon Kind="ChartBar" Width="18" Height="18" Margin="0,0,10,0" Foreground="{DynamicResource AppAccentBrush}"/>
                                     <TextBlock Text="Аналитика по задачам"
                                                FontSize="18"
                                                FontWeight="SemiBold"
-                                               Foreground="#7A5338"/>
+                                               Foreground="{DynamicResource AppTextBrush}"/>
                                 </StackPanel>
                             </Border>
 
@@ -776,8 +752,8 @@
                             <Border Grid.Column="0"
                                     Padding="24"
                                     CornerRadius="18"
-                                    Background="#FFF9F1"
-                                    BorderBrush="#E2D5C6"
+                                    Background="{DynamicResource AppSurfaceAltBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
                                     BorderThickness="1">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -789,18 +765,18 @@
                                         <TextBlock Text="Выбор отчёта"
                                                    FontSize="15"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#5B3E2C"/>
+                                                   Foreground="{DynamicResource AppTextBrush}"/>
                                         <TextBlock Text="Тип отчёта:"
                                                    Margin="0,16,0,6"
                                                    FontSize="12"
-                                                   Foreground="#8E7A69"/>
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                                         <ComboBox x:Name="cbReportTypeSelector"
                                                   Height="36"
                                                   SelectedIndex="0"
-                                                  Background="#FFFBF6"
-                                                  BorderBrush="#D6C3AF"
+                                                  Background="{DynamicResource AppInputBackgroundBrush}"
+                                                  BorderBrush="{DynamicResource AppBorderBrush}"
                                                   BorderThickness="1"
-                                                  Foreground="#4A3326"
+                                                  Foreground="{DynamicResource AppTextBrush}"
                                                   Padding="8,4">
                                             <ComboBoxItem Content="Общий список задач" Tag="tasks"/>
                                             <ComboBoxItem Content="Задачи по объектам" Tag="tasks_by_site"/>
@@ -811,14 +787,14 @@
                                         <TextBlock Text="Тип диаграммы:"
                                                    Margin="0,14,0,6"
                                                    FontSize="12"
-                                                   Foreground="#8E7A69"/>
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                                         <ComboBox x:Name="cbReportChartType"
                                                   Height="36"
                                                   SelectedIndex="0"
-                                                  Background="#FFFBF6"
-                                                  BorderBrush="#D6C3AF"
+                                                  Background="{DynamicResource AppInputBackgroundBrush}"
+                                                  BorderBrush="{DynamicResource AppBorderBrush}"
                                                   BorderThickness="1"
-                                                  Foreground="#4A3326"
+                                                  Foreground="{DynamicResource AppTextBrush}"
                                                   Padding="8,4">
                                             <ComboBoxItem Content="Гистограмма" Tag="bar"/>
                                             <ComboBoxItem Content="Круговая диаграмма" Tag="pie"/>
@@ -830,36 +806,32 @@
                                                 Click="BtnGenerateSelectedReport_Click"
                                                 Height="38"
                                                 Margin="0,16,0,0"
-                                                Background="#9B6A49"
-                                                BorderBrush="#9B6A49"
-                                                BorderThickness="1"
-                                                Foreground="White"
-                                                FontWeight="SemiBold"/>
+                                                Style="{StaticResource ModernButtonStyle}"/>
                                     </StackPanel>
 
                                     <Border Grid.Row="1"
                                             Margin="0,24,0,0"
                                             Padding="16"
                                             CornerRadius="16"
-                                            Background="#F8EFE4"
-                                            BorderBrush="#E1D1BF"
+                                            Background="{DynamicResource AppPanelBrush}"
+                                            BorderBrush="{DynamicResource AppBorderBrush}"
                                             BorderThickness="1">
                                         <StackPanel>
                                             <TextBlock Text="Экспорт"
                                                        FontSize="15"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#5B3E2C"/>
+                                                       Foreground="{DynamicResource AppTextBrush}"/>
                                             <TextBlock Text="Экспортировать как:"
                                                        Margin="0,12,0,6"
                                                        FontSize="12"
-                                                       Foreground="#8E7A69"/>
+                                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
                                             <ComboBox x:Name="cbReportExportFormat"
                                                       Height="36"
                                                       SelectedIndex="0"
-                                                      Background="#FFFBF6"
-                                                      BorderBrush="#D6C3AF"
+                                                      Background="{DynamicResource AppInputBackgroundBrush}"
+                                                      BorderBrush="{DynamicResource AppBorderBrush}"
                                                       BorderThickness="1"
-                                                      Foreground="#4A3326"
+                                                      Foreground="{DynamicResource AppTextBrush}"
                                                       Padding="8,4">
                                                 <ComboBoxItem Content="PNG" Tag="png"/>
                                                 <ComboBoxItem Content="CSV" Tag="csv"/>
@@ -872,17 +844,13 @@
                                                     Click="BtnExportSelectedReport_Click"
                                                     Height="38"
                                                     Margin="0,16,0,0"
-                                                    Background="#B5804B"
-                                                    BorderBrush="#B5804B"
-                                                    BorderThickness="1"
-                                                    Foreground="White"
-                                                    FontWeight="SemiBold"/>
+                                                    Style="{StaticResource ModernOutlinedButtonStyle}"/>
 
                                             <TextBlock Text="Справа показывается текущий график по выбранному срезу. Экспорт сохраняет именно эту выборку."
                                                        Margin="0,18,0,0"
                                                        TextWrapping="Wrap"
                                                        FontSize="11"
-                                                        Foreground="#866F5E"/>
+                                                        Foreground="{DynamicResource AppSubtleTextBrush}"/>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -891,8 +859,8 @@
                             <Border Grid.Column="2"
                                     Padding="20"
                                     CornerRadius="18"
-                                    Background="#FFF9F1"
-                                    BorderBrush="#E2D5C6"
+                                    Background="{DynamicResource AppSurfaceAltBrush}"
+                                    BorderBrush="{DynamicResource AppBorderBrush}"
                                     BorderThickness="1">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -910,20 +878,20 @@
                                                HorizontalAlignment="Center"
                                                FontSize="20"
                                                FontWeight="SemiBold"
-                                               Foreground="#5B3E2C"/>
+                                               Foreground="{DynamicResource AppTextBrush}"/>
                                     <TextBlock x:Name="ReportSubtitle"
                                                Grid.Row="1"
                                                Margin="0,6,0,0"
                                                HorizontalAlignment="Center"
                                                FontSize="12"
-                                               Foreground="#866F5E"
+                                               Foreground="{DynamicResource AppMutedTextBrush}"
                                                Text="Сводка по задачам и текущему состоянию исполнения."/>
                                     <TextBlock x:Name="ReportTableCaption"
                                                Grid.Row="2"
                                                Margin="0,8,0,0"
                                                HorizontalAlignment="Center"
                                                FontSize="11"
-                                               Foreground="#A18A78"
+                                               Foreground="{DynamicResource AppSubtleTextBrush}"
                                                Text="Выберите параметры слева и сформируйте отчёт."/>
 
                                     <Border x:Name="ReportPreviewHost"
@@ -932,8 +900,8 @@
                                             Padding="14"
                                             MinHeight="320"
                                             CornerRadius="18"
-                                            Background="#FCF6EE"
-                                            BorderBrush="#E5D8CB"
+                                            Background="{DynamicResource AppSurfaceBrush}"
+                                            BorderBrush="{DynamicResource AppBorderBrush}"
                                             BorderThickness="1"
                                             SizeChanged="ReportPreviewHost_SizeChanged">
                                         <Canvas x:Name="ReportPreviewCanvas"/>
@@ -943,33 +911,33 @@
                                         <Border Margin="0,0,10,0"
                                                 Padding="12"
                                                 CornerRadius="14"
-                                                Background="#F1E3D2"
-                                                BorderBrush="#DDCCB8"
+                                                Background="{DynamicResource AppPanelBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
                                                 BorderThickness="1">
                                             <StackPanel>
-                                                <TextBlock x:Name="ReportMetricPrimaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="#6A4834"/>
-                                                <TextBlock x:Name="ReportMetricPrimaryLabel" Text="Всего записей" Margin="0,4,0,0" Foreground="#8E7A69"/>
+                                                <TextBlock x:Name="ReportMetricPrimaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource AppTextBrush}"/>
+                                                <TextBlock x:Name="ReportMetricPrimaryLabel" Text="Всего записей" Margin="0,4,0,0" Foreground="{DynamicResource AppMutedTextBrush}"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Margin="0,0,10,0"
                                                 Padding="12"
                                                 CornerRadius="14"
-                                                Background="#F7E9D5"
-                                                BorderBrush="#E5D0B0"
+                                                Background="{DynamicResource AppPanelBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
                                                 BorderThickness="1">
                                             <StackPanel>
-                                                <TextBlock x:Name="ReportMetricSecondaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="#A16A32"/>
-                                                <TextBlock x:Name="ReportMetricSecondaryLabel" Text="Ключевой показатель" Margin="0,4,0,0" Foreground="#8E7A69"/>
+                                                <TextBlock x:Name="ReportMetricSecondaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource AppAccentBrush}"/>
+                                                <TextBlock x:Name="ReportMetricSecondaryLabel" Text="Ключевой показатель" Margin="0,4,0,0" Foreground="{DynamicResource AppMutedTextBrush}"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Padding="12"
                                                 CornerRadius="14"
-                                                Background="#EFE0D4"
-                                                BorderBrush="#DBC8BA"
+                                                Background="{DynamicResource AppPanelBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
                                                 BorderThickness="1">
                                             <StackPanel>
-                                                <TextBlock x:Name="ReportMetricTertiaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="#835844"/>
-                                                <TextBlock x:Name="ReportMetricTertiaryLabel" Text="Доп. показатель" Margin="0,4,0,0" Foreground="#8E7A69"/>
+                                                <TextBlock x:Name="ReportMetricTertiaryValue" Text="0" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource AppTextBrush}"/>
+                                                <TextBlock x:Name="ReportMetricTertiaryLabel" Text="Доп. показатель" Margin="0,4,0,0" Foreground="{DynamicResource AppMutedTextBrush}"/>
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>
@@ -979,42 +947,42 @@
                                                 Margin="0,0,10,10"
                                                 Padding="10,6"
                                                 CornerRadius="14"
-                                                Background="#FAF2E8"
-                                                BorderBrush="#E6D8C7"
+                                                Background="{DynamicResource AppPanelBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
                                                 BorderThickness="1">
                                             <StackPanel Orientation="Horizontal">
                                                 <Border x:Name="ReportLegendSwatch1" Width="10" Height="10" CornerRadius="5" Background="#B47A4F" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock x:Name="ReportLegendLabel1" Text="Сегмент 1" Foreground="#715D4F" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendLabel1" Text="Сегмент 1" Foreground="{DynamicResource AppMutedTextBrush}" VerticalAlignment="Center"/>
                                                 <TextBlock Text="  "/>
-                                                <TextBlock x:Name="ReportLegendValue1" Text="0" Foreground="#5B3E2C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendValue1" Text="0" Foreground="{DynamicResource AppTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
                                         <Border x:Name="ReportLegendRow2"
                                                 Margin="0,0,10,10"
                                                 Padding="10,6"
                                                 CornerRadius="14"
-                                                Background="#FAF2E8"
-                                                BorderBrush="#E6D8C7"
+                                                Background="{DynamicResource AppPanelBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
                                                 BorderThickness="1">
                                             <StackPanel Orientation="Horizontal">
                                                 <Border x:Name="ReportLegendSwatch2" Width="10" Height="10" CornerRadius="5" Background="#D1A16A" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock x:Name="ReportLegendLabel2" Text="Сегмент 2" Foreground="#715D4F" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendLabel2" Text="Сегмент 2" Foreground="{DynamicResource AppMutedTextBrush}" VerticalAlignment="Center"/>
                                                 <TextBlock Text="  "/>
-                                                <TextBlock x:Name="ReportLegendValue2" Text="0" Foreground="#5B3E2C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendValue2" Text="0" Foreground="{DynamicResource AppTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
                                         <Border x:Name="ReportLegendRow3"
                                                 Margin="0,0,10,10"
                                                 Padding="10,6"
                                                 CornerRadius="14"
-                                                Background="#FAF2E8"
-                                                BorderBrush="#E6D8C7"
+                                                Background="{DynamicResource AppPanelBrush}"
+                                                BorderBrush="{DynamicResource AppBorderBrush}"
                                                 BorderThickness="1">
                                             <StackPanel Orientation="Horizontal">
                                                 <Border x:Name="ReportLegendSwatch3" Width="10" Height="10" CornerRadius="5" Background="#8B5C43" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock x:Name="ReportLegendLabel3" Text="Сегмент 3" Foreground="#715D4F" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendLabel3" Text="Сегмент 3" Foreground="{DynamicResource AppMutedTextBrush}" VerticalAlignment="Center"/>
                                                 <TextBlock Text="  "/>
-                                                <TextBlock x:Name="ReportLegendValue3" Text="0" Foreground="#5B3E2C" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                <TextBlock x:Name="ReportLegendValue3" Text="0" Foreground="{DynamicResource AppTextBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
                                     </WrapPanel>
@@ -1124,12 +1092,12 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <Border x:Name="MaterialRequestsPlaceholder" Background="#FFF8F3" BorderBrush="#E4DCCF" BorderThickness="1" CornerRadius="8"
+                        <Border x:Name="MaterialRequestsPlaceholder" Background="{DynamicResource AppSurfaceAltBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="8"
                                 Padding="24" Visibility="Collapsed">
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <materialDesign:PackIcon Kind="HardHat" Width="64" Height="64" Foreground="#B08968" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Здесь пока нет заявок" Margin="0,12,0,4" FontSize="16" FontWeight="SemiBold" Foreground="#6D5E4F" HorizontalAlignment="Center"/>
-                                <TextBlock Text="Создайте заявку, и бригадир проверит её здесь" FontSize="13" Foreground="#8C7A68" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="280"/>
+                                <materialDesign:PackIcon Kind="HardHat" Width="64" Height="64" Foreground="{DynamicResource AppAccentBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Здесь пока нет заявок" Margin="0,12,0,4" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource AppTextBrush}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Создайте заявку, и бригадир проверит её здесь" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="280"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -1182,7 +1150,7 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <Grid x:Name="RolesContent" Visibility="Collapsed" Grid.ColumnSpan="2" Background="#F4ECE5">
+                <Grid x:Name="RolesContent" Visibility="Collapsed" Grid.ColumnSpan="2" Background="{DynamicResource AppBackgroundBrush}">
                     <Grid Margin="24">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -1214,7 +1182,7 @@
                                     <ColumnDefinition Width="1.35*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Border Grid.Column="0" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                <Border Grid.Column="0" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
                                     <Grid>
                                         <DataGrid
                                                   x:Name="dgRoleUsers"
@@ -1223,7 +1191,7 @@
                                                   SelectionChanged="DgRoleUsers_SelectionChanged"
                                                   SelectionMode="Single"
                                                   CanUserResizeRows="False"
-                                                  AlternatingRowBackground="#FFF9F5F2"
+                                                  AlternatingRowBackground="{DynamicResource AppSurfaceAltBrush}"
                                                   GridLinesVisibility="Horizontal">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
@@ -1234,7 +1202,7 @@
                                     </Grid>
                                 </Border>
 
-                                <Border Grid.Column="2" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                <Border Grid.Column="2" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
                                         <Grid>
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
@@ -1247,17 +1215,17 @@
                                                 <RowDefinition Height="*"/>
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Text="Действия" FontSize="20" FontWeight="SemiBold" Foreground="#5F4336"/>
+                                            <TextBlock Text="Действия" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource AppTextBrush}"/>
                                             <TextBlock Grid.Row="2"
                                                        x:Name="txtRoleAssignmentSummary"
                                                        Text="Выберите пользователя в таблице"
-                                                       Foreground="#8A6250"
+                                                       Foreground="{DynamicResource AppMutedTextBrush}"
                                                        FontWeight="SemiBold"/>
                                             <TextBlock Grid.Row="4"
                                                        x:Name="txtSelectedRoleUserInfo"
                                                        Text="Добавьте нового пользователя или выберите пользователя слева для редактирования или удаления."
                                                        TextWrapping="Wrap"
-                                                       Foreground="#4B5563"/>
+                                                       Foreground="{DynamicResource AppSubtleTextBrush}"/>
                                             <Grid Grid.Row="6">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="120"/>
@@ -1303,7 +1271,7 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <Border Grid.Column="0" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                <Border Grid.Column="0" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -1313,10 +1281,10 @@
                                             <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <TextBlock Text="Роли" FontSize="20" FontWeight="SemiBold" Foreground="#5F4336"/>
+                                        <TextBlock Text="Роли" FontSize="20" FontWeight="SemiBold" Foreground="{DynamicResource AppTextBrush}"/>
                                         <TextBlock Grid.Row="2"
                                                    x:Name="txtRoleCatalogSummary"
-                                                   Foreground="#7A6A60"
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"
                                                    Visibility="Collapsed"/>
                                         <DataGrid Grid.Row="4"
                                                   x:Name="dgRoles"
@@ -1325,7 +1293,7 @@
                                                   SelectionChanged="DgRoles_SelectionChanged"
                                                   SelectionMode="Single"
                                                   CanUserResizeRows="False"
-                                                  AlternatingRowBackground="#FFF9F5F2"
+                                                  AlternatingRowBackground="{DynamicResource AppSurfaceAltBrush}"
                                                   GridLinesVisibility="Horizontal">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="ID" Binding="{Binding RoleId}" Width="60"/>
@@ -1335,7 +1303,7 @@
                                     </Grid>
                                 </Border>
 
-                                <Border Grid.Column="2" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                <Border Grid.Column="2" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20">
                                     <Grid>
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto"/>
@@ -1351,13 +1319,13 @@
                                                    Text="Права роли"
                                                    FontSize="20"
                                                    FontWeight="SemiBold"
-                                                   Foreground="#5F4336"/>
+                                                   Foreground="{DynamicResource AppTextBrush}"/>
 
                                         <StackPanel Grid.Row="2" Visibility="Collapsed">
                                             <TextBlock x:Name="txtRolePermissionSummary"
                                                        Text="Выберите роль слева, чтобы посмотреть и изменить ее права."
                                                        TextWrapping="Wrap"
-                                                       Foreground="#7A6A60"/>
+                                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
                                         </StackPanel>
 
                                         <DataGrid Grid.Row="4"
@@ -1367,7 +1335,7 @@
                                                   CanUserDeleteRows="False"
                                                   HeadersVisibility="Column"
                                                   CanUserResizeRows="False"
-                                                  AlternatingRowBackground="#FFF9F5F2"
+                                                  AlternatingRowBackground="{DynamicResource AppSurfaceAltBrush}"
                                                   GridLinesVisibility="Horizontal"
                                                   CurrentCellChanged="DgRolePermissions_CurrentCellChanged">
                                             <DataGrid.Columns>

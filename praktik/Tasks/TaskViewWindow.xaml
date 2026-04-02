@@ -1,11 +1,11 @@
-<Window x:Class="praktik.TaskViewWindow"
+﻿<Window x:Class="praktik.TaskViewWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Информация о задаче" Height="700" Width="600" WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5">
+        Title="РРЅС„РѕСЂРјР°С†РёСЏ Рѕ Р·Р°РґР°С‡Рµ" Height="700" Width="600" WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -13,94 +13,94 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="30,20">
+        <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="30,20">
             <StackPanel>
-                <TextBlock Text="НАРЯД-ЗАДАЧА" 
+                <TextBlock Text="РќРђР РЇР”-Р—РђР”РђР§Рђ" 
                            FontSize="24" 
                            FontWeight="Bold" 
-                           Foreground="#1976D2"
+                           Foreground="{DynamicResource AppAccentBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,10"/>
                 <TextBlock x:Name="txtTitle" 
                            FontSize="18" 
                            FontWeight="SemiBold" 
                            TextWrapping="Wrap"
-                           Foreground="#212121"
+                           Foreground="{DynamicResource AppTextBrush}"
                            HorizontalAlignment="Center"
                            TextAlignment="Center"/>
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{DynamicResource AppSurfaceBrush}">
             <StackPanel Margin="30,25">
                 <TextBlock x:Name="txtTaskId" 
                            FontSize="12" 
-                           Foreground="#757575" 
+                           Foreground="{DynamicResource AppSubtleTextBrush}" 
                            Margin="0,0,0,20"
                            HorizontalAlignment="Right"/>
 
-                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="ОБЪЕКТ" 
+                        <TextBlock Text="РћР‘РЄР•РљРў" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
-                                   Foreground="#424242"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtSite" 
                                    FontSize="15" 
                                    TextWrapping="Wrap" 
-                                   Foreground="#212121"
+                                   Foreground="{DynamicResource AppTextBrush}"
                                    LineHeight="22"/>
                     </StackPanel>
                 </Border>
 
                 <Border x:Name="pnlPrintJournal"
-                        BorderBrush="#E0E0E0"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
                         BorderThickness="0,0,0,1"
                         Padding="0,15,0,15"
                         Margin="0,0,0,20"
                         Visibility="Collapsed">
                     <StackPanel>
-                        <TextBlock Text="ЖУРНАЛ ПЕЧАТИ"
+                        <TextBlock Text="Р–РЈР РќРђР› РџР•Р§РђРўР"
                                    FontWeight="Bold"
                                    FontSize="13"
                                    Margin="0,0,0,12"
-                                   Foreground="#424242"/>
-                        <TextBlock Text="Последняя печать"
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
+                        <TextBlock Text="РџРѕСЃР»РµРґРЅСЏСЏ РїРµС‡Р°С‚СЊ"
                                    FontWeight="SemiBold"
                                    FontSize="13"
                                    Margin="0,0,0,6"
-                                   Foreground="#616161"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtLastPrintedAt"
                                    FontSize="14"
-                                   Foreground="#212121"
+                                   Foreground="{DynamicResource AppTextBrush}"
                                    Margin="0,0,0,14"/>
-                        <TextBlock Text="История печати"
+                        <TextBlock Text="РСЃС‚РѕСЂРёСЏ РїРµС‡Р°С‚Рё"
                                    FontWeight="SemiBold"
                                    FontSize="13"
                                    Margin="0,0,0,8"
-                                   Foreground="#616161"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtPrintHistoryEmpty"
-                                   Text="Печать по задаче еще не выполнялась"
+                                   Text="РџРµС‡Р°С‚СЊ РїРѕ Р·Р°РґР°С‡Рµ РµС‰Рµ РЅРµ РІС‹РїРѕР»РЅСЏР»Р°СЃСЊ"
                                    FontSize="13"
-                                   Foreground="#757575"
+                                   Foreground="{DynamicResource AppSubtleTextBrush}"
                                    Margin="0,0,0,8"/>
                         <ItemsControl x:Name="icPrintHistory">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#E0E0E0"
+                                    <Border BorderBrush="{DynamicResource AppBorderBrush}"
                                             BorderThickness="0,0,0,1"
                                             Padding="0,0,0,10"
                                             Margin="0,0,0,10">
                                         <StackPanel>
-                                            <TextBlock FontSize="14" Foreground="#212121">
+                                            <TextBlock FontSize="14" Foreground="{DynamicResource AppTextBrush}">
                                                 <Run Text="{Binding PrintedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"/>
-                                                <Run Text=" • "/>
+                                                <Run Text=" вЂў "/>
                                                 <Run Text="{Binding DisplayPrintedByName}"/>
                                             </TextBlock>
                                             <TextBlock Text="{Binding DisplayTemplateName}"
                                                        FontSize="12"
-                                                       Foreground="#757575"
+                                                       Foreground="{DynamicResource AppSubtleTextBrush}"
                                                        Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
@@ -110,36 +110,36 @@
                     </StackPanel>
                 </Border>
 
-                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="БРИГАДА" 
+                        <TextBlock Text="Р‘Р РР“РђР”Рђ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
-                                   Foreground="#424242"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtCrew" 
                                    FontSize="15" 
                                    TextWrapping="Wrap" 
-                                   Foreground="#212121"
+                                   Foreground="{DynamicResource AppTextBrush}"
                                    Margin="0,0,0,8"/>
                         <TextBlock x:Name="txtBrigadier" 
                                    FontSize="14" 
                                    TextWrapping="Wrap" 
-                                   Foreground="#616161"
+                                   Foreground="{DynamicResource AppSubtleTextBrush}"
                                    Visibility="Collapsed"/>
                     </StackPanel>
                 </Border>
 
-                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="ПЕРИОД ВЫПОЛНЕНИЯ" 
+                        <TextBlock Text="РџР•Р РРћР” Р’Р«РџРћР›РќР•РќРРЇ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
-                                   Foreground="#424242"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtPeriod" 
                                    FontSize="15" 
-                                   Foreground="#212121"/>
+                                   Foreground="{DynamicResource AppTextBrush}"/>
                     </StackPanel>
                 </Border>
 
@@ -149,100 +149,100 @@
                         <ColumnDefinition Width="20"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
+                    <Border Grid.Column="0" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="ПРИОРИТЕТ" 
+                            <TextBlock Text="РџР РРћР РРўР•Рў" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
-                                       Foreground="#424242"/>
+                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtPriority" 
                                        FontSize="15" 
-                                       Foreground="#212121"/>
+                                       Foreground="{DynamicResource AppTextBrush}"/>
                         </StackPanel>
                     </Border>
-                    <Border Grid.Column="2" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
+                    <Border Grid.Column="2" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="СТАТУС" 
+                            <TextBlock Text="РЎРўРђРўРЈРЎ" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
-                                       Foreground="#424242"/>
+                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtStatus" 
                                        FontSize="15" 
-                                       Foreground="#212121"/>
+                                       Foreground="{DynamicResource AppTextBrush}"/>
                         </StackPanel>
                     </Border>
                 </Grid>
 
-                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="ДАТА ПОСЛЕДНЕЙ ПЕЧАТИ"
+                        <TextBlock Text="Р”РђРўРђ РџРћРЎР›Р•Р”РќР•Р™ РџР•Р§РђРўР"
                                    FontWeight="Bold"
                                    FontSize="13"
                                    Margin="0,0,0,8"
-                                   Foreground="#424242"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtLastPrintedSummary"
                                    FontSize="15"
-                                   Foreground="#212121"/>
+                                   Foreground="{DynamicResource AppTextBrush}"/>
                     </StackPanel>
                 </Border>
 
                 <StackPanel x:Name="pnlProgress" Visibility="Collapsed" Margin="0,0,0,20">
-                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
+                    <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="ПОСЛЕДНИЙ ПРОГРЕСС" 
+                            <TextBlock Text="РџРћРЎР›Р•Р”РќРР™ РџР РћР“Р Р•РЎРЎ" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
-                                       Foreground="#424242"/>
+                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtProgress" 
                                        FontSize="15" 
                                        Margin="0,0,0,15" 
-                                       Foreground="#212121"/>
-                            <TextBlock Text="КОММЕНТАРИЙ" 
+                                       Foreground="{DynamicResource AppTextBrush}"/>
+                            <TextBlock Text="РљРћРњРњР•РќРўРђР РР™" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
-                                       Foreground="#424242"/>
+                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtComment" 
                                        FontSize="15" 
                                        TextWrapping="Wrap" 
-                                       Foreground="#212121"
+                                       Foreground="{DynamicResource AppTextBrush}"
                                        LineHeight="22"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
 
-                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15">
+                <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                     <StackPanel>
-                        <TextBlock Text="ОПИСАНИЕ" 
+                        <TextBlock Text="РћРџРРЎРђРќРР•" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
-                                   Foreground="#424242"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtDescription" 
                                    FontSize="15" 
                                    TextWrapping="Wrap" 
-                                   Foreground="#212121"
+                                   Foreground="{DynamicResource AppTextBrush}"
                                    LineHeight="22"/>
                     </StackPanel>
                 </Border>
 
-                <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
+                <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="ЗАМЕТКИ" 
+                        <TextBlock Text="Р—РђРњР•РўРљР" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,12" 
-                                   Foreground="#424242"/>
+                                   Foreground="{DynamicResource AppMutedTextBrush}"/>
                         
                         <Border x:Name="pnlAddNote" 
-                                BorderBrush="#E0E0E0" 
+                                BorderBrush="{DynamicResource AppBorderBrush}" 
                                 BorderThickness="1" 
                                 CornerRadius="4"
                                 Padding="12"
-                                Background="#F9F9F9"
+                                Background="{DynamicResource AppSurfaceAltBrush}"
                                 Margin="0,0,0,15">
                             <StackPanel>
                                 <TextBox x:Name="txtNewNote" 
@@ -253,16 +253,16 @@
                                          TextWrapping="Wrap"
                                          AcceptsReturn="True"
                                          VerticalScrollBarVisibility="Auto"
-                                         Background="White"
-                                         BorderBrush="#BDBDBD"
+                                         Background="{DynamicResource AppSurfaceBrush}"
+                                         BorderBrush="{DynamicResource AppBorderBrush}"
                                          BorderThickness="1"
-                                         Foreground="#212121"
+                                         Foreground="{DynamicResource AppTextBrush}"
                                          TextChanged="TxtNewNote_TextChanged"
                                          Margin="0,0,0,10"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
-                                    <TextBlock Text="Прогресс, %"
+                                    <TextBlock Text="РџСЂРѕРіСЂРµСЃСЃ, %"
                                                FontSize="13"
-                                               Foreground="#424242"
+                                               Foreground="{DynamicResource AppMutedTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
                                     <TextBox x:Name="txtProgressPercent"
@@ -272,22 +272,22 @@
                                              Padding="8,0"
                                              MaxLength="3"
                                              VerticalContentAlignment="Center"
-                                             Background="White"
-                                             BorderBrush="#BDBDBD"
+                                             Background="{DynamicResource AppSurfaceBrush}"
+                                             BorderBrush="{DynamicResource AppBorderBrush}"
                                              BorderThickness="1"
                                              PreviewTextInput="ProgressTextBox_PreviewTextInput"
                                              DataObject.Pasting="ProgressTextBox_Pasting"/>
-                                    <TextBlock Text="Необязательно"
+                                    <TextBlock Text="РќРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ"
                                                FontSize="12"
-                                               Foreground="#757575"
+                                   Foreground="{DynamicResource AppSubtleTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="10,0,0,0"/>
                                 </StackPanel>
-                                <Border BorderBrush="#E0E0E0"
+                                <Border BorderBrush="{DynamicResource AppBorderBrush}"
                                         BorderThickness="1"
                                         CornerRadius="4"
                                         Padding="10"
-                                        Background="White"
+                                        Background="{DynamicResource AppSurfaceBrush}"
                                         Margin="0,0,0,10">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -297,24 +297,26 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock x:Name="txtSelectedAttachment"
                                                    VerticalAlignment="Center"
-                                                   Foreground="#616161"
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <Button Grid.Column="1"
-                                                Content="РџСЂРёРєСЂРµРїРёС‚СЊ С„Р°Р№Р»"
+                                                Content="Р СџРЎР‚Р С‘Р С”РЎР‚Р ВµР С—Р С‘РЎвЂљРЎРЉ РЎвЂћР В°Р в„–Р В»"
                                                 Click="BtnAttachFile_Click"
+                                                Style="{StaticResource ModernOutlinedButtonStyle}"
                                                 Margin="12,0,0,0"
                                                 Padding="10,4"/>
                                         <Button x:Name="btnRemoveAttachment"
                                                 Grid.Column="2"
-                                                Content="РЈРґР°Р»РёС‚СЊ"
+                                                Content="Р Р€Р Т‘Р В°Р В»Р С‘РЎвЂљРЎРЉ"
                                                 Click="BtnRemoveAttachment_Click"
+                                                Style="{StaticResource ModernOutlinedButtonStyle}"
                                                 Margin="8,0,0,0"
                                                 Padding="10,4"
                                                 Visibility="Collapsed"/>
                                     </Grid>
                                 </Border>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="Сохранить" 
+                                    <Button Content="РЎРѕС…СЂР°РЅРёС‚СЊ" 
                                             x:Name="btnSaveNote"
                                             Click="BtnSaveNote_Click"
                                             Width="120" 
@@ -322,68 +324,16 @@
                                             FontSize="14"
                                             FontWeight="Medium"
                                             Margin="0,0,10,0"
-                                            Background="#4CAF50"
-                                            Foreground="White"
-                                            BorderThickness="0"
-                                            Cursor="Hand"
-                                            IsEnabled="False">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="{TemplateBinding Background}" 
-                                                                    CornerRadius="4"
-                                                                    Padding="12,8">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Setter Property="Opacity" Value="1"/>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsEnabled" Value="False">
-                                                        <Setter Property="Opacity" Value="0.5"/>
-                                                    </Trigger>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#45A049"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
-                                    <Button Content="Отмена" 
+                                            Style="{StaticResource ModernButtonStyle}"
+                                            IsEnabled="False"/>
+                                    <Button Content="РћС‚РјРµРЅР°" 
                                             x:Name="btnCancelNote"
                                             Click="BtnCancelNote_Click"
                                             Width="100" 
                                             Height="35"
                                             FontSize="14"
                                             FontWeight="Medium"
-                                            Background="#757575"
-                                            Foreground="White"
-                                            BorderThickness="0"
-                                            Cursor="Hand">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="{TemplateBinding Background}" 
-                                                                    CornerRadius="4"
-                                                                    Padding="12,8">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#616161"/>
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
+                                            Style="{StaticResource ModernOutlinedButtonStyle}"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -391,7 +341,7 @@
                         <ItemsControl x:Name="icNotes" Margin="0,0,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#E0E0E0" 
+                                    <Border BorderBrush="{DynamicResource AppBorderBrush}" 
                                             BorderThickness="0,0,0,1" 
                                             Padding="0,0,0,10"
                                             Margin="0,0,0,10">
@@ -399,18 +349,18 @@
                                             <TextBlock Text="{Binding ReportText}" 
                                                        FontSize="14" 
                                                        TextWrapping="Wrap" 
-                                                       Foreground="#212121"
+                                                       Foreground="{DynamicResource AppTextBrush}"
                                                        LineHeight="20"
                                                        Margin="0,0,0,8"/>
-                                            <TextBlock FontSize="12" Foreground="#757575">
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource AppSubtleTextBrush}">
                                                 <Run Text="{Binding ReportedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"/>
-                                                <Run Text=" • "/>
+                                                <Run Text=" вЂў "/>
                                                 <Run Text="{Binding ReporterName}"/>
                                             </TextBlock>
                                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                                                 <TextBlock Text="{Binding AttachmentFileName}"
                                                            VerticalAlignment="Center"
-                                                           Foreground="#616161">
+                                                           Foreground="{DynamicResource AppMutedTextBrush}">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -422,12 +372,12 @@
                                                         </Style>
                                                     </TextBlock.Style>
                                                 </TextBlock>
-                                                <Button Content="РћС‚РєСЂС‹С‚СЊ РІР»РѕР¶РµРЅРёРµ"
+                                                <Button Content="Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р Р†Р В»Р С•Р В¶Р ВµР Р…Р С‘Р Вµ"
                                                         Click="BtnOpenAttachment_Click"
                                                         Margin="12,0,0,0"
                                                         Padding="10,3">
                                                     <Button.Style>
-                                                        <Style TargetType="Button">
+                                                        <Style TargetType="Button" BasedOn="{StaticResource AppAttachmentButtonStyle}">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding HasAttachment}" Value="True">
@@ -448,74 +398,27 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="30,20">
+        <Border Grid.Row="2" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="30,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="📱 Показать QR-код" 
+                <Button Content="рџ“± РџРѕРєР°Р·Р°С‚СЊ QR-РєРѕРґ" 
                         x:Name="btnShowQR"
                         Click="BtnShowQR_Click"
                         Width="180" 
                         Height="40"
-                        Background="#4CAF50"
-                        Foreground="White"
-                        BorderThickness="0"
                         FontSize="14"
                         FontWeight="Medium"
-                        Cursor="Hand"
-                        Margin="0,0,15,0">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" 
-                                                CornerRadius="4"
-                                                Padding="12,10">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#45A049"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                        Margin="0,0,15,0"
+                        Style="{StaticResource ModernButtonStyle}"/>
                 
-                <Button Content="Закрыть" 
+                <Button Content="Р—Р°РєСЂС‹С‚СЊ" 
                         Click="BtnClose_Click" 
                         Width="120" 
                         Height="40"
-                        Background="#1976D2"
-                        Foreground="White"
-                        BorderThickness="0"
                         FontSize="14"
                         FontWeight="Medium"
-                        Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" 
-                                                CornerRadius="4"
-                                                Padding="12,10">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#1565C0"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                        Style="{StaticResource ModernOutlinedButtonStyle}"/>
             </StackPanel>
         </Border>
     </Grid>
 </Window>
+

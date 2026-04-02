@@ -1,8 +1,8 @@
-<Window x:Class="praktik.CrewMemberCreateWindow"
+﻿<Window x:Class="praktik.CrewMemberCreateWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Новый сотрудник"
+        Title="РќРѕРІС‹Р№ СЃРѕС‚СЂСѓРґРЅРёРє"
         Height="360"
         Width="560"
         MinHeight="340"
@@ -11,9 +11,9 @@
         ResizeMode="NoResize">
     <Grid Margin="16">
         <Border CornerRadius="8"
-                BorderBrush="#D0D0D0"
+                BorderBrush="{DynamicResource AppBorderBrush}"
                 BorderThickness="1"
-                Background="White"
+                Background="{DynamicResource AppSurfaceBrush}"
                 Padding="18">
             <Grid>
                 <Grid.RowDefinitions>
@@ -25,26 +25,26 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0"
-                           Text="Добавление сотрудника"
+                           Text="Р”РѕР±Р°РІР»РµРЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР°"
                            FontSize="24"
                            FontWeight="SemiBold"
                            Margin="0,0,0,14"/>
 
                 <TextBox x:Name="txtFullName"
                          Grid.Row="1"
-                         materialDesign:HintAssist.Hint="ФИО сотрудника"
+                         materialDesign:HintAssist.Hint="Р¤РРћ СЃРѕС‚СЂСѓРґРЅРёРєР°"
                          Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                          Margin="0,0,0,12"/>
 
                 <DatePicker x:Name="dpJoinedAt"
                             Grid.Row="2"
-                            materialDesign:HintAssist.Hint="Дата включения в бригаду"
+                            materialDesign:HintAssist.Hint="Р”Р°С‚Р° РІРєР»СЋС‡РµРЅРёСЏ РІ Р±СЂРёРіР°РґСѓ"
                             Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
                             Margin="0,0,0,12"/>
 
                 <TextBlock Grid.Row="3"
-                           Text="Логин и пароль для сотрудника создаются автоматически."
-                           Foreground="#6A6A6A"
+                           Text="Р›РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ РґР»СЏ СЃРѕС‚СЂСѓРґРЅРёРєР° СЃРѕР·РґР°СЋС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё."
+                           Foreground="{DynamicResource AppMutedTextBrush}"
                            FontSize="13"
                            VerticalAlignment="Top"/>
 
@@ -52,13 +52,13 @@
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,16,0,0">
-                    <Button Content="Отмена"
+                    <Button Content="РћС‚РјРµРЅР°"
                             Width="130"
                             Height="38"
                             Margin="0,0,10,0"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             IsCancel="True"/>
-                    <Button Content="Сохранить"
+                    <Button Content="РЎРѕС…СЂР°РЅРёС‚СЊ"
                             Width="130"
                             Height="38"
                             Style="{StaticResource MaterialDesignRaisedButton}"
@@ -69,3 +69,4 @@
         </Border>
     </Grid>
 </Window>
+

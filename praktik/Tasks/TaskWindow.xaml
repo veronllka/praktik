@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:praktik"
         mc:Ignorable="d"
         Title="Задача" Height="600" Width="700" WindowStartupLocation="CenterScreen">
-    <Grid>
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -38,7 +38,7 @@
                         <TextBlock x:Name="txtAiHint"
                                    Text="Р“РµРЅРµСЂР°С†РёСЏ РѕРїРёСЃР°РЅРёСЏ С‡РµСЂРµР· LM Studio РїРѕ РЅР°Р·РІР°РЅРёСЋ Р·Р°РґР°С‡Рё."
                                    Margin="0,-6,0,10"
-                                   Foreground="#666666"
+                                   Foreground="{DynamicResource AppSubtleTextBrush}"
                                    FontSize="11"/>
 
                         <Grid Margin="0,0,0,10">
@@ -87,9 +87,9 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Border x:Name="borderAwaitMTS" Grid.Row="0" Background="#FDD835" 
+                    <Border x:Name="borderAwaitMTS" Grid.Row="0" Background="{DynamicResource AppWarningBrush}" 
                            Padding="8" Margin="0,0,0,10" CornerRadius="4" Visibility="Collapsed">
-                        <TextBlock Text="⏳ Ожидание МТС" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="⏳ Ожидание МТС" FontWeight="Bold" HorizontalAlignment="Center" Foreground="{DynamicResource AppNavigationBrush}"/>
                     </Border>
 
                     <DataGrid x:Name="dgMaterialRequests" Grid.Row="1" 
@@ -121,28 +121,28 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,10">
+                    <Border Grid.Row="0" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="Последние события" FontWeight="SemiBold" FontSize="14" Margin="0,0,0,10"/>
                             
-                            <Border BorderBrush="#E0E0E0" 
+                            <Border BorderBrush="{DynamicResource AppBorderBrush}" 
                                     BorderThickness="1" 
                                     CornerRadius="4"
                                     Padding="10"
-                                    Background="#F5F5F5"
+                                    Background="{DynamicResource AppSurfaceAltBrush}"
                                     Margin="0,0,0,10">
                                 <StackPanel>
                                     <TextBlock Text="Добавить отчет по задаче" 
                                                FontSize="12" 
                                                FontWeight="SemiBold"
-                                               Foreground="#424242"
+                                               Foreground="{DynamicResource AppTextBrush}"
                                                Margin="0,0,0,8"/>
                                     <TextBox x:Name="txtEventComment"
                                              TextWrapping="Wrap"
                                              AcceptsReturn="True"
                                              FontSize="12"
-                                             Background="White"
-                                             BorderBrush="#E0E0E0"
+                                             Background="{DynamicResource AppInputBackgroundBrush}"
+                                             BorderBrush="{DynamicResource AppBorderBrush}"
                                              Padding="8"
                                              MinHeight="50"
                                              MaxHeight="100"
@@ -158,7 +158,7 @@
                                         <TextBlock Grid.Column="0"
                                                    Text="Прогресс, %"
                                                    FontSize="12"
-                                                   Foreground="#424242"
+                                                   Foreground="{DynamicResource AppTextBrush}"
                                                    VerticalAlignment="Center"
                                                    Margin="0,0,10,0"/>
                                         <TextBox x:Name="txtEventProgressPercent"
@@ -168,15 +168,15 @@
                                                  Padding="8,0"
                                                  MaxLength="3"
                                                  VerticalContentAlignment="Center"
-                                                 Background="White"
-                                                 BorderBrush="#E0E0E0"
+                                                 Background="{DynamicResource AppInputBackgroundBrush}"
+                                                 BorderBrush="{DynamicResource AppBorderBrush}"
                                                  BorderThickness="1"
                                                  PreviewTextInput="ProgressTextBox_PreviewTextInput"
                                                  DataObject.Pasting="ProgressTextBox_Pasting"/>
                                         <TextBlock Grid.Column="2"
                                                    Text="Необязательно"
                                                    FontSize="11"
-                                                   Foreground="#666666"
+                                                   Foreground="{DynamicResource AppSubtleTextBrush}"
                                                    VerticalAlignment="Center"
                                                    Margin="10,0,0,0"/>
                                         <Button Grid.Column="3"
@@ -198,24 +198,26 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock x:Name="txtEventAttachment"
                                                    VerticalAlignment="Center"
-                                                   Foreground="#666666"
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <Button Grid.Column="1"
                                                 Content="Прикрепить файл"
-                                                Click="BtnAttachEventFile_Click"
+                                            Click="BtnAttachEventFile_Click"
+                                            Style="{StaticResource ModernOutlinedButtonStyle}"
                                                 Padding="10,4"
                                                 Margin="12,0,0,0"/>
                                         <Button x:Name="btnRemoveEventAttachment"
                                                 Grid.Column="2"
                                                 Content="Удалить"
-                                                Click="BtnRemoveEventAttachment_Click"
+                                            Click="BtnRemoveEventAttachment_Click"
+                                            Style="{StaticResource ModernOutlinedButtonStyle}"
                                                 Padding="10,4"
                                                 Margin="8,0,0,0"
                                                 Visibility="Collapsed"/>
                                     </Grid>
                                     <TextBlock Text="Файл будет сохранен после кнопки «Добавить отчет» и появится ниже в списке вложений."
                                                FontSize="11"
-                                               Foreground="#777777"
+                                               Foreground="{DynamicResource AppSubtleTextBrush}"
                                                Margin="0,6,0,0"
                                                TextWrapping="Wrap"/>
                                 </StackPanel>
@@ -240,7 +242,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Прогресс, %"
                                                FontSize="12"
-                                               Foreground="#424242"
+                                               Foreground="{DynamicResource AppTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,10,0"/>
                                     <TextBox x:Name="txtQuickNoteProgressPercent"
@@ -256,7 +258,7 @@
                                              DataObject.Pasting="ProgressTextBox_Pasting"/>
                                     <TextBlock Text="Необязательно"
                                                FontSize="11"
-                                               Foreground="#666666"
+                                               Foreground="{DynamicResource AppSubtleTextBrush}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,12,0"/>
                                     <Button x:Name="btnSaveNote" 
@@ -284,17 +286,19 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock x:Name="txtQuickNoteAttachment"
                                                VerticalAlignment="Center"
-                                               Foreground="#666666"
+                                               Foreground="{DynamicResource AppMutedTextBrush}"
                                                TextTrimming="CharacterEllipsis"/>
                                     <Button Grid.Column="1"
                                             Content="Прикрепить файл"
                                             Click="BtnAttachQuickNoteFile_Click"
+                                            Style="{StaticResource ModernOutlinedButtonStyle}"
                                             Padding="10,4"
                                             Margin="12,0,0,0"/>
                                     <Button x:Name="btnRemoveQuickNoteAttachment"
                                             Grid.Column="2"
                                             Content="Удалить"
                                             Click="BtnRemoveQuickNoteAttachment_Click"
+                                            Style="{StaticResource ModernOutlinedButtonStyle}"
                                             Padding="10,4"
                                             Margin="8,0,0,0"
                                             Visibility="Collapsed"/>
@@ -318,26 +322,26 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0"
-                                BorderBrush="#E0E0E0"
+                                BorderBrush="{DynamicResource AppBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="4"
-                                Background="#FAFAFA"
+                                Background="{DynamicResource AppSurfaceAltBrush}"
                                 Padding="10"
                                 Margin="0,0,0,10">
                             <StackPanel>
                                 <TextBlock Text="Вложения задачи"
                                            FontWeight="SemiBold"
                                            FontSize="12"
-                                           Foreground="#424242"
+                                           Foreground="{DynamicResource AppTextBrush}"
                                            Margin="0,0,0,8"/>
                                 <TextBlock x:Name="txtNoTaskAttachments"
                                            Text="Пока нет сохраненных вложений."
                                            FontSize="12"
-                                           Foreground="#777777"/>
+                                           Foreground="{DynamicResource AppSubtleTextBrush}"/>
                                 <ItemsControl x:Name="icTaskAttachments">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border BorderBrush="#E6E6E6"
+                                            <Border BorderBrush="{DynamicResource AppBorderBrush}"
                                                     BorderThickness="0,1,0,0"
                                                     Padding="0,8,0,0"
                                                     Margin="0,8,0,0">
@@ -346,15 +350,16 @@
                                                         <TextBlock Text="{Binding FileName}"
                                                                    FontSize="12"
                                                                    FontWeight="SemiBold"
-                                                                   Foreground="#333333"/>
+                                                                   Foreground="{DynamicResource AppTextBrush}"/>
                                                         <TextBlock Text="{Binding MetaText}"
                                                                    FontSize="11"
-                                                                   Foreground="#777777"
+                                                                   Foreground="{DynamicResource AppSubtleTextBrush}"
                                                                    Margin="0,2,0,0"/>
                                                     </StackPanel>
                                                     <Button DockPanel.Dock="Right"
                                                             Content="Открыть"
                                                             Click="BtnOpenTaskAttachmentFromList_Click"
+                                                            Style="{StaticResource AppAttachmentButtonStyle}"
                                                             Padding="10,3"
                                                             VerticalAlignment="Center"/>
                                                 </DockPanel>
@@ -371,14 +376,14 @@
                                 BorderThickness="0">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="0,8,0,8" Margin="0,0,0,5">
+                                    <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,8,0,8" Margin="0,0,0,5">
                                         <StackPanel>
                                             <TextBlock Text="{Binding DisplayText}" TextWrapping="Wrap" FontSize="13"/>
-                                            <TextBlock Text="{Binding TimeInfo}" FontSize="11" Foreground="#666666" Margin="0,4,0,0"/>
+                                            <TextBlock Text="{Binding TimeInfo}" FontSize="11" Foreground="{DynamicResource AppSubtleTextBrush}" Margin="0,4,0,0"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                                 <TextBlock Text="{Binding AttachmentFileName}"
                                                            VerticalAlignment="Center"
-                                                           Foreground="#666666">
+                                                           Foreground="{DynamicResource AppMutedTextBrush}">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -395,7 +400,7 @@
                                                         Margin="12,0,0,0"
                                                         Padding="10,3">
                                                     <Button.Style>
-                                                        <Style TargetType="Button">
+                                                        <Style TargetType="Button" BasedOn="{StaticResource AppAttachmentButtonStyle}">
                                                             <Setter Property="Visibility" Value="Collapsed"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding HasAttachment}" Value="True">
@@ -418,8 +423,8 @@
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
             <Button x:Name="btnPrint" Content="Печать" Click="BtnPrint_Click" Width="100" Margin="0,0,20,0" Visibility="Collapsed"/>
-            <Button x:Name="btnSave" Content="Сохранить" Click="BtnSave_Click" Width="100" Margin="0,0,20,0"/>
-            <Button x:Name="btnCancel" Content="Отмена" Click="BtnCancel_Click" Width="100"/>
+            <Button x:Name="btnSave" Content="Сохранить" Click="BtnSave_Click" Width="100" Margin="0,0,20,0" Style="{StaticResource ModernButtonStyle}"/>
+            <Button x:Name="btnCancel" Content="Отмена" Click="BtnCancel_Click" Width="100" Style="{StaticResource ModernOutlinedButtonStyle}"/>
         </StackPanel>
     </Grid>
 </Window>

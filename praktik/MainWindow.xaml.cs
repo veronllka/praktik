@@ -1912,7 +1912,7 @@ namespace praktik
                 Text = "Нет данных для построения отчёта",
                 FontSize = 16,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = CreateBrush("#9A846F")
+                Foreground = GetThemeBrush("AppMutedTextBrush", "#ADB6C3")
             };
             emptyText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(emptyText, width / 2 - emptyText.DesiredSize.Width / 2);
@@ -1960,7 +1960,7 @@ namespace praktik
                     Text = slice.Value.ToString(),
                     FontSize = 11,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = CreateBrush("#6E5241")
+                    Foreground = GetThemeBrush("AppTextBrush", "#F5F7FB")
                 };
                 valueText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 Canvas.SetLeft(valueText, x + barWidth / 2 - valueText.DesiredSize.Width / 2);
@@ -1972,7 +1972,7 @@ namespace praktik
                     Text = TrimChartLabel(slice.Label, 18),
                     Width = Math.Max(slotWidth - 6, 48),
                     FontSize = 11,
-                    Foreground = CreateBrush("#8A7462"),
+                    Foreground = GetThemeBrush("AppMutedTextBrush", "#ADB6C3"),
                     TextAlignment = TextAlignment.Center,
                     TextTrimming = TextTrimming.CharacterEllipsis
                 };
@@ -2000,7 +2000,7 @@ namespace praktik
 
             var polyline = new System.Windows.Shapes.Polyline
             {
-                Stroke = CreateBrush("#9B6A49"),
+                Stroke = GetThemeBrush("AppAccentBrush", "#8D6E63"),
                 StrokeThickness = 3
             };
 
@@ -2016,7 +2016,7 @@ namespace praktik
                     Width = 10,
                     Height = 10,
                     Fill = slice.Brush,
-                    Stroke = CreateBrush("#FFF9F1"),
+                    Stroke = GetThemeBrush("AppSurfaceBrush", "#1C2027"),
                     StrokeThickness = 2
                 };
                 Canvas.SetLeft(point, x - 5);
@@ -2028,7 +2028,7 @@ namespace praktik
                     Text = slice.Value.ToString(),
                     FontSize = 11,
                     FontWeight = FontWeights.SemiBold,
-                    Foreground = CreateBrush("#6E5241")
+                    Foreground = GetThemeBrush("AppTextBrush", "#F5F7FB")
                 };
                 valueText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 Canvas.SetLeft(valueText, x - valueText.DesiredSize.Width / 2);
@@ -2040,7 +2040,7 @@ namespace praktik
                     Text = TrimChartLabel(slice.Label, 18),
                     Width = 90,
                     FontSize = 11,
-                    Foreground = CreateBrush("#8A7462"),
+                    Foreground = GetThemeBrush("AppMutedTextBrush", "#ADB6C3"),
                     TextAlignment = TextAlignment.Center,
                     TextTrimming = TextTrimming.CharacterEllipsis
                 };
@@ -2166,7 +2166,7 @@ namespace praktik
             double textLeft = callout.Side > 0 ? width - textWidth - outerPadding : outerPadding;
             double lineEndX = callout.Side > 0 ? textLeft - 10 : textLeft + textWidth + 10;
             double elbowX = center.X + callout.Side * (radius + 28);
-            var connectorBrush = CreateBrush("#A98C72");
+            var connectorBrush = GetThemeBrush("AppBorderBrush", "#343C49");
             string percentText = $"{Math.Round(callout.Slice.Value * 100d / total)}%";
 
             var connectorStart = new System.Windows.Shapes.Line
@@ -2194,7 +2194,7 @@ namespace praktik
                 Width = 8,
                 Height = 8,
                 Fill = callout.Slice.Brush,
-                Stroke = CreateBrush("#FFF9F1"),
+                Stroke = GetThemeBrush("AppSurfaceBrush", "#1C2027"),
                 StrokeThickness = 1.5
             };
 
@@ -2211,7 +2211,7 @@ namespace praktik
                 TextWrapping = TextWrapping.Wrap,
                 FontSize = 13,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = CreateBrush("#5B3E2C"),
+                Foreground = GetThemeBrush("AppTextBrush", "#F5F7FB"),
                 TextAlignment = callout.Side > 0 ? TextAlignment.Left : TextAlignment.Right
             };
 
@@ -2222,7 +2222,7 @@ namespace praktik
                 Text = $"{callout.Slice.Value} задач, {percentText}",
                 Width = textWidth,
                 FontSize = 11,
-                Foreground = CreateBrush("#866F5E"),
+                Foreground = GetThemeBrush("AppMutedTextBrush", "#ADB6C3"),
                 TextAlignment = callout.Side > 0 ? TextAlignment.Left : TextAlignment.Right
             };
 
@@ -2239,8 +2239,8 @@ namespace praktik
 
         private void DrawChartGrid(double left, double top, double plotWidth, double plotHeight, double axisMax)
         {
-            var axisBrush = CreateBrush("#E7DACC");
-            var labelBrush = CreateBrush("#9B8777");
+            var axisBrush = GetThemeBrush("AppBorderBrush", "#343C49");
+            var labelBrush = GetThemeBrush("AppMutedTextBrush", "#ADB6C3");
 
             for (int step = 0; step <= 4; step++)
             {
@@ -2354,7 +2354,7 @@ namespace praktik
             {
                 Data = new PathGeometry(new[] { figure }),
                 Fill = fill,
-                Stroke = CreateBrush("#FFF9F1"),
+                Stroke = GetThemeBrush("AppSurfaceBrush", "#1C2027"),
                 StrokeThickness = 2
             };
         }
@@ -2363,18 +2363,23 @@ namespace praktik
         {
             return new[]
             {
-                CreateBrush("#B47A4F"),
-                CreateBrush("#D1A16A"),
-                CreateBrush("#8B5C43"),
-                CreateBrush("#C8A17C"),
-                CreateBrush("#E1C39C"),
-                CreateBrush("#A87A5C")
+                GetThemeBrush("AppChartBrush1", "#8D6E63"),
+                GetThemeBrush("AppChartBrush2", "#B88B5B"),
+                GetThemeBrush("AppChartBrush3", "#A9877D"),
+                GetThemeBrush("AppChartBrush4", "#6A5148"),
+                GetThemeBrush("AppChartBrush5", "#8E765E"),
+                GetThemeBrush("AppChartBrush6", "#C7A88D")
             };
         }
 
         private SolidColorBrush CreateBrush(string colorHex)
         {
             return (SolidColorBrush)new BrushConverter().ConvertFrom(colorHex);
+        }
+
+        private SolidColorBrush GetThemeBrush(string resourceKey, string fallbackHex)
+        {
+            return AppThemeManager.ResolveBrush(resourceKey, fallbackHex);
         }
 
         private string FormatPercent(int value, int total)
@@ -2502,8 +2507,8 @@ namespace praktik
             using (var drawingContext = drawingVisual.RenderOpen())
             {
                 drawingContext.DrawRoundedRectangle(
-                    CreateBrush("#FCF6EE"),
-                    new Pen(CreateBrush("#E5D8CB"), 1),
+                    GetThemeBrush("AppSurfaceBrush", "#1C2027"),
+                    new Pen(GetThemeBrush("AppBorderBrush", "#343C49"), 1),
                     new Rect(0, 0, exportWidth, exportHeight),
                     18,
                     18);
