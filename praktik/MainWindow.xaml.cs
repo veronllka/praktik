@@ -34,6 +34,7 @@ namespace praktik
         private User selectedRoleManagementUser;
         private Role selectedRoleManagementRole;
         private List<RolePermissionItem> rolePermissionItems = new List<RolePermissionItem>();
+        private bool isRolePermissionsViewActive;
         private string currentReportType = "tasks";
         private string currentReportChartType = "bar";
 
@@ -41,10 +42,13 @@ namespace praktik
         {
             InitializeComponent();
             facade = new WorkPlannerFacade();
+            AppThemeManager.ApplyTheme(LoginWindow.CurrentUser);
+            UpdateRoleManagementView();
             LoadCurrentPermissions();
             LoadData();
             SetupPermissions();
             UpdateUserInfo();
+            UpdateThemeToggleButton();
             LoadDashboard();
             if (LogoutBtn != null)
             {
@@ -155,8 +159,14 @@ namespace praktik
             if (LoginWindow.CurrentUser != null)
             {
                 var role = GetCurrentRole();
-                UserInfo.Text = $"{LoginWindow.CurrentUser.Username} ({role})";
+                var userDisplayName = string.IsNullOrWhiteSpace(LoginWindow.CurrentUser.FullName)
+                    ? LoginWindow.CurrentUser.Username
+                    : LoginWindow.CurrentUser.FullName;
+
+                UserInfo.Text = $"{userDisplayName} ({role})";
             }
+
+            UpdateThemeToggleButton();
         }
 
         private string GetCurrentRole()
@@ -292,11 +302,14 @@ namespace praktik
             btnExportSelectedReport.IsEnabled = CanExportReports();
             btnMRAddRequest.IsEnabled = CanManageMaterialRequests();
             btnMRExport.IsEnabled = CanViewMaterialRequests();
-            btnApplyUserRole.IsEnabled = isAdminRole;
+            btnAddManagedUser.IsEnabled = isAdminRole;
+            btnEditManagedUser.IsEnabled = isAdminRole;
+            btnDeleteManagedUser.IsEnabled = isAdminRole;
+            btnApplyUserRole.IsEnabled = false;
             btnCreateRole.IsEnabled = isAdminRole;
             btnSaveRolePermissions.IsEnabled = isAdminRole;
             btnReloadRoleManagement.IsEnabled = isAdminRole;
-            cbRoleAssignment.IsEnabled = isAdminRole;
+            cbRoleAssignment.IsEnabled = false;
             txtNewRoleName.IsEnabled = isAdminRole;
             btnScanQR.Visibility = CanViewTasks() ? Visibility.Visible : Visibility.Collapsed;
 
@@ -339,6 +352,66 @@ namespace praktik
             roleOverride = role;
             SetupPermissions();
             UpdateUserInfo();
+        }
+
+        private void UpdateThemeToggleButton()
+        {
+            if (QuickThemeToggleIcon == null || btnQuickThemeToggle == null)
+            {
+                return;
+            }
+
+            var baseTheme = AppThemeManager.NormalizeBaseTheme(LoginWindow.CurrentUser?.PreferredTheme);
+            var isDarkTheme = AppThemeManager.IsDarkTheme(baseTheme);
+
+            QuickThemeToggleIcon.Kind = isDarkTheme
+                ? MaterialDesignThemes.Wpf.PackIconKind.WhiteBalanceSunny
+                : MaterialDesignThemes.Wpf.PackIconKind.WeatherNight;
+            btnQuickThemeToggle.ToolTip = isDarkTheme
+                ? "Переключить на светлую тему"
+                : "Переключить на тёмную тему";
+        }
+
+        private void BtnOpenSettings_Click(object sender, RoutedEventArgs e)
+        {
+            if (LoginWindow.CurrentUser == null)
+            {
+                return;
+            }
+
+            var settingsWindow = new SettingsWindow();
+            var ownerWindow = Window.GetWindow(this);
+            if (ownerWindow != null)
+            {
+                settingsWindow.Owner = ownerWindow;
+            }
+
+            settingsWindow.ShowDialog();
+            UpdateUserInfo();
+        }
+
+        private void BtnQuickThemeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            if (LoginWindow.CurrentUser == null)
+            {
+                return;
+            }
+
+            var nextTheme = AppThemeManager.ToggleBaseTheme(LoginWindow.CurrentUser.PreferredTheme);
+            var accentColor = AppThemeManager.NormalizeAccent(LoginWindow.CurrentUser.AccentColor);
+
+            try
+            {
+                facade.UpdateUserSettings(LoginWindow.CurrentUser.UserId, null, nextTheme, accentColor);
+                LoginWindow.CurrentUser.PreferredTheme = nextTheme;
+                LoginWindow.CurrentUser.AccentColor = accentColor;
+                AppThemeManager.ApplyTheme(LoginWindow.CurrentUser);
+                UpdateThemeToggleButton();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при смене темы: {ex.Message}", "Настройки", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void SetHelpSectionsVisibility(
@@ -496,7 +569,7 @@ namespace praktik
                     break;
                 case 7:
                     RolesContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Управление ролями";
+                    PageTitle.Text = "Управление пользователями";
                     LoadRoleManagementData();
                     break;
             }
@@ -596,6 +669,7 @@ namespace praktik
         private void PerformLogout()
         {
             LoginWindow.CurrentUser = null;
+            AppThemeManager.ApplyTheme(AppThemeManager.DefaultBaseTheme, AppThemeManager.DefaultAccentColor);
             var loginWindow = new LoginWindow();
             loginWindow.Show();
             Window.GetWindow(this)?.Close();
@@ -2879,8 +2953,105 @@ namespace praktik
                 return true;
             }
 
-            MessageBox.Show("Управление ролями доступно только администратору.", "Доступ запрещен", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Управление пользователями доступно только администратору.", "Доступ запрещен", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
+        }
+
+        private static bool CanEditRolePermissions(string roleName)
+        {
+            var normalizedRole = RolePermissionCatalog.NormalizeRoleName(roleName);
+            return normalizedRole == "диспетчер"
+                || normalizedRole == "dispatcher"
+                || normalizedRole == "бригадир"
+                || normalizedRole == "foreman";
+        }
+
+        private bool IsCurrentSessionUser(User user)
+        {
+            return LoginWindow.CurrentUser != null &&
+                   user != null &&
+                   LoginWindow.CurrentUser.UserId == user.UserId;
+        }
+
+        private bool CanDeleteRoleManagementUser(User user, IEnumerable<User> users, out string restrictionMessage)
+        {
+            if (user == null)
+            {
+                restrictionMessage = "Сначала выберите пользователя.";
+                return false;
+            }
+
+            if (IsCurrentSessionUser(user))
+            {
+                restrictionMessage = "Нельзя удалить собственную учетную запись.";
+                return false;
+            }
+
+            var activeUsers = (users ?? Enumerable.Empty<User>()).ToList();
+            var activeAdminCount = activeUsers.Count(candidate =>
+                IsAdminRole(RolePermissionCatalog.NormalizeRoleName(candidate.Role)));
+
+            if (IsAdminRole(RolePermissionCatalog.NormalizeRoleName(user.Role)) && activeAdminCount <= 1)
+            {
+                restrictionMessage = "Нельзя удалить последнего администратора.";
+                return false;
+            }
+
+            restrictionMessage = null;
+            return true;
+        }
+
+        private void SelectRoleManagementUserByUsername(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username) || !(dgRoleUsers.ItemsSource is IEnumerable<User> users))
+            {
+                return;
+            }
+
+            var createdUser = users.FirstOrDefault(user =>
+                string.Equals(user.Username, username, StringComparison.OrdinalIgnoreCase));
+
+            if (createdUser == null)
+            {
+                return;
+            }
+
+            dgRoleUsers.SelectedItem = createdUser;
+            dgRoleUsers.ScrollIntoView(createdUser);
+            selectedRoleManagementUser = createdUser;
+            cbRoleAssignment.SelectedValue = createdUser.RoleId;
+            UpdateRoleManagementSummary();
+        }
+
+        private void UpdateRoleManagementView()
+        {
+            if (RoleAssignmentsPanel == null ||
+                RolePermissionsPanel == null ||
+                btnRoleAssignmentsView == null ||
+                btnRolePermissionsView == null)
+            {
+                return;
+            }
+
+            RoleAssignmentsPanel.Visibility = isRolePermissionsViewActive ? Visibility.Collapsed : Visibility.Visible;
+            RolePermissionsPanel.Visibility = isRolePermissionsViewActive ? Visibility.Visible : Visibility.Collapsed;
+
+            btnRoleAssignmentsView.Style = (Style)FindResource(
+                isRolePermissionsViewActive ? "MaterialDesignOutlinedButton" : "MaterialDesignRaisedButton");
+            btnRolePermissionsView.Style = (Style)FindResource(
+                isRolePermissionsViewActive ? "MaterialDesignRaisedButton" : "MaterialDesignOutlinedButton");
+        }
+
+        private void BtnRoleAssignmentsView_Click(object sender, RoutedEventArgs e)
+        {
+            isRolePermissionsViewActive = false;
+            UpdateRoleManagementView();
+        }
+
+        private void BtnRolePermissionsView_Click(object sender, RoutedEventArgs e)
+        {
+            isRolePermissionsViewActive = true;
+            UpdateRoleManagementView();
         }
 
         private void LoadRoleManagementData()
@@ -2899,27 +3070,171 @@ namespace praktik
             var roles = facade.GetRoles()
                 .OrderBy(role => role.RoleName)
                 .ToList();
+            var editableRoles = roles
+                .Where(role => CanEditRolePermissions(role.RoleName))
+                .ToList();
 
             cbRoleAssignment.SelectedValuePath = "RoleId";
             cbRoleAssignment.ItemsSource = roles;
             dgRoleUsers.ItemsSource = users;
-            dgRoles.ItemsSource = roles;
+            dgRoles.ItemsSource = editableRoles;
 
             dgRoleUsers.SelectedItem = users.FirstOrDefault(user => user.UserId == selectedUserId) ?? users.FirstOrDefault();
-            dgRoles.SelectedItem = roles.FirstOrDefault(role => role.RoleId == selectedRoleId) ?? roles.FirstOrDefault();
+            dgRoles.SelectedItem = editableRoles.FirstOrDefault(role => role.RoleId == selectedRoleId) ?? editableRoles.FirstOrDefault();
 
-            if (dgRoleUsers.SelectedItem == null)
+            selectedRoleManagementUser = dgRoleUsers.SelectedItem as User;
+            selectedRoleManagementRole = dgRoles.SelectedItem as Role;
+
+            if (selectedRoleManagementUser == null)
             {
-                selectedRoleManagementUser = null;
-                txtSelectedRoleUserInfo.Text = "Нет доступных пользователей для назначения роли.";
+                cbRoleAssignment.SelectedItem = null;
+            }
+            else
+            {
+                cbRoleAssignment.SelectedValue = selectedRoleManagementUser.RoleId;
             }
 
-            if (dgRoles.SelectedItem == null)
+            if (selectedRoleManagementRole == null)
             {
-                selectedRoleManagementRole = null;
-                txtSelectedRoleInfo.Text = "Нет доступных ролей для настройки прав.";
                 rolePermissionItems = new List<RolePermissionItem>();
                 dgRolePermissions.ItemsSource = rolePermissionItems;
+            }
+            else
+            {
+                var grantedPermissions = new HashSet<string>(
+                    facade.GetRolePermissionCodes(selectedRoleManagementRole.RoleId),
+                    StringComparer.OrdinalIgnoreCase);
+
+                rolePermissionItems = RolePermissionCatalog.Definitions
+                    .Select(definition => new RolePermissionItem
+                    {
+                        Code = definition.Code,
+                        Category = definition.Category,
+                        DisplayName = definition.DisplayName,
+                        Description = definition.Description,
+                        IsGranted = grantedPermissions.Contains(definition.Code)
+                    })
+                    .ToList();
+
+                dgRolePermissions.ItemsSource = rolePermissionItems;
+            }
+
+            UpdateRoleManagementView();
+            UpdateRoleManagementSummary(users, editableRoles);
+        }
+
+        private void UpdateRoleManagementSummary(IEnumerable<User> users = null, IEnumerable<Role> roles = null)
+        {
+            if (txtRoleUsersSummary == null ||
+                txtRoleAssignmentSummary == null ||
+                txtRoleAccessOverview == null ||
+                txtRolePermissionSummary == null ||
+                txtRoleCreationInfo == null ||
+                txtRoleCatalogSummary == null ||
+                btnAddManagedUser == null ||
+                btnEditManagedUser == null ||
+                btnDeleteManagedUser == null)
+            {
+                return;
+            }
+
+            var userList = (users ?? Enumerable.Empty<User>()).ToList();
+            var roleList = (roles ?? Enumerable.Empty<Role>()).ToList();
+
+            if (userList.Count == 0 && dgRoleUsers.ItemsSource is IEnumerable<User> currentUsers)
+            {
+                userList = currentUsers.ToList();
+            }
+
+            if (roleList.Count == 0 && dgRoles.ItemsSource is IEnumerable<Role> currentRoles)
+            {
+                roleList = currentRoles.ToList();
+            }
+
+            txtRoleUsersSummary.Text = userList.Count == 0
+                ? "Активных пользователей нет"
+                : $"Активных пользователей: {userList.Count}";
+
+            txtRoleCatalogSummary.Text = string.Empty;
+
+            var isEditingOwnRole = IsCurrentSessionUser(selectedRoleManagementUser);
+            var canDeleteSelectedUser = CanDeleteRoleManagementUser(selectedRoleManagementUser, userList, out var deleteRestriction);
+
+            if (selectedRoleManagementUser == null)
+            {
+                txtSelectedRoleUserInfo.Text = "Добавьте нового пользователя или выберите пользователя слева для редактирования или удаления.";
+                txtRoleAssignmentSummary.Text = userList.Count == 0
+                    ? "Список пользователей пуст"
+                    : "Пользователь не выбран";
+            }
+            else
+            {
+                var currentRoleName = selectedRoleManagementUser.Role ?? "не назначена";
+
+                txtSelectedRoleUserInfo.Text =
+                    $"Логин: {selectedRoleManagementUser.Username}\n" +
+                    $"Имя: {selectedRoleManagementUser.DisplayName}\n" +
+                    $"Роль: {currentRoleName}";
+
+                if (isEditingOwnRole)
+                {
+                    txtSelectedRoleUserInfo.Text += "\nСвою роль в текущем сеансе менять нельзя.";
+                }
+                else if (!canDeleteSelectedUser && !string.IsNullOrWhiteSpace(deleteRestriction))
+                {
+                    txtSelectedRoleUserInfo.Text += $"\n{deleteRestriction}";
+                }
+
+                txtRoleAssignmentSummary.Text = $"Выбран пользователь: {selectedRoleManagementUser.DisplayName}";
+            }
+
+            btnApplyUserRole.IsEnabled = false;
+            btnAddManagedUser.IsEnabled = true;
+            btnEditManagedUser.IsEnabled = selectedRoleManagementUser != null;
+            btnDeleteManagedUser.IsEnabled = canDeleteSelectedUser;
+
+            if (selectedRoleManagementRole == null)
+            {
+                txtSelectedRoleInfo.Text = "Права роли";
+                txtRolePermissionSummary.Text = string.Empty;
+                txtRoleAccessOverview.Text = string.Empty;
+                txtRoleCreationInfo.Text = string.Empty;
+                btnSaveRolePermissions.IsEnabled = false;
+                btnCreateRole.IsEnabled = false;
+                return;
+            }
+
+            var grantedCount = rolePermissionItems.Count(item => item.IsGranted);
+            var totalCount = rolePermissionItems.Count;
+
+            txtSelectedRoleInfo.Text = totalCount == 0
+                ? $"Права роли: {selectedRoleManagementRole.RoleName}"
+                : $"Права роли: {selectedRoleManagementRole.RoleName} ({grantedCount}/{totalCount})";
+            txtRolePermissionSummary.Text = string.Empty;
+            txtRoleAccessOverview.Text = string.Empty;
+            txtRoleCreationInfo.Text = string.Empty;
+            btnSaveRolePermissions.IsEnabled = true;
+            btnCreateRole.IsEnabled = false;
+        }
+
+        private static string GetRoleManagementPlural(int number, string one, string few, string many)
+        {
+            var remainder100 = number % 100;
+            if (remainder100 >= 11 && remainder100 <= 14)
+            {
+                return many;
+            }
+
+            switch (number % 10)
+            {
+                case 1:
+                    return one;
+                case 2:
+                case 3:
+                case 4:
+                    return few;
+                default:
+                    return many;
             }
         }
 
@@ -2929,13 +3244,23 @@ namespace praktik
 
             if (selectedRoleManagementUser == null)
             {
-                txtSelectedRoleUserInfo.Text = "Выберите пользователя для смены роли";
                 cbRoleAssignment.SelectedItem = null;
+                UpdateRoleManagementSummary();
                 return;
             }
 
-            txtSelectedRoleUserInfo.Text = $"Пользователь: {selectedRoleManagementUser.DisplayName}\nТекущая роль: {selectedRoleManagementUser.Role ?? "не назначена"}";
             cbRoleAssignment.SelectedValue = selectedRoleManagementUser.RoleId;
+            UpdateRoleManagementSummary();
+        }
+
+        private void CbRoleAssignment_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateRoleManagementSummary();
+        }
+
+        private void TxtNewRoleName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateRoleManagementSummary();
         }
 
         private void DgRoles_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -2944,9 +3269,9 @@ namespace praktik
 
             if (selectedRoleManagementRole == null)
             {
-                txtSelectedRoleInfo.Text = "Выберите роль для настройки прав";
                 rolePermissionItems = new List<RolePermissionItem>();
                 dgRolePermissions.ItemsSource = rolePermissionItems;
+                UpdateRoleManagementSummary();
                 return;
             }
 
@@ -2965,8 +3290,147 @@ namespace praktik
                 })
                 .ToList();
 
-            txtSelectedRoleInfo.Text = $"Роль: {selectedRoleManagementRole.RoleName}";
             dgRolePermissions.ItemsSource = rolePermissionItems;
+            UpdateRoleManagementSummary();
+        }
+
+        private void DgRolePermissions_CurrentCellChanged(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() => UpdateRoleManagementSummary()));
+        }
+
+        private void BtnAddManagedUser_Click(object sender, RoutedEventArgs e)
+        {
+            if (!EnsureRoleManagementAccess())
+            {
+                return;
+            }
+
+            try
+            {
+                var registerWindow = new RegisterWindow(true);
+                var ownerWindow = Window.GetWindow(this);
+                if (ownerWindow != null)
+                {
+                    registerWindow.Owner = ownerWindow;
+                }
+
+                if (registerWindow.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                LoadRoleManagementData();
+                LoadCrews();
+                SelectRoleManagementUserByUsername(registerWindow.CreatedUsername);
+                MessageBox.Show("Пользователь добавлен.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка добавления пользователя: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnEditManagedUser_Click(object sender, RoutedEventArgs e)
+        {
+            if (!EnsureRoleManagementAccess())
+            {
+                return;
+            }
+
+            if (selectedRoleManagementUser == null)
+            {
+                MessageBox.Show("Выберите пользователя.");
+                return;
+            }
+
+            try
+            {
+                var editWindow = new RegisterWindow(true, new User
+                {
+                    UserId = selectedRoleManagementUser.UserId,
+                    Username = selectedRoleManagementUser.Username,
+                    FullName = selectedRoleManagementUser.FullName,
+                    Password = selectedRoleManagementUser.Password,
+                    RoleId = selectedRoleManagementUser.RoleId,
+                    Role = selectedRoleManagementUser.Role
+                });
+
+                var ownerWindow = Window.GetWindow(this);
+                if (ownerWindow != null)
+                {
+                    editWindow.Owner = ownerWindow;
+                }
+
+                if (editWindow.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                if (editWindow.SavedUser != null &&
+                    LoginWindow.CurrentUser != null &&
+                    editWindow.SavedUser.UserId == LoginWindow.CurrentUser.UserId)
+                {
+                    LoginWindow.CurrentUser.Username = editWindow.SavedUser.Username;
+                    LoginWindow.CurrentUser.FullName = editWindow.SavedUser.FullName;
+                    LoginWindow.CurrentUser.Password = editWindow.SavedUser.Password;
+                    LoginWindow.CurrentUser.RoleId = editWindow.SavedUser.RoleId;
+                    LoginWindow.CurrentUser.Role = editWindow.SavedUser.Role;
+                    roleOverride = null;
+                    LoadCurrentPermissions();
+                    SetupPermissions();
+                    UpdateUserInfo();
+                }
+
+                LoadRoleManagementData();
+                LoadCrews();
+                SelectRoleManagementUserByUsername(editWindow.CreatedUsername);
+                MessageBox.Show("Данные пользователя сохранены.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка редактирования пользователя: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnDeleteManagedUser_Click(object sender, RoutedEventArgs e)
+        {
+            if (!EnsureRoleManagementAccess())
+            {
+                return;
+            }
+
+            var users = (dgRoleUsers.ItemsSource as IEnumerable<User>)?.ToList() ?? facade.GetUsers();
+            if (!CanDeleteRoleManagementUser(selectedRoleManagementUser, users, out var restrictionMessage))
+            {
+                MessageBox.Show(restrictionMessage, "Удаление пользователя", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var userName = selectedRoleManagementUser.DisplayName;
+            var confirmResult = MessageBox.Show(
+                $"Удалить пользователя \"{userName}\"?\nПользователь будет скрыт из активного списка и не сможет войти в систему.",
+                "Удаление пользователя",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmResult != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                facade.DeleteUser(selectedRoleManagementUser.UserId);
+                selectedRoleManagementUser = null;
+                LoadRoleManagementData();
+                LoadCrews();
+                MessageBox.Show("Пользователь удален.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка удаления пользователя: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnApplyUserRole_Click(object sender, RoutedEventArgs e)
@@ -2985,6 +3449,12 @@ namespace praktik
             if (!(cbRoleAssignment.SelectedItem is Role role))
             {
                 MessageBox.Show("Выберите роль для назначения.");
+                return;
+            }
+
+            if (selectedRoleManagementUser.RoleId == role.RoleId)
+            {
+                MessageBox.Show("У пользователя уже назначена выбранная роль.");
                 return;
             }
 
@@ -3018,6 +3488,12 @@ namespace praktik
             if (string.IsNullOrWhiteSpace(roleName))
             {
                 MessageBox.Show("Введите название роли.");
+                return;
+            }
+
+            if (selectedRoleManagementRole == null)
+            {
+                MessageBox.Show("Сначала выберите роль-шаблон.");
                 return;
             }
 

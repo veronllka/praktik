@@ -42,6 +42,11 @@ namespace praktik.Models.Patterns
             return db.GetUser(username, password);
         }
 
+        public User GetUserById(int userId)
+        {
+            return db.GetUserById(userId);
+        }
+
         /// <summary>
         /// Получает список ролей пользователей.
         /// </summary>
@@ -63,6 +68,21 @@ namespace praktik.Models.Patterns
         public void RegisterUser(string loginName, string password, string fullName, int roleId)
         {
             db.RegisterUser(loginName, password, fullName, roleId);
+        }
+
+        public void UpdateUser(int userId, string loginName, string password, string fullName, int roleId)
+        {
+            db.UpdateUser(userId, loginName, password, fullName, roleId);
+        }
+
+        public void DeleteUser(int userId)
+        {
+            db.DeleteUser(userId);
+        }
+
+        public void UpdateUserSettings(int userId, string newPassword, string preferredTheme, string accentColor)
+        {
+            db.UpdateUserSettings(userId, newPassword, preferredTheme, accentColor);
         }
 
         public int CreateRole(string roleName, IEnumerable<string> permissionCodes)

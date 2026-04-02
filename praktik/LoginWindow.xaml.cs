@@ -91,6 +91,7 @@ namespace praktik
         private void OpenMainWindow(User user)
         {
             CurrentUser = user;
+            AppThemeManager.ApplyTheme(user);
             try
             {
                 var mainWindow = RoleWindowFactory.CreateWindow(user.Role);

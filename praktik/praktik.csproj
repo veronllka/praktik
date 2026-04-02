@@ -146,6 +146,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="SettingsWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Materials\MaterialRequestEditWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -210,6 +214,10 @@
       <DependentUpon>RegisterWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="SettingsWindow.xaml.cs">
+      <DependentUpon>SettingsWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Materials\MaterialRequestEditWindow.xaml.cs">
       <DependentUpon>MaterialRequestEditWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -258,6 +266,7 @@
       <DependentUpon>BrigadierWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AppThemeManager.cs" />
     <Compile Include="CrewMembersWindow.xaml.cs">
       <DependentUpon>CrewMembersWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

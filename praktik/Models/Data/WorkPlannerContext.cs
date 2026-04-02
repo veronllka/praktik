@@ -64,6 +64,7 @@ namespace praktik.Models
                         END", schemaConnection);
                     command.ExecuteNonQuery();
 
+                    EnsureUserSettingsSchema(schemaConnection);
                     SeedDefaultRolePermissions(schemaConnection);
                 }
 
@@ -138,6 +139,48 @@ namespace praktik.Models
             }
         }
 
+        private static void EnsureUserSettingsSchema(SqlConnection sqlConnection)
+        {
+            var addPreferredThemeCommand = new SqlCommand(@"
+                IF COL_LENGTH('dbo.Users', 'PreferredTheme') IS NULL
+                BEGIN
+                    ALTER TABLE dbo.Users ADD PreferredTheme NVARCHAR(20) NULL;
+                END", sqlConnection);
+            addPreferredThemeCommand.ExecuteNonQuery();
+
+            var addAccentColorCommand = new SqlCommand(@"
+                IF COL_LENGTH('dbo.Users', 'AccentColor') IS NULL
+                BEGIN
+                    ALTER TABLE dbo.Users ADD AccentColor NVARCHAR(20) NULL;
+                END", sqlConnection);
+            addAccentColorCommand.ExecuteNonQuery();
+
+            var normalizeSettingsCommand = new SqlCommand(@"
+                UPDATE dbo.Users
+                SET PreferredTheme = COALESCE(NULLIF(PreferredTheme, ''), 'Light'),
+                    AccentColor = COALESCE(NULLIF(AccentColor, ''), 'Brown')
+                WHERE PreferredTheme IS NULL
+                   OR LTRIM(RTRIM(PreferredTheme)) = ''
+                   OR AccentColor IS NULL
+                   OR LTRIM(RTRIM(AccentColor)) = '';", sqlConnection);
+            normalizeSettingsCommand.ExecuteNonQuery();
+        }
+
+        private static User MapUser(SqlDataReader reader)
+        {
+            return new User
+            {
+                UserId = Convert.ToInt32(reader["UserId"]),
+                RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
+                Username = reader["LoginName"] as string ?? string.Empty,
+                FullName = reader["FullName"] as string,
+                Password = reader["PasswordPlain"] as string ?? string.Empty,
+                Role = reader["RoleName"] as string,
+                PreferredTheme = reader["PreferredTheme"] as string,
+                AccentColor = reader["AccentColor"] as string
+            };
+        }
+
         /// <summary>
         /// Получает список активных пользователей из базы данных.
         /// </summary>
@@ -148,7 +191,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"SELECT u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                var command = new SqlCommand(@"SELECT u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, u.PreferredTheme, u.AccentColor, r.RoleName
                                               FROM Users u
                                               LEFT JOIN Roles r ON r.RoleId = u.RoleId
                                               WHERE u.IsActive = 1
@@ -157,15 +200,7 @@ namespace praktik.Models
                 {
                     while (reader.Read())
                     {
-                        users.Add(new User
-                        {
-                            UserId = (int)reader["UserId"],
-                            RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
-                            Username = (string)reader["LoginName"],
-                            FullName = reader["FullName"] != DBNull.Value ? (string)reader["FullName"] : null,
-                            Password = (string)reader["PasswordPlain"],
-                            Role = reader["RoleName"] != DBNull.Value ? (string)reader["RoleName"] : null
-                        });
+                        users.Add(MapUser(reader));
                     }
                 }
             }
@@ -184,7 +219,7 @@ namespace praktik.Models
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, u.PreferredTheme, u.AccentColor, r.RoleName
                                               FROM Users u
                                               LEFT JOIN Roles r ON r.RoleId = u.RoleId
                                               WHERE u.LoginName = @username
@@ -196,19 +231,30 @@ namespace praktik.Models
                 {
                     if (reader.Read())
                     {
-                        return new User
-                        {
-                            UserId = (int)reader["UserId"],
-                            RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
-                            Username = (string)reader["LoginName"],
-                            FullName = reader["FullName"] != DBNull.Value ? (string)reader["FullName"] : null,
-                            Password = (string)reader["PasswordPlain"],
-                            Role = reader["RoleName"] != DBNull.Value ? (string)reader["RoleName"] : null
-                        };
+                        return MapUser(reader);
                     }
                 }
             }
             return null;
+        }
+
+        public User GetUserById(int userId)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, u.PreferredTheme, u.AccentColor, r.RoleName
+                                              FROM Users u
+                                              LEFT JOIN Roles r ON r.RoleId = u.RoleId
+                                              WHERE u.UserId = @userId
+                                                AND u.IsActive = 1", connection);
+                command.Parameters.AddWithValue("@userId", userId);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    return reader.Read() ? MapUser(reader) : null;
+                }
+            }
         }
 
         public List<Site> GetSites()
@@ -360,7 +406,7 @@ namespace praktik.Models
             {
                 connection.Open();
                 var command = new SqlCommand(@"
-                    SELECT u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, r.RoleName
+                    SELECT u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, u.PreferredTheme, u.AccentColor, r.RoleName
                     FROM Users u
                     LEFT JOIN Roles r ON r.RoleId = u.RoleId
                     WHERE u.IsActive = 1
@@ -379,15 +425,7 @@ namespace praktik.Models
                 {
                     while (reader.Read())
                     {
-                        users.Add(new User
-                        {
-                            UserId = Convert.ToInt32(reader["UserId"]),
-                            RoleId = reader["RoleId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["RoleId"]) : null,
-                            Username = reader["LoginName"] as string ?? string.Empty,
-                            FullName = reader["FullName"] as string,
-                            Password = reader["PasswordPlain"] as string,
-                            Role = reader["RoleName"] as string
-                        });
+                        users.Add(MapUser(reader));
                     }
                 }
             }
@@ -1091,9 +1129,9 @@ namespace praktik.Models
 
                 // Создаем пользователя сразу с ролью в Users.
                 var insertUserCommand = new SqlCommand(@"
-                    INSERT INTO Users (LoginName, PasswordPlain, FullName, RoleId, IsActive, CreatedAt) 
+                    INSERT INTO Users (LoginName, PasswordPlain, FullName, RoleId, IsActive, CreatedAt, PreferredTheme, AccentColor) 
                     OUTPUT INSERTED.UserId
-                    VALUES (@login, @password, @fullName, @roleId, 1, @createdAt)", connection);
+                    VALUES (@login, @password, @fullName, @roleId, 1, @createdAt, 'Light', 'Brown')", connection);
                 insertUserCommand.Parameters.AddWithValue("@login", loginName);
                 insertUserCommand.Parameters.AddWithValue("@password", password);
                 insertUserCommand.Parameters.AddWithValue("@fullName", fullName);
@@ -1102,6 +1140,108 @@ namespace praktik.Models
                 insertUserCommand.ExecuteScalar();
                 
                 Logger.Info($"User registered: {loginName}");
+            }
+        }
+
+        public void UpdateUser(int userId, string loginName, string password, string fullName, int roleId)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var checkCommand = new SqlCommand(@"
+                    SELECT COUNT(*)
+                    FROM Users
+                    WHERE LoginName = @login
+                      AND UserId <> @userId", connection);
+                checkCommand.Parameters.AddWithValue("@login", loginName);
+                checkCommand.Parameters.AddWithValue("@userId", userId);
+
+                if (Convert.ToInt32(checkCommand.ExecuteScalar()) > 0)
+                {
+                    throw new Exception("Пользователь с таким логином уже существует.");
+                }
+
+                var updateCommand = new SqlCommand(@"
+                    UPDATE Users
+                    SET LoginName = @login,
+                        PasswordPlain = @password,
+                        FullName = @fullName,
+                        RoleId = @roleId
+                    WHERE UserId = @userId
+                      AND IsActive = 1", connection);
+                updateCommand.Parameters.AddWithValue("@login", loginName);
+                updateCommand.Parameters.AddWithValue("@password", password);
+                updateCommand.Parameters.AddWithValue("@fullName", fullName);
+                updateCommand.Parameters.AddWithValue("@roleId", roleId);
+                updateCommand.Parameters.AddWithValue("@userId", userId);
+
+                if (updateCommand.ExecuteNonQuery() == 0)
+                {
+                    throw new InvalidOperationException("Пользователь не найден.");
+                }
+
+                Logger.Info($"User updated: {userId}");
+            }
+        }
+
+        public void DeleteUser(int userId)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var command = new SqlCommand(@"
+                    UPDATE Users
+                    SET IsActive = 0
+                    WHERE UserId = @userId
+                      AND IsActive = 1", connection);
+                command.Parameters.AddWithValue("@userId", userId);
+
+                var affectedRows = command.ExecuteNonQuery();
+                if (affectedRows == 0)
+                {
+                    throw new InvalidOperationException("Пользователь не найден или уже удален.");
+                }
+
+                Logger.Info($"User deactivated: {userId}");
+            }
+        }
+
+        public void UpdateUserSettings(int userId, string newPassword, string preferredTheme, string accentColor)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var updateCommand = new SqlCommand(@"
+                    UPDATE Users
+                    SET PasswordPlain = CASE
+                                            WHEN @password IS NULL THEN PasswordPlain
+                                            ELSE @password
+                                        END,
+                        PreferredTheme = @preferredTheme,
+                        AccentColor = @accentColor
+                    WHERE UserId = @userId
+                      AND IsActive = 1", connection);
+
+                updateCommand.Parameters.AddWithValue("@userId", userId);
+                updateCommand.Parameters.AddWithValue(
+                    "@password",
+                    string.IsNullOrWhiteSpace(newPassword) ? (object)DBNull.Value : newPassword);
+                updateCommand.Parameters.AddWithValue(
+                    "@preferredTheme",
+                    string.IsNullOrWhiteSpace(preferredTheme) ? "Light" : preferredTheme.Trim());
+                updateCommand.Parameters.AddWithValue(
+                    "@accentColor",
+                    string.IsNullOrWhiteSpace(accentColor) ? "Brown" : accentColor.Trim());
+
+                if (updateCommand.ExecuteNonQuery() == 0)
+                {
+                    throw new InvalidOperationException("Пользователь не найден.");
+                }
+
+                Logger.Info($"User settings updated: {userId}");
             }
         }
 
@@ -1142,9 +1282,9 @@ namespace praktik.Models
                         // Новые сотрудники состава не логинятся в приложение,
                         // поэтому сохраняем их неактивными, но с обязательной ролью.
                         var createUserCommand = new SqlCommand(@"
-                            INSERT INTO Users (LoginName, PasswordPlain, FullName, RoleId, IsActive, CreatedAt)
+                            INSERT INTO Users (LoginName, PasswordPlain, FullName, RoleId, IsActive, CreatedAt, PreferredTheme, AccentColor)
                             OUTPUT INSERTED.UserId
-                            VALUES (@login, @password, @fullName, @roleId, 0, @createdAt)", connection, transaction);
+                            VALUES (@login, @password, @fullName, @roleId, 0, @createdAt, 'Light', 'Brown')", connection, transaction);
                         createUserCommand.Parameters.AddWithValue("@login", loginName);
                         createUserCommand.Parameters.AddWithValue("@password", password);
                         createUserCommand.Parameters.AddWithValue("@fullName", fullName);

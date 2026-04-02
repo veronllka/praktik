@@ -173,7 +173,7 @@
                     <ListBoxItem x:Name="RolesMenuItem">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ShieldAccount" Width="24" Height="24" VerticalAlignment="Center"/>
-                            <TextBlock Text="Управление ролями" Margin="16,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Управление пользователями" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
                 </ListBox>
@@ -192,7 +192,7 @@
                              VerticalAlignment="Center" Margin="16,0"/>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Border Background="#C2B39A" CornerRadius="4" Margin="0,0,16,0" Padding="8,4">
+                        <Border Background="{DynamicResource PrimaryHueDarkBrush}" CornerRadius="4" Margin="0,0,16,0" Padding="8,4">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="White"/>
                                 <TextBlock x:Name="UserInfo" Text="Загрузка..." 
@@ -206,6 +206,26 @@
                                 </Button>
                             </StackPanel>
                         </Border>
+
+                        <Button x:Name="btnQuickThemeToggle"
+                                ToolTip="Быстрое переключение темы"
+                                Margin="0,0,16,0"
+                                Click="BtnQuickThemeToggle_Click"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8">
+                            <materialDesign:PackIcon x:Name="QuickThemeToggleIcon" Kind="WeatherNight" />
+                        </Button>
+
+                        <Button x:Name="btnOpenSettings"
+                                ToolTip="Настройки"
+                                Margin="0,0,16,0"
+                                Click="BtnOpenSettings_Click"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Padding="8">
+                            <materialDesign:PackIcon Kind="CogOutline" />
+                        </Button>
 
                         <Button x:Name="btnScanQR" 
                                 ToolTip="Сканировать QR-код"
@@ -1023,7 +1043,7 @@
                         <RowDefinition Height="Auto" MinHeight="350" MaxHeight="400"/>
                     </Grid.RowDefinitions>
 
-                    <materialDesign:Card Grid.Row="0" Margin="16,16,16,8">
+                            <materialDesign:Card Margin="0,0,0,12">
                         <StackPanel Margin="16">
                             <TextBlock Text="Фильтры" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
                             <Grid>
@@ -1162,130 +1182,233 @@
                     </materialDesign:Card>
                 </Grid>
 
-                <Grid x:Name="RolesContent" Visibility="Collapsed" Grid.ColumnSpan="2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+                <Grid x:Name="RolesContent" Visibility="Collapsed" Grid.ColumnSpan="2" Background="#F4ECE5">
+                    <Grid Margin="24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="18"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                    <materialDesign:Card Grid.Row="0" Margin="16,16,16,8">
-                        <Grid Margin="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="3*"/>
-                            </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="btnRoleAssignmentsView"
+                                    Content="Пользователи"
+                                    Click="BtnRoleAssignmentsView_Click"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Width="160"
+                                    Height="38"
+                                    Margin="0,0,12,0"/>
+                            <Button x:Name="btnRolePermissionsView"
+                                    Content="Права доступа"
+                                    Click="BtnRolePermissionsView_Click"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Width="170"
+                                    Height="38"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Пользователи" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
-                                <DataGrid x:Name="dgRoleUsers"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionChanged="DgRoleUsers_SelectionChanged"
-                                          Height="260">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
-                                        <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="160"/>
-                                        <DataGridTextColumn Header="Текущая роль" Binding="{Binding Role}" Width="170"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </StackPanel>
+                        <Grid Grid.Row="2">
+                            <Grid x:Name="RoleAssignmentsPanel">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="1.35*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Назначение роли" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
-                                <TextBlock x:Name="txtSelectedRoleUserInfo"
-                                           Text="Выберите пользователя для смены роли"
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,12"/>
-                                <ComboBox x:Name="cbRoleAssignment"
-                                          DisplayMemberPath="RoleName"
-                                          materialDesign:HintAssist.Hint="Новая роль"
-                                          Margin="0,0,0,12"/>
-                                <Button x:Name="btnApplyUserRole"
-                                        Content="Назначить роль"
-                                        Click="BtnApplyUserRole_Click"
-                                        Style="{StaticResource MaterialDesignRaisedButton}"
-                                        Width="180"
-                                        Height="40"
-                                        HorizontalAlignment="Left"/>
-                                <Separator Margin="0,16,0,16"/>
-                                <TextBlock Text="Создание роли" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
-                                <TextBox x:Name="txtNewRoleName"
-                                         materialDesign:HintAssist.Hint="Название роли"
-                                         Margin="0,0,0,12"/>
-                                <TextBlock Text="Новая роль создается с текущим набором отмеченных разрешений."
-                                           TextWrapping="Wrap"
-                                           Foreground="#666666"
-                                           Margin="0,0,0,12"/>
-                                <Button x:Name="btnCreateRole"
-                                        Content="Создать роль"
-                                        Click="BtnCreateRole_Click"
-                                        Style="{StaticResource MaterialDesignOutlinedButton}"
-                                        Width="180"
-                                        Height="40"
-                                        HorizontalAlignment="Left"/>
-                            </StackPanel>
+                                <Border Grid.Column="0" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                    <Grid>
+                                        <DataGrid
+                                                  x:Name="dgRoleUsers"
+                                                  AutoGenerateColumns="False"
+                                                  IsReadOnly="True"
+                                                  SelectionChanged="DgRoleUsers_SelectionChanged"
+                                                  SelectionMode="Single"
+                                                  CanUserResizeRows="False"
+                                                  AlternatingRowBackground="#FFF9F5F2"
+                                                  GridLinesVisibility="Horizontal">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="ФИО" Binding="{Binding FullName}" Width="*"/>
+                                                <DataGridTextColumn Header="Логин" Binding="{Binding Username}" Width="170"/>
+                                                <DataGridTextColumn Header="Текущая роль" Binding="{Binding Role}" Width="190"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Column="2" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="10"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="14"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="16"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Text="Действия" FontSize="20" FontWeight="SemiBold" Foreground="#5F4336"/>
+                                            <TextBlock Grid.Row="2"
+                                                       x:Name="txtRoleAssignmentSummary"
+                                                       Text="Выберите пользователя в таблице"
+                                                       Foreground="#8A6250"
+                                                       FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="4"
+                                                       x:Name="txtSelectedRoleUserInfo"
+                                                       Text="Добавьте нового пользователя или выберите пользователя слева для редактирования или удаления."
+                                                       TextWrapping="Wrap"
+                                                       Foreground="#4B5563"/>
+                                            <Grid Grid.Row="6">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="140"/>
+                                                    <ColumnDefinition Width="10"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <Button Grid.Column="0"
+                                                        x:Name="btnAddManagedUser"
+                                                        Content="Добавить"
+                                                        Click="BtnAddManagedUser_Click"
+                                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                        Width="120"
+                                                        Height="38"/>
+                                                <Button Grid.Column="2"
+                                                        x:Name="btnEditManagedUser"
+                                                        Content="Редактировать"
+                                                        Click="BtnEditManagedUser_Click"
+                                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                                        Width="140"
+                                                        Height="38"
+                                                        IsEnabled="False"/>
+                                                <Button Grid.Column="4"
+                                                        x:Name="btnDeleteManagedUser"
+                                                        Content="Удалить"
+                                                        Click="BtnDeleteManagedUser_Click"
+                                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                        Width="120"
+                                                        Height="38"
+                                                        IsEnabled="False"/>
+                                            </Grid>
+                                        </Grid>
+                                </Border>
+                            </Grid>
+
+                            <Grid x:Name="RolePermissionsPanel" Visibility="Collapsed">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="12"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Text="Роли" FontSize="20" FontWeight="SemiBold" Foreground="#5F4336"/>
+                                        <TextBlock Grid.Row="2"
+                                                   x:Name="txtRoleCatalogSummary"
+                                                   Foreground="#7A6A60"
+                                                   Visibility="Collapsed"/>
+                                        <DataGrid Grid.Row="4"
+                                                  x:Name="dgRoles"
+                                                  AutoGenerateColumns="False"
+                                                  IsReadOnly="True"
+                                                  SelectionChanged="DgRoles_SelectionChanged"
+                                                  SelectionMode="Single"
+                                                  CanUserResizeRows="False"
+                                                  AlternatingRowBackground="#FFF9F5F2"
+                                                  GridLinesVisibility="Horizontal">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="ID" Binding="{Binding RoleId}" Width="60"/>
+                                                <DataGridTextColumn Header="Название роли" Binding="{Binding RoleName}" Width="*"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </Grid>
+                                </Border>
+
+                                <Border Grid.Column="2" Background="#FFFDFC" BorderBrush="#E3D4C7" BorderThickness="1" CornerRadius="16" Padding="20">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="10"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="12"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="16"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Name="txtSelectedRoleInfo"
+                                                   Text="Права роли"
+                                                   FontSize="20"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#5F4336"/>
+
+                                        <StackPanel Grid.Row="2" Visibility="Collapsed">
+                                            <TextBlock x:Name="txtRolePermissionSummary"
+                                                       Text="Выберите роль слева, чтобы посмотреть и изменить ее права."
+                                                       TextWrapping="Wrap"
+                                                       Foreground="#7A6A60"/>
+                                        </StackPanel>
+
+                                        <DataGrid Grid.Row="4"
+                                                  x:Name="dgRolePermissions"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserAddRows="False"
+                                                  CanUserDeleteRows="False"
+                                                  HeadersVisibility="Column"
+                                                  CanUserResizeRows="False"
+                                                  AlternatingRowBackground="#FFF9F5F2"
+                                                  GridLinesVisibility="Horizontal"
+                                                  CurrentCellChanged="DgRolePermissions_CurrentCellChanged">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="150" IsReadOnly="True"/>
+                                                <DataGridTextColumn Header="Разрешение" Binding="{Binding DisplayName}" Width="220" IsReadOnly="True"/>
+                                                <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
+                                                <DataGridCheckBoxColumn Header="Доступ" Binding="{Binding IsGranted, Mode=TwoWay}" Width="90"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+
+                                        <StackPanel Grid.Row="6" Orientation="Horizontal">
+                                            <Button x:Name="btnSaveRolePermissions"
+                                                    Content="Сохранить права"
+                                                    Click="BtnSaveRolePermissions_Click"
+                                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                                    Width="180"
+                                                    Height="38"
+                                                    Margin="0,0,12,0"
+                                                    IsEnabled="False"/>
+                                            <Button x:Name="btnReloadRoleManagement"
+                                                    Content="Обновить"
+                                                    Click="BtnReloadRoleManagement_Click"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Width="140"
+                                                    Height="38"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </Grid>
                         </Grid>
-                    </materialDesign:Card>
 
-                    <materialDesign:Card Grid.Row="1" Margin="16,0,16,16">
-                        <Grid Margin="16">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="280"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Роли" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" Margin="0,0,0,12"/>
-                                <DataGrid x:Name="dgRoles"
-                                          AutoGenerateColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionChanged="DgRoles_SelectionChanged"
-                                          Height="360">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="ID" Binding="{Binding RoleId}" Width="60"/>
-                                        <DataGridTextColumn Header="Название" Binding="{Binding RoleName}" Width="*"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock x:Name="txtSelectedRoleInfo"
-                                           Text="Выберите роль для настройки прав"
-                                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}"
-                                           Margin="0,0,0,12"/>
-                                <DataGrid x:Name="dgRolePermissions"
-                                          AutoGenerateColumns="False"
-                                          CanUserAddRows="False"
-                                          CanUserDeleteRows="False"
-                                          HeadersVisibility="Column"
-                                          Height="360">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Категория" Binding="{Binding Category}" Width="140" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Разрешение" Binding="{Binding DisplayName}" Width="220" IsReadOnly="True"/>
-                                        <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="*" IsReadOnly="True"/>
-                                        <DataGridCheckBoxColumn Header="Разрешено" Binding="{Binding IsGranted, Mode=TwoWay}" Width="100"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                                    <Button x:Name="btnSaveRolePermissions"
-                                            Content="Сохранить права"
-                                            Click="BtnSaveRolePermissions_Click"
-                                            Style="{StaticResource MaterialDesignRaisedButton}"
-                                            Width="180"
-                                            Height="40"
-                                            Margin="0,0,12,0"/>
-                                    <Button x:Name="btnReloadRoleManagement"
-                                            Content="Обновить"
-                                            Click="BtnReloadRoleManagement_Click"
-                                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                                            Width="140"
-                                            Height="40"/>
-                                </StackPanel>
-                            </StackPanel>
+                        <Grid Visibility="Collapsed">
+                            <TextBlock x:Name="txtRoleUsersSummary"/>
+                            <TextBlock x:Name="txtRoleAccessOverview"/>
+                            <TextBlock x:Name="txtRoleCreationInfo"/>
+                            <ComboBox x:Name="cbRoleAssignment" SelectionChanged="CbRoleAssignment_SelectionChanged"/>
+                            <Button x:Name="btnApplyUserRole" Click="BtnApplyUserRole_Click"/>
+                            <TextBox x:Name="txtNewRoleName" TextChanged="TxtNewRoleName_TextChanged"/>
+                            <Button x:Name="btnCreateRole" Click="BtnCreateRole_Click"/>
                         </Grid>
-                    </materialDesign:Card>
+                    </Grid>
                 </Grid>
             </Grid>
         </DockPanel>

@@ -27,7 +27,9 @@ namespace praktik.Models
         /// <summary>
         /// Роль пользователя в системе
         /// </summary>
-        public string Role { get; set; } 
+        public string Role { get; set; }
+        public string PreferredTheme { get; set; }
+        public string AccentColor { get; set; }
 
         /// <summary>
         /// Отображаемое имя в списках (ФИО + логин, если есть).
