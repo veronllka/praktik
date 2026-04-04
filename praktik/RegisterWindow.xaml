@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:praktik"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Р РµРіРёСЃС‚СЂР°С†РёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ" Width="460"
+        Title="Регистрация пользователя" Width="460"
         SizeToContent="Height"
         MinHeight="440"
         WindowStartupLocation="CenterScreen"
@@ -187,21 +187,21 @@
                 CornerRadius="10">
             <StackPanel>
                 <TextBlock x:Name="txtHeaderTitle"
-                           Text="Р РµРіРёСЃС‚СЂР°С†РёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ"
+                           Text="Регистрация пользователя"
                            FontSize="22"
                            FontWeight="SemiBold"
                            Foreground="{DynamicResource AppTextBrush}"
                            Visibility="Collapsed"/>
 
                 <TextBlock x:Name="txtHeaderSubtitle"
-                           Text="Р—Р°РїРѕР»РЅРёС‚Рµ РґР°РЅРЅС‹Рµ РЅРѕРІРѕР№ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё."
+                           Text="Заполните данные новой учетной записи."
                            Margin="0,6,0,18"
                            Foreground="{DynamicResource AppMutedTextBrush}"
                            TextWrapping="Wrap"
                            Visibility="Collapsed"/>
 
                 <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="Р›РѕРіРёРЅ"
+                    <TextBlock Text="Логин"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource AppTextBrush}"/>
@@ -212,7 +212,7 @@
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="РџР°СЂРѕР»СЊ"
+                    <TextBlock Text="Пароль"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource AppTextBrush}"/>
@@ -237,13 +237,13 @@
                                 Grid.Column="1"
                                 Width="90"
                                 Margin="8,0,0,0"
-                                Content="РџРѕРєР°Р·Р°С‚СЊ"
+                                Content="Показать"
                                 Click="BtnTogglePassword_Click"/>
                     </Grid>
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="РџРѕР»РЅРѕРµ РёРјСЏ"
+                    <TextBlock Text="Полное имя"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource AppTextBrush}"/>
@@ -254,7 +254,7 @@
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,10">
-                    <TextBlock Text="Р РѕР»СЊ"
+                    <TextBlock Text="Роль"
                                Margin="0,0,0,6"
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource AppTextBrush}"/>
@@ -277,7 +277,7 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="btnRegister"
-                            Content="Р—Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°С‚СЊСЃСЏ"
+                            Content="Зарегистрироваться"
                             Click="BtnRegister_Click"
                             MinWidth="180"
                             Height="34"
@@ -285,7 +285,7 @@
                             Style="{StaticResource ModernButtonStyle}"/>
 
                     <Button x:Name="btnCancel"
-                            Content="РћС‚РјРµРЅР°"
+                            Content="Отмена"
                             Click="BtnCancel_Click"
                             MinWidth="110"
                             Height="34"

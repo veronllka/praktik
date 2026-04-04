@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="РќРѕРІС‹Р№ СЃРѕС‚СЂСѓРґРЅРёРє"
+        Title="Новый сотрудник"
         Height="360"
         Width="560"
         MinHeight="340"
@@ -25,25 +25,25 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0"
-                           Text="Р”РѕР±Р°РІР»РµРЅРёРµ СЃРѕС‚СЂСѓРґРЅРёРєР°"
+                           Text="Добавление сотрудника"
                            FontSize="24"
                            FontWeight="SemiBold"
                            Margin="0,0,0,14"/>
 
                 <TextBox x:Name="txtFullName"
                          Grid.Row="1"
-                         materialDesign:HintAssist.Hint="Р¤РРћ СЃРѕС‚СЂСѓРґРЅРёРєР°"
+                         materialDesign:HintAssist.Hint="ФИО сотрудника"
                          Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                          Margin="0,0,0,12"/>
 
                 <DatePicker x:Name="dpJoinedAt"
                             Grid.Row="2"
-                            materialDesign:HintAssist.Hint="Р”Р°С‚Р° РІРєР»СЋС‡РµРЅРёСЏ РІ Р±СЂРёРіР°РґСѓ"
+                            materialDesign:HintAssist.Hint="Дата включения в бригаду"
                             Style="{StaticResource MaterialDesignFloatingHintDatePicker}"
                             Margin="0,0,0,12"/>
 
                 <TextBlock Grid.Row="3"
-                           Text="Р›РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ РґР»СЏ СЃРѕС‚СЂСѓРґРЅРёРєР° СЃРѕР·РґР°СЋС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё."
+                           Text="Логин и пароль для сотрудника создаются автоматически."
                            Foreground="{DynamicResource AppMutedTextBrush}"
                            FontSize="13"
                            VerticalAlignment="Top"/>
@@ -52,13 +52,13 @@
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
                             Margin="0,16,0,0">
-                    <Button Content="РћС‚РјРµРЅР°"
+                    <Button Content="Отмена"
                             Width="130"
                             Height="38"
                             Margin="0,0,10,0"
                             Style="{StaticResource MaterialDesignOutlinedButton}"
                             IsCancel="True"/>
-                    <Button Content="РЎРѕС…СЂР°РЅРёС‚СЊ"
+                    <Button Content="Сохранить"
                             Width="130"
                             Height="38"
                             Style="{StaticResource MaterialDesignRaisedButton}"

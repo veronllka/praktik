@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="QR-РєРѕРґ Р·Р°РґР°С‡Рё" Height="650" Width="550" 
+        Title="QR-код задачи" Height="650" Width="550" 
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
     <Grid>
@@ -14,10 +14,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Р—Р°РіРѕР»РѕРІРѕРє -->
+        <!-- Заголовок -->
         <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="30,20">
             <StackPanel>
-                <TextBlock Text="QR-РљРћР” Р—РђР”РђР§Р" 
+                <TextBlock Text="QR-КОД ЗАДАЧИ" 
                            FontSize="24" 
                            FontWeight="Bold" 
                            Foreground="{DynamicResource AppAccentBrush}"
@@ -33,11 +33,11 @@
             </StackPanel>
         </Border>
 
-        <!-- РћСЃРЅРѕРІРЅРѕРµ СЃРѕРґРµСЂР¶РёРјРѕРµ -->
+        <!-- Основное содержимое -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{DynamicResource AppSurfaceBrush}">
             <StackPanel Margin="30,25" HorizontalAlignment="Center">
                 
-                <!-- QR-РєРѕРґ -->
+                <!-- QR-код -->
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" 
                         BorderThickness="2" 
                         CornerRadius="8"
@@ -50,14 +50,14 @@
                                Height="280"
                                Stretch="Uniform"
                                Margin="0,0,0,15"/>
-                        <TextBlock Text="РћС‚СЃРєР°РЅРёСЂСѓР№С‚Рµ РґР»СЏ Р±С‹СЃС‚СЂРѕРіРѕ РґРѕСЃС‚СѓРїР° Рє Р·Р°РґР°С‡Рµ"
+                        <TextBlock Text="Отсканируйте для быстрого доступа к задаче"
                                    FontSize="12"
                                    Foreground="{DynamicResource AppSubtleTextBrush}"
                                    TextAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
-                <!-- РРЅС„РѕСЂРјР°С†РёСЏ Рѕ Р·Р°РґР°С‡Рµ -->
+                <!-- Информация о задаче -->
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="4"
@@ -65,7 +65,7 @@
                         Background="{DynamicResource AppSurfaceAltBrush}"
                         Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="РРќР¤РћР РњРђР¦РРЇ Рћ Р—РђР”РђР§Р•" 
+                        <TextBlock Text="ИНФОРМАЦИЯ О ЗАДАЧЕ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,15" 
@@ -76,7 +76,7 @@
                                 <ColumnDefinition Width="100"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="ID Р·Р°РґР°С‡Рё:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            <TextBlock Text="ID задачи:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtTaskId" Grid.Column="1" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource AppTextBrush}"/>
                         </Grid>
 
@@ -85,7 +85,7 @@
                                 <ColumnDefinition Width="100"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="РћР±СЉРµРєС‚:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            <TextBlock Text="Объект:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtSite" Grid.Column="1" FontSize="13" TextWrapping="Wrap" Foreground="{DynamicResource AppTextBrush}"/>
                         </Grid>
 
@@ -94,7 +94,7 @@
                                 <ColumnDefinition Width="100"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Р‘СЂРёРіР°РґР°:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            <TextBlock Text="Бригада:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtCrew" Grid.Column="1" FontSize="13" TextWrapping="Wrap" Foreground="{DynamicResource AppTextBrush}"/>
                         </Grid>
 
@@ -103,7 +103,7 @@
                                 <ColumnDefinition Width="100"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="РџСЂРёРѕСЂРёС‚РµС‚:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            <TextBlock Text="Приоритет:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtPriority" Grid.Column="1" FontSize="13" Foreground="{DynamicResource AppTextBrush}"/>
                         </Grid>
 
@@ -112,20 +112,20 @@
                                 <ColumnDefinition Width="100"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="РџРµСЂРёРѕРґ:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            <TextBlock Text="Период:" FontSize="13" Foreground="{DynamicResource AppMutedTextBrush}"/>
                             <TextBlock x:Name="txtPeriod" Grid.Column="1" FontSize="13" Foreground="{DynamicResource AppTextBrush}"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- РўРµРєСЃС‚РѕРІС‹Рµ РґР°РЅРЅС‹Рµ QR-РєРѕРґР° -->
+                <!-- Текстовые данные QR-кода -->
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" 
                         BorderThickness="1" 
                         CornerRadius="4"
                         Padding="15"
                         Background="{DynamicResource AppSurfaceBrush}">
                     <StackPanel>
-                        <TextBlock Text="Р”Р°РЅРЅС‹Рµ QR-РєРѕРґР° (РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ)" 
+                        <TextBlock Text="Данные QR-кода (для копирования)" 
                                    FontSize="11" 
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource AppMutedTextBrush}"
@@ -145,10 +145,10 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- РљРЅРѕРїРєРё -->
+        <!-- Кнопки -->
         <Border Grid.Row="2" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="30,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <Button Content="рџ’ѕ РЎРѕС…СЂР°РЅРёС‚СЊ РєР°Рє РёР·РѕР±СЂР°Р¶РµРЅРёРµ" 
+                <Button Content="Сохранить как изображение" 
                         x:Name="btnSaveImage"
                         Click="BtnSaveImage_Click"
                         Width="220" 
@@ -158,7 +158,7 @@
                         Margin="0,0,15,0"
                         Style="{StaticResource ModernButtonStyle}"/>
                 
-                <Button Content="Р—Р°РєСЂС‹С‚СЊ" 
+                <Button Content="Закрыть" 
                         Click="BtnClose_Click" 
                         Width="120" 
                         Height="40"

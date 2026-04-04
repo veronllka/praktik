@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ QR-РєРѕРґР°" Height="380" Width="550" WindowStartupLocation="CenterScreen"
+        Title="Сканирование QR-кода" Height="380" Width="550" WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="25,20">
-            <TextBlock Text="РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ QR-РєРѕРґР° Р·Р°РґР°С‡Рё" 
+            <TextBlock Text="Сканирование QR-кода задачи" 
                        FontSize="18" FontWeight="SemiBold" 
                        Foreground="{DynamicResource AppTextBrush}"
                        HorizontalAlignment="Center"/>
@@ -23,7 +23,7 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{DynamicResource AppSurfaceBrush}">
             <StackPanel Margin="25,20">
                 
-                <Button Content="рџ“· Р’С‹Р±СЂР°С‚СЊ РёР·РѕР±СЂР°Р¶РµРЅРёРµ СЃ QR-РєРѕРґРѕРј" 
+                <Button Content="Выбрать изображение с QR-кодом" 
                         Click="BtnSelectImage_Click"
                         FontSize="14"
                         FontWeight="Medium"
@@ -51,7 +51,7 @@
 
         <Border Grid.Row="2" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="25,15">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="РћС‚РєСЂС‹С‚СЊ Р·Р°РґР°С‡Сѓ" 
+                <Button Content="Открыть задачу" 
                         x:Name="btnOpenTask" 
                         Click="BtnOpenTask_Click" 
                         Width="150" 
@@ -61,7 +61,7 @@
                         Margin="0,0,10,0"
                         IsEnabled="False"
                         Style="{StaticResource ModernButtonStyle}"/>
-                <Button Content="РћС‚РјРµРЅР°" 
+                <Button Content="Отмена" 
                         Click="BtnCancel_Click" 
                         Width="120"
                         Height="40"

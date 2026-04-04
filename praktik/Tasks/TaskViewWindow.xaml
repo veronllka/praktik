@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="РРЅС„РѕСЂРјР°С†РёСЏ Рѕ Р·Р°РґР°С‡Рµ" Height="700" Width="600" WindowStartupLocation="CenterScreen"
+        Title="Информация о задаче" Height="700" Width="600" WindowStartupLocation="CenterScreen"
         Background="{DynamicResource AppBackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
@@ -15,7 +15,7 @@
 
         <Border Grid.Row="0" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="30,20">
             <StackPanel>
-                <TextBlock Text="РќРђР РЇР”-Р—РђР”РђР§Рђ" 
+                <TextBlock Text="НАРЯД-ЗАДАЧА" 
                            FontSize="24" 
                            FontWeight="Bold" 
                            Foreground="{DynamicResource AppAccentBrush}"
@@ -41,7 +41,7 @@
 
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="РћР‘РЄР•РљРў" 
+                        <TextBlock Text="ОБЪЕКТ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
@@ -61,12 +61,12 @@
                         Margin="0,0,0,20"
                         Visibility="Collapsed">
                     <StackPanel>
-                        <TextBlock Text="Р–РЈР РќРђР› РџР•Р§РђРўР"
+                        <TextBlock Text="ЖУРНАЛ ПЕЧАТИ"
                                    FontWeight="Bold"
                                    FontSize="13"
                                    Margin="0,0,0,12"
                                    Foreground="{DynamicResource AppMutedTextBrush}"/>
-                        <TextBlock Text="РџРѕСЃР»РµРґРЅСЏСЏ РїРµС‡Р°С‚СЊ"
+                        <TextBlock Text="Последняя печать"
                                    FontWeight="SemiBold"
                                    FontSize="13"
                                    Margin="0,0,0,6"
@@ -75,13 +75,13 @@
                                    FontSize="14"
                                    Foreground="{DynamicResource AppTextBrush}"
                                    Margin="0,0,0,14"/>
-                        <TextBlock Text="РСЃС‚РѕСЂРёСЏ РїРµС‡Р°С‚Рё"
+                        <TextBlock Text="История печати"
                                    FontWeight="SemiBold"
                                    FontSize="13"
                                    Margin="0,0,0,8"
                                    Foreground="{DynamicResource AppMutedTextBrush}"/>
                         <TextBlock x:Name="txtPrintHistoryEmpty"
-                                   Text="РџРµС‡Р°С‚СЊ РїРѕ Р·Р°РґР°С‡Рµ РµС‰Рµ РЅРµ РІС‹РїРѕР»РЅСЏР»Р°СЃСЊ"
+                                   Text="Печать по задаче еще не выполнялась"
                                    FontSize="13"
                                    Foreground="{DynamicResource AppSubtleTextBrush}"
                                    Margin="0,0,0,8"/>
@@ -95,7 +95,7 @@
                                         <StackPanel>
                                             <TextBlock FontSize="14" Foreground="{DynamicResource AppTextBrush}">
                                                 <Run Text="{Binding PrintedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"/>
-                                                <Run Text=" вЂў "/>
+                                                <Run Text=" | "/>
                                                 <Run Text="{Binding DisplayPrintedByName}"/>
                                             </TextBlock>
                                             <TextBlock Text="{Binding DisplayTemplateName}"
@@ -112,7 +112,7 @@
 
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="Р‘Р РР“РђР”Рђ" 
+                        <TextBlock Text="БРИГАДА" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
@@ -132,7 +132,7 @@
 
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="РџР•Р РРћР” Р’Р«РџРћР›РќР•РќРРЇ" 
+                        <TextBlock Text="ПЕРИОД ВЫПОЛНЕНИЯ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
@@ -151,7 +151,7 @@
                     </Grid.ColumnDefinitions>
                     <Border Grid.Column="0" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="РџР РРћР РРўР•Рў" 
+                            <TextBlock Text="ПРИОРИТЕТ" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
@@ -163,7 +163,7 @@
                     </Border>
                     <Border Grid.Column="2" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="РЎРўРђРўРЈРЎ" 
+                            <TextBlock Text="СТАТУС" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
@@ -177,7 +177,7 @@
 
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="Р”РђРўРђ РџРћРЎР›Р•Р”РќР•Р™ РџР•Р§РђРўР"
+                        <TextBlock Text="ДАТА ПОСЛЕДНЕЙ ПЕЧАТИ"
                                    FontWeight="Bold"
                                    FontSize="13"
                                    Margin="0,0,0,8"
@@ -191,7 +191,7 @@
                 <StackPanel x:Name="pnlProgress" Visibility="Collapsed" Margin="0,0,0,20">
                     <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                         <StackPanel>
-                            <TextBlock Text="РџРћРЎР›Р•Р”РќРР™ РџР РћР“Р Р•РЎРЎ" 
+                            <TextBlock Text="ПОСЛЕДНИЙ ПРОГРЕСС" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
@@ -200,7 +200,7 @@
                                        FontSize="15" 
                                        Margin="0,0,0,15" 
                                        Foreground="{DynamicResource AppTextBrush}"/>
-                            <TextBlock Text="РљРћРњРњР•РќРўРђР РР™" 
+                            <TextBlock Text="КОММЕНТАРИЙ" 
                                        FontWeight="Bold" 
                                        FontSize="13" 
                                        Margin="0,0,0,8" 
@@ -216,7 +216,7 @@
 
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15">
                     <StackPanel>
-                        <TextBlock Text="РћРџРРЎРђРќРР•" 
+                        <TextBlock Text="ОПИСАНИЕ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,8" 
@@ -231,7 +231,7 @@
 
                 <Border BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,15" Margin="0,0,0,20">
                     <StackPanel>
-                        <TextBlock Text="Р—РђРњР•РўРљР" 
+                        <TextBlock Text="ЗАМЕТКИ" 
                                    FontWeight="Bold" 
                                    FontSize="13" 
                                    Margin="0,0,0,12" 
@@ -260,7 +260,7 @@
                                          TextChanged="TxtNewNote_TextChanged"
                                          Margin="0,0,0,10"/>
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
-                                    <TextBlock Text="РџСЂРѕРіСЂРµСЃСЃ, %"
+                                    <TextBlock Text="Прогресс, %"
                                                FontSize="13"
                                                Foreground="{DynamicResource AppMutedTextBrush}"
                                                VerticalAlignment="Center"
@@ -277,7 +277,7 @@
                                              BorderThickness="1"
                                              PreviewTextInput="ProgressTextBox_PreviewTextInput"
                                              DataObject.Pasting="ProgressTextBox_Pasting"/>
-                                    <TextBlock Text="РќРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ"
+                                    <TextBlock Text="Необязательно"
                                                FontSize="12"
                                    Foreground="{DynamicResource AppSubtleTextBrush}"
                                                VerticalAlignment="Center"
@@ -300,14 +300,14 @@
                                                    Foreground="{DynamicResource AppMutedTextBrush}"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <Button Grid.Column="1"
-                                                Content="Р СџРЎР‚Р С‘Р С”РЎР‚Р ВµР С—Р С‘РЎвЂљРЎРЉ РЎвЂћР В°Р в„–Р В»"
+                                                Content="Прикрепить файл"
                                                 Click="BtnAttachFile_Click"
                                                 Style="{StaticResource ModernOutlinedButtonStyle}"
                                                 Margin="12,0,0,0"
                                                 Padding="10,4"/>
                                         <Button x:Name="btnRemoveAttachment"
                                                 Grid.Column="2"
-                                                Content="Р Р€Р Т‘Р В°Р В»Р С‘РЎвЂљРЎРЉ"
+                                                Content="Удалить"
                                                 Click="BtnRemoveAttachment_Click"
                                                 Style="{StaticResource ModernOutlinedButtonStyle}"
                                                 Margin="8,0,0,0"
@@ -316,7 +316,7 @@
                                     </Grid>
                                 </Border>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="РЎРѕС…СЂР°РЅРёС‚СЊ" 
+                                    <Button Content="Сохранить" 
                                             x:Name="btnSaveNote"
                                             Click="BtnSaveNote_Click"
                                             Width="120" 
@@ -326,7 +326,7 @@
                                             Margin="0,0,10,0"
                                             Style="{StaticResource ModernButtonStyle}"
                                             IsEnabled="False"/>
-                                    <Button Content="РћС‚РјРµРЅР°" 
+                                    <Button Content="Отмена" 
                                             x:Name="btnCancelNote"
                                             Click="BtnCancelNote_Click"
                                             Width="100" 
@@ -354,7 +354,7 @@
                                                        Margin="0,0,0,8"/>
                                             <TextBlock FontSize="12" Foreground="{DynamicResource AppSubtleTextBrush}">
                                                 <Run Text="{Binding ReportedAt, StringFormat={}{0:dd.MM.yyyy HH:mm}}"/>
-                                                <Run Text=" вЂў "/>
+                                                <Run Text=" | "/>
                                                 <Run Text="{Binding ReporterName}"/>
                                             </TextBlock>
                                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -372,7 +372,7 @@
                                                         </Style>
                                                     </TextBlock.Style>
                                                 </TextBlock>
-                                                <Button Content="Р С›РЎвЂљР С”РЎР‚РЎвЂ№РЎвЂљРЎРЉ Р Р†Р В»Р С•Р В¶Р ВµР Р…Р С‘Р Вµ"
+                                                <Button Content="Открыть вложение"
                                                         Click="BtnOpenAttachment_Click"
                                                         Margin="12,0,0,0"
                                                         Padding="10,3">
@@ -400,7 +400,7 @@
 
         <Border Grid.Row="2" Background="{DynamicResource AppSurfaceBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,1,0,0" Padding="30,20">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="рџ“± РџРѕРєР°Р·Р°С‚СЊ QR-РєРѕРґ" 
+                <Button Content="Показать QR-код" 
                         x:Name="btnShowQR"
                         Click="BtnShowQR_Click"
                         Width="180" 
@@ -410,7 +410,7 @@
                         Margin="0,0,15,0"
                         Style="{StaticResource ModernButtonStyle}"/>
                 
-                <Button Content="Р—Р°РєСЂС‹С‚СЊ" 
+                <Button Content="Закрыть" 
                         Click="BtnClose_Click" 
                         Width="120" 
                         Height="40"

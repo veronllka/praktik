@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using praktik.Models;
 using praktik.Models.Patterns;
 using praktik.Models.Patterns.States;
@@ -21,7 +24,10 @@ namespace praktik
     {
         private readonly WorkPlannerFacade facade;
         private readonly HashSet<string> currentPermissionCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly ObservableCollection<BrigadierTaskChecklistItem> brigadierChecklistItems = new ObservableCollection<BrigadierTaskChecklistItem>();
+        private readonly Brush calendarTaskHighlightBrush = new SolidColorBrush(Color.FromRgb(30, 136, 229));
         private string roleOverride;
+        private DateTime brigadierChecklistDate = DateTime.Today;
         private Site selectedSite;
         private Crew selectedCrew;
         private Models.Task selectedTask;
@@ -37,11 +43,13 @@ namespace praktik
         private bool isRolePermissionsViewActive;
         private string currentReportType = "tasks";
         private string currentReportChartType = "bar";
+        private bool isUpdatingBrigadierChecklistDate;
 
         public MainWindow()
         {
             InitializeComponent();
             facade = new WorkPlannerFacade();
+            icBrigadierTasks.ItemsSource = brigadierChecklistItems;
             AppThemeManager.ApplyTheme(LoginWindow.CurrentUser);
             UpdateRoleManagementView();
             LoadCurrentPermissions();
@@ -181,6 +189,12 @@ namespace praktik
             return RolePermissionCatalog.NormalizeRoleName(GetCurrentRole());
         }
 
+        private bool IsBrigadierMode()
+        {
+            var normalizedRole = GetCurrentRoleNormalized();
+            return normalizedRole == "бригадир" || normalizedRole == "foreman";
+        }
+
         private static bool IsAdminRole(string normalizedRole)
         {
             return normalizedRole == "администратор"
@@ -276,6 +290,21 @@ namespace praktik
             NavigationListBox.SelectedIndex = -1;
         }
 
+        private void UpdateTaskWorkspaceMode()
+        {
+            var isBrigadierMode = IsBrigadierMode();
+
+            if (StandardTasksPanel != null)
+            {
+                StandardTasksPanel.Visibility = isBrigadierMode ? Visibility.Collapsed : Visibility.Visible;
+            }
+
+            if (BrigadierTasksPanel != null)
+            {
+                BrigadierTasksPanel.Visibility = isBrigadierMode ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
         private void SetupPermissions()
         {
             var normalizedRole = GetCurrentRoleNormalized();
@@ -343,6 +372,7 @@ namespace praktik
                 canViewCalendar,
                 canViewReports);
 
+            UpdateTaskWorkspaceMode();
             UpdateMaterialRequestActionButtons();
             EnsureVisibleNavigationSelection();
         }
@@ -549,7 +579,7 @@ namespace praktik
                     break;
                 case 3:
                     TasksContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Задачи";
+                    PageTitle.Text = IsBrigadierMode() ? "Чек-лист бригады" : "Задачи";
                     LoadTasks();
                     break;
                 case 4:
@@ -879,6 +909,8 @@ namespace praktik
 
                 allTasks = tasks;
                 ApplyTaskFilters();
+                LoadBrigadierChecklist();
+                UpdateCalendarHighlightsAsync();
                 
                 var children = TasksContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
@@ -894,6 +926,156 @@ namespace praktik
             {
                 MessageBox.Show($"Ошибка загрузки задач: {ex.Message}");
             }
+        }
+
+        private void LoadBrigadierChecklist()
+        {
+            brigadierChecklistItems.Clear();
+
+            if (!IsBrigadierMode())
+            {
+                if (txtBrigadierTaskSummary != null)
+                {
+                    txtBrigadierTaskSummary.Text = string.Empty;
+                }
+
+                if (txtBrigadierWeekRange != null)
+                {
+                    txtBrigadierWeekRange.Text = string.Empty;
+                }
+
+                if (txtBrigadierChecklistEmpty != null)
+                {
+                    txtBrigadierChecklistEmpty.Visibility = Visibility.Collapsed;
+                }
+
+                return;
+            }
+
+            EnsureBrigadierChecklistDateSync();
+            var selectedDate = brigadierChecklistDate.Date;
+            var weekStart = GetStartOfWeek(selectedDate);
+            var weekEnd = weekStart.AddDays(6);
+
+            var checklistTasks = (allTasks ?? new List<Models.Task>())
+                .Where(task => IsTaskVisibleInBrigadierChecklist(task, selectedDate))
+                .Where(task => !IsTaskCompleted(task))
+                .OrderByDescending(task => task.EndDate.Date < selectedDate)
+                .ThenByDescending(task => task.PriorityId)
+                .ThenBy(task => task.EndDate)
+                .ThenBy(task => task.Title)
+                .ToList();
+
+            foreach (var task in checklistTasks)
+            {
+                var isOverdue = task.EndDate.Date < selectedDate;
+                brigadierChecklistItems.Add(new BrigadierTaskChecklistItem
+                {
+                    Task = task,
+                    IsOverdue = isOverdue,
+                    ChecklistStatusText = isOverdue ? "Просрочена" : "На выбранную дату",
+                    IsMarkedCompleted = false,
+                    CompletionComment = string.Empty
+                });
+            }
+
+            if (txtBrigadierWeekRange != null)
+            {
+                txtBrigadierWeekRange.Text = $"Неделя: {weekStart:dd.MM.yyyy} - {weekEnd:dd.MM.yyyy}";
+            }
+
+            if (txtBrigadierTaskSummary != null)
+            {
+                txtBrigadierTaskSummary.Text = checklistTasks.Count == 0
+                    ? $"На {selectedDate:dd.MM.yyyy} задач нет."
+                    : $"На {selectedDate:dd.MM.yyyy} задач в чек-листе: {checklistTasks.Count}.";
+            }
+
+            if (txtBrigadierChecklistEmpty != null)
+            {
+                txtBrigadierChecklistEmpty.Visibility = checklistTasks.Count == 0
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+        }
+
+        private void EnsureBrigadierChecklistDateSync()
+        {
+            if (dpBrigadierChecklistDate == null)
+            {
+                return;
+            }
+
+            var pickerDate = dpBrigadierChecklistDate.SelectedDate?.Date;
+            if (pickerDate.HasValue)
+            {
+                brigadierChecklistDate = pickerDate.Value;
+                return;
+            }
+
+            isUpdatingBrigadierChecklistDate = true;
+            dpBrigadierChecklistDate.SelectedDate = brigadierChecklistDate;
+            isUpdatingBrigadierChecklistDate = false;
+        }
+
+        private static DateTime GetStartOfWeek(DateTime date)
+        {
+            var diff = ((7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7);
+            return date.Date.AddDays(-diff);
+        }
+
+        private bool IsTaskVisibleInBrigadierChecklist(Models.Task task, DateTime selectedDate)
+        {
+            if (task == null || IsTaskCompleted(task))
+            {
+                return false;
+            }
+
+            var date = selectedDate.Date;
+            var isActiveOnSelectedDate = task.StartDate.Date <= date && task.EndDate.Date >= date;
+            var isOverdueForSelectedDate = task.EndDate.Date < date;
+
+            return isActiveOnSelectedDate || isOverdueForSelectedDate;
+        }
+
+        private void SetBrigadierChecklistDate(DateTime date)
+        {
+            brigadierChecklistDate = date.Date;
+
+            if (dpBrigadierChecklistDate != null)
+            {
+                isUpdatingBrigadierChecklistDate = true;
+                dpBrigadierChecklistDate.SelectedDate = brigadierChecklistDate;
+                isUpdatingBrigadierChecklistDate = false;
+            }
+
+            LoadBrigadierChecklist();
+        }
+
+        private void DpBrigadierChecklistDate_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (isUpdatingBrigadierChecklistDate || dpBrigadierChecklistDate?.SelectedDate == null)
+            {
+                return;
+            }
+
+            brigadierChecklistDate = dpBrigadierChecklistDate.SelectedDate.Value.Date;
+            LoadBrigadierChecklist();
+        }
+
+        private void BtnBrigadierChecklistPrevDay_Click(object sender, RoutedEventArgs e)
+        {
+            SetBrigadierChecklistDate(brigadierChecklistDate.AddDays(-1));
+        }
+
+        private void BtnBrigadierChecklistToday_Click(object sender, RoutedEventArgs e)
+        {
+            SetBrigadierChecklistDate(DateTime.Today);
+        }
+
+        private void BtnBrigadierChecklistNextDay_Click(object sender, RoutedEventArgs e)
+        {
+            SetBrigadierChecklistDate(brigadierChecklistDate.AddDays(1));
         }
 
         private void LoadFilters()
@@ -1086,10 +1268,10 @@ namespace praktik
 
         private List<Crew> GetCrewsVisibleForCurrentUser(List<Crew> crews)
         {
-            var role = roleOverride ?? LoginWindow.CurrentUser?.Role;
+            var role = RolePermissionCatalog.NormalizeRoleName(roleOverride ?? LoginWindow.CurrentUser?.Role);
             var currentUser = LoginWindow.CurrentUser;
 
-            if (role == "Бригадир" && currentUser != null)
+            if ((role == "бригадир" || role == "foreman") && currentUser != null)
             {
                 return crews
                     .Where(c => c.BrigadierId.HasValue && c.BrigadierId.Value == currentUser.UserId)
@@ -1101,10 +1283,10 @@ namespace praktik
 
         private List<Models.Task> GetTasksVisibleForCurrentUser(List<Models.Task> tasks)
         {
-            var role = roleOverride ?? LoginWindow.CurrentUser?.Role;
+            var role = RolePermissionCatalog.NormalizeRoleName(roleOverride ?? LoginWindow.CurrentUser?.Role);
             var currentUser = LoginWindow.CurrentUser;
 
-            if (role == "Бригадир" && currentUser != null)
+            if ((role == "бригадир" || role == "foreman") && currentUser != null)
             {
                 var brigadierCrewIds = new HashSet<int>(
                     facade.GetCrews()
@@ -1134,6 +1316,119 @@ namespace praktik
             return !IsTaskCompleted(task) && !IsTaskOverdue(task);
         }
 
+        private bool TryResolveTaskStatusId(out int statusId, params string[] statusNames)
+        {
+            statusId = 0;
+            if (statusNames == null || statusNames.Length == 0)
+            {
+                return false;
+            }
+
+            var status = facade.GetTaskStatuses()
+                .FirstOrDefault(item => statusNames.Any(name =>
+                    string.Equals(item.TaskStatusName, name, StringComparison.OrdinalIgnoreCase)));
+
+            if (status == null)
+            {
+                return false;
+            }
+
+            statusId = status.TaskStatusId;
+            return true;
+        }
+
+        private int ResolveChecklistIncompleteStatusId(Models.Task task)
+        {
+            if (TryResolveTaskStatusId(out var statusId, "В работе", "In Progress"))
+            {
+                return statusId;
+            }
+
+            if (task != null && !IsTaskCompleted(task) && task.TaskStatusId > 0)
+            {
+                return task.TaskStatusId;
+            }
+
+            if (TryResolveTaskStatusId(out statusId, "Новая", "New"))
+            {
+                return statusId;
+            }
+
+            return task?.TaskStatusId ?? 0;
+        }
+
+        private void RefreshViewsAfterTaskMutation()
+        {
+            LoadTasks();
+            LoadTaskReports();
+            LoadDashboard();
+
+            if (TaskCalendar != null)
+            {
+                if (TaskCalendar.SelectedDate.HasValue)
+                {
+                    LoadTasksForDate(TaskCalendar.SelectedDate.Value);
+                }
+
+                UpdateCalendarHighlightsAsync();
+            }
+        }
+
+        private void BtnSaveBrigadierChecklistDecision_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement element) || !(element.Tag is BrigadierTaskChecklistItem checklistItem))
+            {
+                return;
+            }
+
+            var task = facade.GetTaskById(checklistItem.TaskId);
+            if (task == null)
+            {
+                MessageBox.Show("Задача не найдена", "Чек-лист", MessageBoxButton.OK, MessageBoxImage.Warning);
+                LoadTasks();
+                return;
+            }
+
+            if (!TryResolveTaskStatusId(out var completedStatusId, "Завершено", "Completed"))
+            {
+                MessageBox.Show("Не найден статус завершения задачи.", "Чек-лист", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var incompleteStatusId = ResolveChecklistIncompleteStatusId(task);
+            if (!facade.ApplyTaskChecklistDecision(
+                    task,
+                    checklistItem.IsMarkedCompleted,
+                    completedStatusId,
+                    incompleteStatusId,
+                    LoginWindow.CurrentUser?.UserId ?? 0,
+                    checklistItem.CompletionComment,
+                    out var errorMessage))
+            {
+                MessageBox.Show(errorMessage, "Чек-лист", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            RefreshViewsAfterTaskMutation();
+        }
+
+        private void BtnBrigadierOpenTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement element) || !(element.Tag is int taskId))
+            {
+                return;
+            }
+
+            var task = facade.GetTaskById(taskId);
+            if (task == null)
+            {
+                MessageBox.Show("Задача не найдена", "Задачи", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            OpenTaskDetails(task);
+        }
+
         private void BtnAddTask_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsurePermission(RolePermissionCatalog.TasksManage, "Создание задач запрещено для вашей роли."))
@@ -1144,7 +1439,7 @@ namespace praktik
             var taskWindow = new TaskWindow(null);
             if (taskWindow.ShowDialog() == true)
             {
-                LoadTasks();
+                RefreshViewsAfterTaskMutation();
             }
         }
 
@@ -1181,7 +1476,7 @@ namespace praktik
             var taskWindow = new TaskWindow(sourceTask, true);
             if (taskWindow.ShowDialog() == true)
             {
-                LoadTasks();
+                RefreshViewsAfterTaskMutation();
                 if (taskWindow.SavedTaskId.HasValue)
                 {
                     HighlightTask(taskWindow.SavedTaskId.Value);
@@ -1205,7 +1500,7 @@ namespace praktik
             if (MessageBox.Show("Удалить задачу?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 facade.DeleteTask(selectedTask.TaskId);
-                LoadTasks();
+                RefreshViewsAfterTaskMutation();
             }
         }
 
@@ -1225,7 +1520,7 @@ namespace praktik
             var statusWindow = new TaskStatusWindow(selectedTask);
             if (statusWindow.ShowDialog() == true)
             {
-                LoadTasks();
+                RefreshViewsAfterTaskMutation();
             }
         }
 
@@ -1281,7 +1576,7 @@ namespace praktik
             var taskWindow = new TaskWindow(taskToEdit);
             if (taskWindow.ShowDialog() == true)
             {
-                LoadTasks();
+                RefreshViewsAfterTaskMutation();
                 HighlightTask(taskToEdit.TaskId);
             }
         }
@@ -1378,8 +1673,10 @@ namespace praktik
         {
             try
             {
-                TaskCalendar.SelectedDate = DateTime.Today;
-                LoadTasksForDate(DateTime.Today);
+                var selectedDate = TaskCalendar.SelectedDate ?? DateTime.Today;
+                TaskCalendar.SelectedDate = selectedDate;
+                LoadTasksForDate(selectedDate);
+                UpdateCalendarHighlightsAsync();
                 
                 var children = CalendarContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
@@ -1403,6 +1700,8 @@ namespace praktik
             {
                 LoadTasksForDate(TaskCalendar.SelectedDate.Value);
             }
+
+            UpdateCalendarHighlightsAsync();
         }
 
         private void CalendarFilter_Changed(object sender, SelectionChangedEventArgs e)
@@ -1411,6 +1710,8 @@ namespace praktik
             {
                 LoadTasksForDate(TaskCalendar.SelectedDate.Value);
             }
+
+            UpdateCalendarHighlightsAsync();
         }
 
         private void BtnResetCalendarFilters_Click(object sender, RoutedEventArgs e)
@@ -1421,6 +1722,8 @@ namespace praktik
             {
                 LoadTasksForDate(TaskCalendar.SelectedDate.Value);
             }
+
+            UpdateCalendarHighlightsAsync();
         }
 
         private void LoadTasksForDate(DateTime date)
@@ -1428,7 +1731,7 @@ namespace praktik
             SelectedDateText.Text = $"Задачи на {date:dd.MM.yyyy}";
             
             var tasks = GetTasksVisibleForCurrentUser(facade.GetTasks()).Where(t => 
-                t.StartDate <= date && t.EndDate >= date).ToList();
+                t.StartDate.Date <= date.Date && t.EndDate.Date >= date.Date).ToList();
 
              if (cbCalendarSiteFilter.SelectedItem != null)
             {
@@ -1443,6 +1746,129 @@ namespace praktik
             }
 
             dgCalendarTasks.ItemsSource = tasks;
+        }
+
+        private void TaskCalendar_Loaded(object sender, RoutedEventArgs e)
+        {
+            UpdateCalendarHighlightsAsync();
+        }
+
+        private void TaskCalendar_DisplayDateChanged(object sender, CalendarDateChangedEventArgs e)
+        {
+            UpdateCalendarHighlightsAsync();
+        }
+
+        private void UpdateCalendarHighlightsAsync()
+        {
+            if (TaskCalendar == null)
+            {
+                return;
+            }
+
+            Dispatcher.BeginInvoke(new Action(UpdateCalendarHighlights), DispatcherPriority.Background);
+        }
+
+        private void UpdateCalendarHighlights()
+        {
+            if (TaskCalendar == null)
+            {
+                return;
+            }
+
+            var taskMap = BuildCalendarTaskMap();
+
+            foreach (var button in FindVisualChildren<CalendarDayButton>(TaskCalendar))
+            {
+                button.ClearValue(Control.BorderBrushProperty);
+                button.ClearValue(Control.BorderThicknessProperty);
+                button.ClearValue(Control.ToolTipProperty);
+                button.ClearValue(Control.FontWeightProperty);
+
+                if (!(button.DataContext is DateTime day))
+                {
+                    continue;
+                }
+
+                if (!taskMap.TryGetValue(day.Date, out var dayTasks) || dayTasks.Count == 0)
+                {
+                    continue;
+                }
+
+                button.BorderBrush = calendarTaskHighlightBrush;
+                button.BorderThickness = new Thickness(2);
+                button.FontWeight = FontWeights.SemiBold;
+                button.ToolTip = BuildCalendarTooltip(day.Date, dayTasks);
+            }
+        }
+
+        private Dictionary<DateTime, List<Models.Task>> BuildCalendarTaskMap()
+        {
+            IEnumerable<Models.Task> tasks = GetTasksVisibleForCurrentUser(facade.GetTasks());
+
+            if (cbCalendarSiteFilter?.SelectedItem is Site selectedSiteFilter)
+            {
+                tasks = tasks.Where(task => task.SiteId == selectedSiteFilter.SiteId);
+            }
+
+            if (cbCalendarCrewFilter?.SelectedItem is Crew selectedCrewFilter)
+            {
+                tasks = tasks.Where(task => task.CrewId.HasValue && task.CrewId.Value == selectedCrewFilter.CrewId);
+            }
+
+            var map = new Dictionary<DateTime, List<Models.Task>>();
+            foreach (var task in tasks)
+            {
+                for (var day = task.StartDate.Date; day <= task.EndDate.Date; day = day.AddDays(1))
+                {
+                    if (!map.TryGetValue(day, out var dayTasks))
+                    {
+                        dayTasks = new List<Models.Task>();
+                        map[day] = dayTasks;
+                    }
+
+                    dayTasks.Add(task);
+                }
+            }
+
+            return map;
+        }
+
+        private static string BuildCalendarTooltip(DateTime date, List<Models.Task> tasks)
+        {
+            var titles = tasks
+                .Select(task => $"• {task.Title}")
+                .Take(3)
+                .ToList();
+
+            if (tasks.Count > 3)
+            {
+                titles.Add($"• Еще задач: {tasks.Count - 3}");
+            }
+
+            return $"Задачи на {date:dd.MM.yyyy}:{Environment.NewLine}{string.Join(Environment.NewLine, titles)}";
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject root) where T : DependencyObject
+        {
+            if (root == null)
+            {
+                yield break;
+            }
+
+            var childCount = VisualTreeHelper.GetChildrenCount(root);
+            for (var index = 0; index < childCount; index++)
+            {
+                var child = VisualTreeHelper.GetChild(root, index);
+                if (child is T match)
+                {
+                    yield return match;
+                }
+
+                foreach (var nestedChild in FindVisualChildren<T>(child))
+                {
+                    yield return nestedChild;
+                }
+            }
         }
 
         private void BtnAllTasksReport_Click(object sender, RoutedEventArgs e)
@@ -3987,6 +4413,41 @@ namespace praktik
                 case "Closed": return "Закрыта";
                 default: return status;
             }
+        }
+
+        private sealed class BrigadierTaskChecklistItem
+        {
+            public Models.Task Task { get; set; }
+
+            public int TaskId => Task?.TaskId ?? 0;
+            public string Title => Task?.Title ?? string.Empty;
+            public string DescriptionPreview
+            {
+                get
+                {
+                    var description = Task?.Description?.Trim();
+                    if (string.IsNullOrWhiteSpace(description))
+                    {
+                        return "Описание не заполнено.";
+                    }
+
+                    return description.Length > 180
+                        ? description.Substring(0, 177) + "..."
+                        : description;
+                }
+            }
+            public string SiteName => Task?.Site?.SiteName ?? "—";
+            public string CrewName => Task?.Crew?.CrewName ?? "—";
+            public string PriorityName => Task?.Priority?.PriorityName ?? "—";
+            public string StatusName => Task?.TaskStatus?.TaskStatusName ?? "—";
+            public string DateRangeText => $"{Task?.StartDate:dd.MM.yyyy} - {Task?.EndDate:dd.MM.yyyy}";
+            public string LastNoteText => string.IsNullOrWhiteSpace(Task?.LastNoteText) ? "—" : Task.LastNoteText;
+            public string LastNoteTooltip => string.IsNullOrWhiteSpace(Task?.LastNoteTooltip) ? "Заметок нет" : Task.LastNoteTooltip;
+            public bool IsOverdue { get; set; }
+            public string ChecklistStatusText { get; set; }
+
+            public bool IsMarkedCompleted { get; set; }
+            public string CompletionComment { get; set; }
         }
 
         private sealed class RolePermissionItem

@@ -234,5 +234,87 @@ namespace praktik.Tests
 
             CollectionAssert.AreEquivalent(new[] { 1, 3 }, result.Select(task => task.TaskId).ToArray());
         }
+
+        [TestMethod]
+        public void ApplyChecklistDecision_CompletesTask_AndAddsReport()
+        {
+            var context = new FakeWorkPlannerContext();
+            var task = new TaskEntity
+            {
+                TaskId = 8,
+                SiteId = 1,
+                CrewId = 2,
+                TaskStatusId = 1,
+                Title = "Install roof",
+                StartDate = new DateTime(2026, 4, 4),
+                EndDate = new DateTime(2026, 4, 4)
+            };
+            context.Tasks.Add(task);
+            var service = new TaskService(context);
+
+            var result = service.ApplyChecklistDecision(task, true, completedStatusId: 3, incompleteStatusId: 2, userId: 12, comment: null, out var errorMessage);
+
+            Assert.IsTrue(result);
+            Assert.IsNull(errorMessage);
+            Assert.AreEqual(3, task.TaskStatusId);
+            Assert.AreEqual(new DateTime(2026, 4, 4), task.StartDate);
+            Assert.AreEqual(new DateTime(2026, 4, 4), task.EndDate);
+            Assert.AreEqual(1, context.TaskReports.Count);
+            Assert.AreEqual("Задача отмечена выполненной бригадиром", context.TaskReports[0].ReportText);
+        }
+
+        [TestMethod]
+        public void ApplyChecklistDecision_PostponesTask_WhenNotCompleted()
+        {
+            var context = new FakeWorkPlannerContext();
+            var task = new TaskEntity
+            {
+                TaskId = 9,
+                SiteId = 1,
+                CrewId = 2,
+                TaskStatusId = 4,
+                Title = "Pour concrete",
+                StartDate = new DateTime(2026, 4, 4),
+                EndDate = new DateTime(2026, 4, 5)
+            };
+            context.Tasks.Add(task);
+            var service = new TaskService(context);
+
+            var result = service.ApplyChecklistDecision(task, false, completedStatusId: 3, incompleteStatusId: 2, userId: 12, comment: "Не приехал материал", out var errorMessage);
+
+            Assert.IsTrue(result);
+            Assert.IsNull(errorMessage);
+            Assert.AreEqual(2, task.TaskStatusId);
+            Assert.AreEqual(new DateTime(2026, 4, 5), task.StartDate);
+            Assert.AreEqual(new DateTime(2026, 4, 6), task.EndDate);
+            Assert.AreEqual(1, context.TaskReports.Count);
+            Assert.AreEqual("Задача не выполнена и перенесена: Не приехал материал", context.TaskReports[0].ReportText);
+        }
+
+        [TestMethod]
+        public void ApplyChecklistDecision_ReturnsFalse_WhenIncompleteTaskHasNoComment()
+        {
+            var context = new FakeWorkPlannerContext();
+            var task = new TaskEntity
+            {
+                TaskId = 10,
+                SiteId = 1,
+                CrewId = 2,
+                TaskStatusId = 1,
+                Title = "Mount scaffolding",
+                StartDate = new DateTime(2026, 4, 4),
+                EndDate = new DateTime(2026, 4, 4)
+            };
+            context.Tasks.Add(task);
+            var service = new TaskService(context);
+
+            var result = service.ApplyChecklistDecision(task, false, completedStatusId: 3, incompleteStatusId: 2, userId: 12, comment: "   ", out var errorMessage);
+
+            Assert.IsFalse(result);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(errorMessage));
+            Assert.AreEqual(1, task.TaskStatusId);
+            Assert.AreEqual(0, context.TaskReports.Count);
+            Assert.AreEqual(0, context.UpdatedTasks.Count);
+        }
     }
 }

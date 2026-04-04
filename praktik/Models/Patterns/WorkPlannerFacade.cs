@@ -244,6 +244,11 @@ namespace praktik.Models.Patterns
             return taskService.GetTasksByDate(date);
         }
 
+        public bool ApplyTaskChecklistDecision(Task task, bool isCompleted, int completedStatusId, int incompleteStatusId, int userId, string comment, out string errorMessage, int postponeDays = 1)
+        {
+            return taskService.ApplyChecklistDecision(task, isCompleted, completedStatusId, incompleteStatusId, userId, comment, out errorMessage, postponeDays);
+        }
+
         public bool CanGenerateTaskDescription => taskDescriptionService.IsEnabled;
 
         public System.Threading.Tasks.Task<TaskDescriptionGenerationResult> GenerateTaskDescriptionAsync(TaskDescriptionGenerationRequest request)

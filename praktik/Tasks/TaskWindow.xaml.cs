@@ -255,7 +255,7 @@ namespace praktik
             var title = txtTitle.Text?.Trim();
             if (string.IsNullOrWhiteSpace(title))
             {
-                MessageBox.Show("Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ Р·Р°РґР°С‡Рё, С‡С‚РѕР±С‹ СЃРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РѕРїРёСЃР°РЅРёРµ.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Введите название задачи, чтобы сгенерировать описание.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Information);
                 txtTitle.Focus();
                 return;
             }
@@ -266,7 +266,7 @@ namespace praktik
             if (hasExistingDescription)
             {
                 var decision = MessageBox.Show(
-                    "Р’ РїРѕР»Рµ РѕРїРёСЃР°РЅРёСЏ СѓР¶Рµ РµСЃС‚СЊ С‚РµРєСЃС‚.\n\nРќР°Р¶РјРёС‚Рµ \"Р”Р°\", С‡С‚РѕР±С‹ Р·Р°РјРµРЅРёС‚СЊ РµРіРѕ.\nРќР°Р¶РјРёС‚Рµ \"РќРµС‚\", С‡С‚РѕР±С‹ РґРѕР±Р°РІРёС‚СЊ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ С‚РµРєСЃС‚ РІ РєРѕРЅРµС†.",
+                    "В поле описания уже есть текст.\n\nНажмите \"Да\", чтобы заменить его.\nНажмите \"Нет\", чтобы добавить сгенерированное описание в конец.",
                     "LM Studio",
                     MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
@@ -303,7 +303,7 @@ namespace praktik
                 var generatedDescription = result.Description?.Trim();
                 if (string.IsNullOrWhiteSpace(generatedDescription))
                 {
-                    MessageBox.Show("LM Studio РІРµСЂРЅСѓР» РїСѓСЃС‚РѕР№ С‚РµРєСЃС‚ РѕРїРёСЃР°РЅРёСЏ.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("LM Studio вернул пустой текст описания.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -316,7 +316,7 @@ namespace praktik
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"РћС€РёР±РєР° РїСЂРё РіРµРЅРµСЂР°С†РёРё РѕРїРёСЃР°РЅРёСЏ: {ex.Message}", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при генерации описания: {ex.Message}", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -334,7 +334,7 @@ namespace praktik
 
 #if false
             btnGenerateDescription.IsEnabled = !isGenerating;
-            btnGenerateDescription.Content = isGenerating ? "Р“РµРЅРµСЂР°С†РёСЏ..." : "AI-РѕРїРёСЃР°РЅРёРµ";
+            btnGenerateDescription.Content = isGenerating ? "Генерация..." : "AI-описание";
             Mouse.OverrideCursor = isGenerating ? Cursors.Wait : null;
         }
 
@@ -1044,7 +1044,7 @@ namespace praktik
         {
             if (task == null)
             {
-                MessageBox.Show("РЎРЅР°С‡Р°Р»Р° СЃРѕС…СЂР°РЅРёС‚Рµ Р·Р°РґР°С‡Сѓ");
+                MessageBox.Show("Сначала сохраните задачу");
                 return false;
             }
 
@@ -1068,13 +1068,13 @@ namespace praktik
 
             if (hasComment && (commentText.Length < 3 || commentText.Length > 500))
             {
-                MessageBox.Show("РљРѕРјРјРµРЅС‚Р°СЂРёР№ РґРѕР»Р¶РµРЅ СЃРѕРґРµСЂР¶Р°С‚СЊ РѕС‚ 3 РґРѕ 500 СЃРёРјРІРѕР»РѕРІ", "РћС€РёР±РєР°", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Комментарий должен содержать от 3 до 500 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             if (!TaskReportAttachmentService.TryValidateSourceFile(selectedEventAttachmentPath, out var eventAttachmentError))
             {
-                MessageBox.Show(eventAttachmentError, "РћС€РёР±РєР°", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(eventAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
@@ -1084,7 +1084,7 @@ namespace praktik
                 var reportText = hasComment ? commentText : null;
                 if (!facade.AddTaskReport(task.TaskId, userId, reportText, progressPercent, selectedEventAttachmentPath))
                 {
-                    throw new InvalidOperationException("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РѕС‚С‡РµС‚ РїРѕ Р·Р°РґР°С‡Рµ");
+                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
                 }
 
                 ShowToast("Отчет добавлен");
@@ -1095,7 +1095,7 @@ namespace praktik
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё РѕС‚С‡РµС‚Р°: {ex.Message}", "РћС€РёР±РєР°", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
         }
@@ -1127,13 +1127,13 @@ namespace praktik
 
             if (hasText && (noteText.Length < 3 || noteText.Length > 200))
             {
-                MessageBox.Show("Р—Р°РјРµС‚РєР° РґРѕР»Р¶РЅР° СЃРѕРґРµСЂР¶Р°С‚СЊ РѕС‚ 3 РґРѕ 200 СЃРёРјРІРѕР»РѕРІ", "РћС€РёР±РєР°", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Заметка должна содержать от 3 до 200 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
             if (!TaskReportAttachmentService.TryValidateSourceFile(selectedQuickNoteAttachmentPath, out var quickAttachmentError))
             {
-                MessageBox.Show(quickAttachmentError, "РћС€РёР±РєР°", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(quickAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
@@ -1143,7 +1143,7 @@ namespace praktik
                 var reportText = hasText ? noteText : null;
                 if (!facade.AddTaskReport(task.TaskId, userId, reportText, progressPercent, selectedQuickNoteAttachmentPath))
                 {
-                    throw new InvalidOperationException("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РѕС‚С‡РµС‚ РїРѕ Р·Р°РґР°С‡Рµ");
+                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
                 }
 
                 ShowToast("Отчет добавлен");
@@ -1154,7 +1154,7 @@ namespace praktik
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё Р·Р°РјРµС‚РєРё: {ex.Message}", "РћС€РёР±РєР°", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
         }

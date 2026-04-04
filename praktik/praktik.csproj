@@ -56,14 +56,6 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="zxing">
-      <HintPath>$(NuGetPackageRoot)zxing.net\0.16.9\lib\net47\zxing.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="zxing.presentation">
-      <HintPath>$(NuGetPackageRoot)zxing.net\0.16.9\lib\net47\zxing.presentation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="EntityFramework">

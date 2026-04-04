@@ -25,10 +25,10 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="РћРїРёСЃР°РЅРёРµ:" VerticalAlignment="Center"/>
+                            <TextBlock Text="Описание:" VerticalAlignment="Center"/>
                             <Button x:Name="btnGenerateDescription"
                                     Grid.Column="1"
-                                    Content="AI-РѕРїРёСЃР°РЅРёРµ"
+                                    Content="AI-описание"
                                     Click="BtnGenerateDescription_Click"
                                     Padding="12,4"
                                     MinWidth="150"
@@ -36,7 +36,7 @@
                         </Grid>
                         <TextBox x:Name="txtDescription" Margin="0,0,0,10" Height="60" TextWrapping="Wrap" AcceptsReturn="True"/>
                         <TextBlock x:Name="txtAiHint"
-                                   Text="Р“РµРЅРµСЂР°С†РёСЏ РѕРїРёСЃР°РЅРёСЏ С‡РµСЂРµР· LM Studio РїРѕ РЅР°Р·РІР°РЅРёСЋ Р·Р°РґР°С‡Рё."
+                                   Text="Генерация описания через LM Studio по названию задачи."
                                    Margin="0,-6,0,10"
                                    Foreground="{DynamicResource AppSubtleTextBrush}"
                                    FontSize="11"/>
