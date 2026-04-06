@@ -25,9 +25,9 @@ namespace praktik
         private string selectedEventAttachmentPath;
         private string selectedQuickNoteAttachmentPath;
         public int? SavedTaskId { get; private set; }
-        private const string GenerateDescriptionButtonText = "\u0421\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435";
-        private const string GeneratingDescriptionButtonText = "\u0413\u0435\u043d\u0435\u0440\u0430\u0446\u0438\u044f...";
-        private const string GenerateDescriptionHintText = "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0441\u0442\u0440\u043e\u0438\u0442\u0441\u044f \u043f\u043e \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u044e \u0437\u0430\u0434\u0430\u0447\u0438 \u0438 \u0441\u0442\u0438\u043b\u044e \u0441\u0442\u0440\u043e\u0438\u0442\u0435\u043b\u044c\u043d\u044b\u0445 \u0440\u0430\u0431\u043e\u0442. \u041e\u0431\u044a\u0435\u043a\u0442 \u0434\u043e\u0431\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e \u0435\u0441\u043b\u0438 \u0432\u044b\u0431\u0440\u0430\u043d.";
+        private const string GenerateDescriptionButtonText = "Сгенерировать описание";
+        private const string GeneratingDescriptionButtonText = "Генерация...";
+        private const string GenerateDescriptionHintText = "Описание строится по названию задачи и стилю строительных работ. Объект добавляется только если выбран.";
 
         public TaskWindow(Task task = null, bool isDuplicateMode = false)
         {
@@ -175,67 +175,14 @@ namespace praktik
                 return;
             }
 
-            var title = txtTitle.Text?.Trim();
-            var description = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text.Trim();
-
-            if (string.IsNullOrWhiteSpace(title) || cbSites.SelectedItem == null ||
-                cbCrews.SelectedItem == null ||
-                cbPriorities.SelectedItem == null || dpStartDate.SelectedDate == null ||
-                dpEndDate.SelectedDate == null)
+            if (!TryBuildTaskSaveInput(out var taskInput))
             {
-                MessageBox.Show("Заполните все обязательные поля");
-                return;
-            }
-
-            if (dpStartDate.SelectedDate > dpEndDate.SelectedDate)
-            {
-                MessageBox.Show("Дата окончания должна быть позже даты начала");
-                return;
-            }
-
-            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedEventAttachmentPath, out var eventAttachmentError))
-            {
-                MessageBox.Show(eventAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             try
             {
-                if (task == null)
-                {
-                    task = new Task
-                    {
-                        Title = title,
-                        Description = description,
-                        StartDate = dpStartDate.SelectedDate.Value,
-                        EndDate = dpEndDate.SelectedDate.Value,
-                        SiteId = (cbSites.SelectedItem is Site site) ? site.SiteId : 0,
-                        CrewId = cbCrews.SelectedItem is Crew crew ? (int?)crew.CrewId : null,
-                        PriorityId = (cbPriorities.SelectedItem is Priority priority) ? priority.PriorityId : 0,
-                        TaskStatusId = ResolveInitialStatusId(),
-                        LabelId = copiedLabelId,
-                        CreatedBy = LoginWindow.CurrentUser.UserId,
-                        CreatedAt = DateTime.Now
-                    };
-
-                    facade.AddTask(task);
-                    SavedTaskId = task.TaskId > 0 ? (int?)task.TaskId : null;
-                }
-                else
-                {
-                    task.Title = title;
-                    task.Description = description;
-                    task.StartDate = dpStartDate.SelectedDate.Value;
-                    task.EndDate = dpEndDate.SelectedDate.Value;
-                    task.SiteId = (cbSites.SelectedItem is Site site) ? site.SiteId : 0;
-                    task.CrewId = cbCrews.SelectedItem is Crew crew ? (int?)crew.CrewId : null;
-                    task.PriorityId = (cbPriorities.SelectedItem is Priority priority) ? priority.PriorityId : 0;
-                    task.UpdatedAt = DateTime.Now;
-
-                    facade.UpdateTask(task);
-                    SavedTaskId = task.TaskId;
-                }
-
+                SaveTask(taskInput);
                 skipPendingDraftCheck = true;
                 DialogResult = true;
                 Close();
@@ -244,6 +191,93 @@ namespace praktik
             {
                 MessageBox.Show($"Ошибка при сохранении: {ex.Message}");
             }
+
+            return;
+        }
+
+        private bool TryBuildTaskSaveInput(out TaskSaveInput taskInput)
+        {
+            taskInput = null;
+
+            var title = txtTitle.Text?.Trim();
+            var description = string.IsNullOrWhiteSpace(txtDescription.Text) ? null : txtDescription.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(title)
+                || cbSites.SelectedItem == null
+                || cbCrews.SelectedItem == null
+                || cbPriorities.SelectedItem == null
+                || dpStartDate.SelectedDate == null
+                || dpEndDate.SelectedDate == null)
+            {
+                MessageBox.Show("Заполните все обязательные поля");
+                return false;
+            }
+
+            if (dpStartDate.SelectedDate > dpEndDate.SelectedDate)
+            {
+                MessageBox.Show("Дата окончания должна быть позже даты начала");
+                return false;
+            }
+
+            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedEventAttachmentPath, out var eventAttachmentError))
+            {
+                MessageBox.Show(eventAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            taskInput = new TaskSaveInput
+            {
+                Title = title,
+                Description = description,
+                StartDate = dpStartDate.SelectedDate.Value,
+                EndDate = dpEndDate.SelectedDate.Value,
+                SiteId = ((Site)cbSites.SelectedItem).SiteId,
+                CrewId = ((Crew)cbCrews.SelectedItem).CrewId,
+                PriorityId = ((Priority)cbPriorities.SelectedItem).PriorityId
+            };
+
+            return true;
+        }
+
+        private void SaveTask(TaskSaveInput taskInput)
+        {
+            if (task == null)
+            {
+                task = CreateTask(taskInput);
+                facade.AddTask(task);
+                SavedTaskId = task.TaskId > 0 ? (int?)task.TaskId : null;
+                return;
+            }
+
+            ApplyTaskSaveInput(task, taskInput);
+            task.UpdatedAt = DateTime.Now;
+            facade.UpdateTask(task);
+            SavedTaskId = task.TaskId;
+        }
+
+        private Task CreateTask(TaskSaveInput taskInput)
+        {
+            var newTask = new Task
+            {
+                TaskStatusId = ResolveInitialStatusId(),
+                LabelId = copiedLabelId,
+                CreatedBy = LoginWindow.CurrentUser.UserId,
+                CreatedAt = DateTime.Now
+            };
+
+            ApplyTaskSaveInput(newTask, taskInput);
+            return newTask;
+        }
+
+        private static void ApplyTaskSaveInput(Task targetTask, TaskSaveInput taskInput)
+        {
+            targetTask.Title = taskInput.Title;
+            targetTask.Description = taskInput.Description;
+            targetTask.StartDate = taskInput.StartDate;
+            targetTask.EndDate = taskInput.EndDate;
+            targetTask.SiteId = taskInput.SiteId;
+            targetTask.CrewId = taskInput.CrewId;
+            targetTask.PriorityId = taskInput.PriorityId;
         }
 
         private async void BtnGenerateDescription_Click(object sender, RoutedEventArgs e)
@@ -251,78 +285,6 @@ namespace praktik
             await HandleGenerateDescriptionAsync();
             return;
 
-#if false
-            var title = txtTitle.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                MessageBox.Show("Введите название задачи, чтобы сгенерировать описание.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Information);
-                txtTitle.Focus();
-                return;
-            }
-
-            var hasExistingDescription = !string.IsNullOrWhiteSpace(txtDescription.Text);
-            var appendToExistingDescription = false;
-
-            if (hasExistingDescription)
-            {
-                var decision = MessageBox.Show(
-                    "В поле описания уже есть текст.\n\nНажмите \"Да\", чтобы заменить его.\nНажмите \"Нет\", чтобы добавить сгенерированное описание в конец.",
-                    "LM Studio",
-                    MessageBoxButton.YesNoCancel,
-                    MessageBoxImage.Question);
-
-                if (decision == MessageBoxResult.Cancel)
-                {
-                    return;
-                }
-
-                appendToExistingDescription = decision == MessageBoxResult.No;
-            }
-
-            try
-            {
-                SetDescriptionGenerationState(true);
-
-                var request = new TaskDescriptionGenerationRequest
-                {
-                    Title = title,
-                    SiteName = (cbSites.SelectedItem as Site)?.SiteName,
-                    CrewName = (cbCrews.SelectedItem as Crew)?.CrewName,
-                    PriorityName = (cbPriorities.SelectedItem as Priority)?.PriorityName,
-                    StartDate = dpStartDate.SelectedDate,
-                    EndDate = dpEndDate.SelectedDate
-                };
-
-                var result = await facade.GenerateTaskDescriptionAsync(request);
-                if (!result.IsSuccess)
-                {
-                    MessageBox.Show(result.ErrorMessage, "LM Studio", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var generatedDescription = result.Description?.Trim();
-                if (string.IsNullOrWhiteSpace(generatedDescription))
-                {
-                    MessageBox.Show("LM Studio вернул пустой текст описания.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                txtDescription.Text = appendToExistingDescription
-                    ? string.Concat(txtDescription.Text.TrimEnd(), Environment.NewLine, Environment.NewLine, generatedDescription)
-                    : generatedDescription;
-
-                txtDescription.Focus();
-                txtDescription.CaretIndex = txtDescription.Text.Length;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при генерации описания: {ex.Message}", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            finally
-            {
-                SetDescriptionGenerationState(false);
-            }
-#endif
         }
 
         private void SetDescriptionGenerationState(bool isGenerating)
@@ -332,13 +294,6 @@ namespace praktik
             Mouse.OverrideCursor = isGenerating ? Cursors.Wait : null;
             return;
 
-#if false
-            btnGenerateDescription.IsEnabled = !isGenerating;
-            btnGenerateDescription.Content = isGenerating ? "Генерация..." : "AI-описание";
-            Mouse.OverrideCursor = isGenerating ? Cursors.Wait : null;
-        }
-
-        #endif
         }
 
         private async System.Threading.Tasks.Task HandleGenerateDescriptionAsync()
@@ -346,7 +301,7 @@ namespace praktik
             var title = txtTitle.Text?.Trim();
             if (!IsTitleReadyForDescriptionGeneration(title))
             {
-                MessageBox.Show("\u0414\u043b\u044f \u0433\u0435\u043d\u0435\u0440\u0430\u0446\u0438\u0438 \u043d\u0443\u0436\u043d\u043e \u043e\u0441\u043c\u044b\u0441\u043b\u0435\u043d\u043d\u043e\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0437\u0430\u0434\u0430\u0447\u0438: \u043c\u0438\u043d\u0438\u043c\u0443\u043c 4 \u0441\u0438\u043c\u0432\u043e\u043b\u0430 \u0438 \u0445\u043e\u0442\u044f \u0431\u044b \u043e\u0434\u043d\u043e \u043e\u0441\u043c\u044b\u0441\u043b\u0435\u043d\u043d\u043e\u0435 \u0441\u043b\u043e\u0432\u043e.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Для генерации нужно осмысленное название задачи: минимум 4 символа и хотя бы одно осмысленное слово.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Information);
                 txtTitle.Focus();
                 txtTitle.SelectAll();
                 return;
@@ -358,7 +313,7 @@ namespace praktik
             if (hasExistingDescription)
             {
                 var decision = MessageBox.Show(
-                    "\u0412 \u043f\u043e\u043b\u0435 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u044f \u0443\u0436\u0435 \u0435\u0441\u0442\u044c \u0442\u0435\u043a\u0441\u0442.\n\n\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \"\u0414\u0430\", \u0447\u0442\u043e\u0431\u044b \u0437\u0430\u043c\u0435\u043d\u0438\u0442\u044c \u0435\u0433\u043e.\n\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \"\u041d\u0435\u0442\", \u0447\u0442\u043e\u0431\u044b \u0434\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u0432 \u043a\u043e\u043d\u0435\u0446.",
+                    "В поле описания уже есть текст.\n\nНажмите \"Да\", чтобы заменить его.\nНажмите \"Нет\", чтобы добавить сгенерированное описание в конец.",
                     "LM Studio",
                     MessageBoxButton.YesNoCancel,
                     MessageBoxImage.Question);
@@ -386,7 +341,7 @@ namespace praktik
                 var generatedDescription = result.Description?.Trim();
                 if (string.IsNullOrWhiteSpace(generatedDescription))
                 {
-                    MessageBox.Show("LM Studio \u0432\u0435\u0440\u043d\u0443\u043b \u043f\u0443\u0441\u0442\u043e\u0439 \u0442\u0435\u043a\u0441\u0442 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u044f.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("LM Studio вернул пустой текст описания.", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -399,7 +354,7 @@ namespace praktik
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"\u041e\u0448\u0438\u0431\u043a\u0430 \u043f\u0440\u0438 \u0433\u0435\u043d\u0435\u0440\u0430\u0446\u0438\u0438 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u044f: {ex.Message}", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ошибка при генерации описания: {ex.Message}", "LM Studio", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -754,33 +709,30 @@ namespace praktik
 
         private void UpdateEventAttachmentState()
         {
-            if (txtEventAttachment == null || btnRemoveEventAttachment == null)
-            {
-                return;
-            }
-
-            var hasAttachment = !string.IsNullOrWhiteSpace(selectedEventAttachmentPath);
-            txtEventAttachment.Text = hasAttachment
-                ? $"Выбрано: {TaskReportAttachmentService.GetAttachmentFileName(selectedEventAttachmentPath)}"
-                : "Вложение не выбрано";
-            txtEventAttachment.ToolTip = hasAttachment ? selectedEventAttachmentPath : null;
-            btnRemoveEventAttachment.Visibility = hasAttachment ? Visibility.Visible : Visibility.Collapsed;
+            UpdateAttachmentState(txtEventAttachment, btnRemoveEventAttachment, selectedEventAttachmentPath);
+            return;
         }
 
         private void UpdateQuickNoteAttachmentState()
         {
-            if (txtQuickNoteAttachment == null || btnRemoveQuickNoteAttachment == null)
+            UpdateAttachmentState(txtQuickNoteAttachment, btnRemoveQuickNoteAttachment, selectedQuickNoteAttachmentPath);
+            UpdateQuickNoteDraftState();
+            return;
+        }
+
+        private static void UpdateAttachmentState(TextBlock attachmentTextBlock, Button removeButton, string attachmentPath)
+        {
+            if (attachmentTextBlock == null || removeButton == null)
             {
                 return;
             }
 
-            var hasAttachment = !string.IsNullOrWhiteSpace(selectedQuickNoteAttachmentPath);
-            txtQuickNoteAttachment.Text = hasAttachment
-                ? $"Выбрано: {TaskReportAttachmentService.GetAttachmentFileName(selectedQuickNoteAttachmentPath)}"
+            var hasAttachment = !string.IsNullOrWhiteSpace(attachmentPath);
+            attachmentTextBlock.Text = hasAttachment
+                ? $"Выбрано: {TaskReportAttachmentService.GetAttachmentFileName(attachmentPath)}"
                 : "Вложение не выбрано";
-            txtQuickNoteAttachment.ToolTip = hasAttachment ? selectedQuickNoteAttachmentPath : null;
-            btnRemoveQuickNoteAttachment.Visibility = hasAttachment ? Visibility.Visible : Visibility.Collapsed;
-            UpdateQuickNoteDraftState();
+            attachmentTextBlock.ToolTip = hasAttachment ? attachmentPath : null;
+            removeButton.Visibility = hasAttachment ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void TxtQuickNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -855,63 +807,6 @@ namespace praktik
         {
             TrySaveEventDraft();
             return;
-#if false
-
-            if (task == null)
-            {
-                MessageBox.Show("Сначала сохраните задачу");
-                return;
-            }
-
-            var commentText = txtEventComment.Text?.Trim() ?? "";
-            
-            if (string.IsNullOrWhiteSpace(commentText))
-            {
-                MessageBox.Show("Введите текст комментария", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (commentText.Length < 3 || commentText.Length > 500)
-            {
-                MessageBox.Show("Комментарий должен содержать от 3 до 500 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (!TryGetProgressPercent(txtEventProgressPercent.Text, out var progressPercent))
-            {
-                txtEventProgressPercent.Focus();
-                txtEventProgressPercent.SelectAll();
-                return;
-            }
-
-            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedEventAttachmentPath, out var eventAttachmentError))
-            {
-                MessageBox.Show(eventAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            try
-            {
-                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                if (!facade.AddTaskReport(task.TaskId, userId, commentText, progressPercent, selectedEventAttachmentPath))
-                {
-                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
-                }
-
-                ShowToast("Комментарий добавлен");
-                
-                txtEventComment.Text = "";
-                txtEventProgressPercent.Clear();
-                selectedEventAttachmentPath = null;
-                UpdateEventAttachmentState();
-                SuggestCompletionIfNeeded(progressPercent);
-                LoadEvents();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при добавлении комментария: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-#endif
         }
 
         private void TaskWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -929,34 +824,6 @@ namespace praktik
 
             skipPendingDraftCheck = true;
             return;
-#if false
-
-            if (hasUnsavedNote)
-            {
-                var result = MessageBox.Show("Сохранить черновик заметки?", "Несохраненная заметка", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
-                {
-                    if (task != null && btnSaveNote.IsEnabled)
-                    {
-                        if (!TrySaveQuickNote())
-                        {
-                            e.Cancel = true;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
-                }
-                else if (result == MessageBoxResult.Cancel)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-            }
-#endif
         }
 
         private bool ConfirmPendingDraftsBeforeClose()
@@ -966,70 +833,61 @@ namespace praktik
 
         private bool ConfirmPendingEventDraft()
         {
-            if (!HasPendingEventDraft())
-            {
-                return true;
-            }
-
-            var result = MessageBox.Show(
+            return ConfirmPendingDraft(
+                HasPendingEventDraft(),
+                TrySaveEventDraft,
+                ClearEventDraft,
                 "В блоке добавления отчета есть несохраненные данные. Сохранить отчет сейчас?",
-                "Несохраненный отчет",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Yes)
-            {
-                return TrySaveEventDraft();
-            }
-
-            if (result == MessageBoxResult.No)
-            {
-                ClearEventDraft();
-                return true;
-            }
-
-            return false;
+                "Несохраненный отчет");
         }
 
         private bool ConfirmPendingQuickNoteDraft()
         {
-            if (!HasPendingQuickNoteDraft())
+            return ConfirmPendingDraft(
+                HasPendingQuickNoteDraft(),
+                TrySaveQuickNoteCore,
+                ResetQuickNoteEditor,
+                "Есть несохраненная заметка. Сохранить ее сейчас?",
+                "Несохраненная заметка");
+        }
+
+        private bool HasPendingEventDraft()
+        {
+            return HasPendingDraft(txtEventComment?.Text, txtEventProgressPercent?.Text, selectedEventAttachmentPath);
+        }
+
+        private bool HasPendingQuickNoteDraft()
+        {
+            return HasPendingDraft(txtQuickNote?.Text, txtQuickNoteProgressPercent?.Text, selectedQuickNoteAttachmentPath);
+        }
+
+        private bool ConfirmPendingDraft(bool hasPendingDraft, Func<bool> saveDraft, Action discardDraft, string message, string caption)
+        {
+            if (!hasPendingDraft)
             {
                 return true;
             }
 
-            var result = MessageBox.Show(
-                "Есть несохраненная заметка. Сохранить ее сейчас?",
-                "Несохраненная заметка",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Question);
-
+            var result = MessageBox.Show(message, caption, MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
             if (result == MessageBoxResult.Yes)
             {
-                return TrySaveQuickNoteCore();
+                return saveDraft();
             }
 
             if (result == MessageBoxResult.No)
             {
-                ResetQuickNoteEditor();
+                discardDraft();
                 return true;
             }
 
             return false;
         }
 
-        private bool HasPendingEventDraft()
+        private static bool HasPendingDraft(string text, string progressText, string attachmentPath)
         {
-            return !string.IsNullOrWhiteSpace(txtEventComment?.Text)
-                || !string.IsNullOrWhiteSpace(txtEventProgressPercent?.Text)
-                || !string.IsNullOrWhiteSpace(selectedEventAttachmentPath);
-        }
-
-        private bool HasPendingQuickNoteDraft()
-        {
-            return !string.IsNullOrWhiteSpace(txtQuickNote?.Text)
-                || !string.IsNullOrWhiteSpace(txtQuickNoteProgressPercent?.Text)
-                || !string.IsNullOrWhiteSpace(selectedQuickNoteAttachmentPath);
+            return !string.IsNullOrWhiteSpace(text)
+                || !string.IsNullOrWhiteSpace(progressText)
+                || !string.IsNullOrWhiteSpace(attachmentPath);
         }
 
         private void ClearEventDraft()
@@ -1038,6 +896,86 @@ namespace praktik
             txtEventProgressPercent.Clear();
             selectedEventAttachmentPath = null;
             UpdateEventAttachmentState();
+        }
+
+        private bool TryGetDraftProgressPercent(TextBox progressTextBox, out int? progressPercent)
+        {
+            if (!TryGetProgressPercent(progressTextBox.Text, out progressPercent))
+            {
+                progressTextBox.Focus();
+                progressTextBox.SelectAll();
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool EnsureDraftHasContent(string text, string attachmentPath, int? progressPercent, string emptyMessage)
+        {
+            if (HasDraftContent(text, attachmentPath, progressPercent))
+            {
+                return true;
+            }
+
+            MessageBox.Show(emptyMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        private static bool HasDraftContent(string text, string attachmentPath, int? progressPercent)
+        {
+            return !string.IsNullOrWhiteSpace(text)
+                || !string.IsNullOrWhiteSpace(attachmentPath)
+                || progressPercent.HasValue;
+        }
+
+        private bool ValidateDraftTextLength(string text, int minLength, int maxLength, string errorMessage)
+        {
+            if (string.IsNullOrWhiteSpace(text) || (text.Length >= minLength && text.Length <= maxLength))
+            {
+                return true;
+            }
+
+            MessageBox.Show(errorMessage, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
+        }
+
+        private bool TryValidateDraftAttachment(string attachmentPath)
+        {
+            if (!TaskReportAttachmentService.TryValidateSourceFile(attachmentPath, out var attachmentError))
+            {
+                MessageBox.Show(attachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TrySaveTaskDraft(string reportText, int? progressPercent, string attachmentPath, Action resetDraft, string successMessage, string errorPrefix)
+        {
+            try
+            {
+                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                if (!facade.AddTaskReport(task.TaskId, userId, reportText, progressPercent, attachmentPath))
+                {
+                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
+                }
+
+                ShowToast(successMessage);
+                resetDraft();
+                SuggestCompletionIfNeeded(progressPercent);
+                LoadEvents();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{errorPrefix}: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+            }
+        }
+
+        private static string NormalizeDraftText(string text)
+        {
+            return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
         }
 
         private bool TrySaveEventDraft()
@@ -1049,55 +987,41 @@ namespace praktik
             }
 
             var commentText = txtEventComment.Text?.Trim() ?? string.Empty;
-            if (!TryGetProgressPercent(txtEventProgressPercent.Text, out var progressPercent))
+            if (!TryGetDraftProgressPercent(txtEventProgressPercent, out var progressPercent))
             {
-                txtEventProgressPercent.Focus();
-                txtEventProgressPercent.SelectAll();
                 return false;
             }
 
-            var hasComment = !string.IsNullOrWhiteSpace(commentText);
-            var hasAttachment = !string.IsNullOrWhiteSpace(selectedEventAttachmentPath);
-            var hasProgress = progressPercent.HasValue;
-
-            if (!hasComment && !hasAttachment && !hasProgress)
+            if (!EnsureDraftHasContent(
+                commentText,
+                selectedEventAttachmentPath,
+                progressPercent,
+                "Добавьте комментарий, укажите прогресс или прикрепите файл."))
             {
-                MessageBox.Show("Добавьте комментарий, укажите прогресс или прикрепите файл.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (hasComment && (commentText.Length < 3 || commentText.Length > 500))
+            if (!ValidateDraftTextLength(
+                commentText,
+                3,
+                500,
+                "Комментарий должен содержать от 3 до 500 символов"))
             {
-                MessageBox.Show("Комментарий должен содержать от 3 до 500 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedEventAttachmentPath, out var eventAttachmentError))
+            if (!TryValidateDraftAttachment(selectedEventAttachmentPath))
             {
-                MessageBox.Show(eventAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            try
-            {
-                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                var reportText = hasComment ? commentText : null;
-                if (!facade.AddTaskReport(task.TaskId, userId, reportText, progressPercent, selectedEventAttachmentPath))
-                {
-                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
-                }
-
-                ShowToast("Отчет добавлен");
-                ClearEventDraft();
-                SuggestCompletionIfNeeded(progressPercent);
-                LoadEvents();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении отчета: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
+            return TrySaveTaskDraft(
+                NormalizeDraftText(commentText),
+                progressPercent,
+                selectedEventAttachmentPath,
+                ClearEventDraft,
+                "Отчет добавлен",
+                "Ошибка при сохранении отчета");
         }
 
         private bool TrySaveQuickNoteCore()
@@ -1108,108 +1032,46 @@ namespace praktik
             }
 
             var noteText = txtQuickNote.Text?.Trim() ?? string.Empty;
-            if (!TryGetProgressPercent(txtQuickNoteProgressPercent.Text, out var progressPercent))
+            if (!TryGetDraftProgressPercent(txtQuickNoteProgressPercent, out var progressPercent))
             {
-                txtQuickNoteProgressPercent.Focus();
-                txtQuickNoteProgressPercent.SelectAll();
                 return false;
             }
 
-            var hasText = !string.IsNullOrWhiteSpace(noteText);
-            var hasAttachment = !string.IsNullOrWhiteSpace(selectedQuickNoteAttachmentPath);
-            var hasProgress = progressPercent.HasValue;
-
-            if (!hasText && !hasAttachment && !hasProgress)
+            if (!EnsureDraftHasContent(
+                noteText,
+                selectedQuickNoteAttachmentPath,
+                progressPercent,
+                "Добавьте текст заметки, укажите прогресс или прикрепите файл."))
             {
-                MessageBox.Show("Добавьте текст заметки, укажите прогресс или прикрепите файл.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (hasText && (noteText.Length < 3 || noteText.Length > 200))
+            if (!ValidateDraftTextLength(
+                noteText,
+                3,
+                200,
+                "Заметка должна содержать от 3 до 200 символов"))
             {
-                MessageBox.Show("Заметка должна содержать от 3 до 200 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedQuickNoteAttachmentPath, out var quickAttachmentError))
+            if (!TryValidateDraftAttachment(selectedQuickNoteAttachmentPath))
             {
-                MessageBox.Show(quickAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
 
-            try
-            {
-                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                var reportText = hasText ? noteText : null;
-                if (!facade.AddTaskReport(task.TaskId, userId, reportText, progressPercent, selectedQuickNoteAttachmentPath))
-                {
-                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
-                }
-
-                ShowToast("Отчет добавлен");
-                ResetQuickNoteEditor();
-                SuggestCompletionIfNeeded(progressPercent);
-                LoadEvents();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
+            return TrySaveTaskDraft(
+                NormalizeDraftText(noteText),
+                progressPercent,
+                selectedQuickNoteAttachmentPath,
+                ResetQuickNoteEditor,
+                "Отчет добавлен",
+                "Ошибка при сохранении заметки");
         }
 
         private bool TrySaveQuickNote()
         {
             return TrySaveQuickNoteCore();
-#if false
-
-            if (task == null)
-            {
-                return false;
-            }
-
-            var noteText = txtQuickNote.Text?.Trim() ?? "";
-            if (noteText.Length < 3 || noteText.Length > 200)
-            {
-                MessageBox.Show("Заметка должна содержать от 3 до 200 символов", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            if (!TryGetProgressPercent(txtQuickNoteProgressPercent.Text, out var progressPercent))
-            {
-                txtQuickNoteProgressPercent.Focus();
-                txtQuickNoteProgressPercent.SelectAll();
-                return false;
-            }
-
-            if (!TaskReportAttachmentService.TryValidateSourceFile(selectedQuickNoteAttachmentPath, out var quickAttachmentError))
-            {
-                MessageBox.Show(quickAttachmentError, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return false;
-            }
-
-            try
-            {
-                var userId = LoginWindow.CurrentUser?.UserId ?? 0;
-                if (!facade.AddTaskReport(task.TaskId, userId, noteText, progressPercent, selectedQuickNoteAttachmentPath))
-                {
-                    throw new InvalidOperationException("Не удалось сохранить отчет по задаче");
-                }
-
-                ShowToast("Заметка добавлена");
-
-                ResetQuickNoteEditor();
-                SuggestCompletionIfNeeded(progressPercent);
-                LoadEvents();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при сохранении заметки: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-#endif
         }
 
         private void ResetQuickNoteEditor()
@@ -1414,6 +1276,17 @@ namespace praktik
                 toast.Close();
             };
             timer.Start();
+        }
+
+        private sealed class TaskSaveInput
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public DateTime StartDate { get; set; }
+            public DateTime EndDate { get; set; }
+            public int SiteId { get; set; }
+            public int? CrewId { get; set; }
+            public int PriorityId { get; set; }
         }
     }
 

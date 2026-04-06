@@ -934,30 +934,44 @@ namespace praktik
 
             if (!IsBrigadierMode())
             {
-                if (txtBrigadierTaskSummary != null)
-                {
-                    txtBrigadierTaskSummary.Text = string.Empty;
-                }
-
-                if (txtBrigadierWeekRange != null)
-                {
-                    txtBrigadierWeekRange.Text = string.Empty;
-                }
-
-                if (txtBrigadierChecklistEmpty != null)
-                {
-                    txtBrigadierChecklistEmpty.Visibility = Visibility.Collapsed;
-                }
-
+                ResetBrigadierChecklistView();
                 return;
             }
 
             EnsureBrigadierChecklistDateSync();
             var selectedDate = brigadierChecklistDate.Date;
             var weekStart = GetStartOfWeek(selectedDate);
-            var weekEnd = weekStart.AddDays(6);
+            var checklistTasks = BuildBrigadierChecklistTasks(selectedDate);
 
-            var checklistTasks = (allTasks ?? new List<Models.Task>())
+            foreach (var checklistItem in checklistTasks.Select(task => CreateBrigadierChecklistItem(task, selectedDate)))
+            {
+                brigadierChecklistItems.Add(checklistItem);
+            }
+
+            UpdateBrigadierChecklistSummary(selectedDate, weekStart, checklistTasks.Count);
+        }
+
+        private void ResetBrigadierChecklistView()
+        {
+            if (txtBrigadierTaskSummary != null)
+            {
+                txtBrigadierTaskSummary.Text = string.Empty;
+            }
+
+            if (txtBrigadierWeekRange != null)
+            {
+                txtBrigadierWeekRange.Text = string.Empty;
+            }
+
+            if (txtBrigadierChecklistEmpty != null)
+            {
+                txtBrigadierChecklistEmpty.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private List<Models.Task> BuildBrigadierChecklistTasks(DateTime selectedDate)
+        {
+            return (allTasks ?? new List<Models.Task>())
                 .Where(task => IsTaskVisibleInBrigadierChecklist(task, selectedDate))
                 .Where(task => !IsTaskCompleted(task))
                 .OrderByDescending(task => task.EndDate.Date < selectedDate)
@@ -965,35 +979,38 @@ namespace praktik
                 .ThenBy(task => task.EndDate)
                 .ThenBy(task => task.Title)
                 .ToList();
+        }
 
-            foreach (var task in checklistTasks)
+        private static BrigadierTaskChecklistItem CreateBrigadierChecklistItem(Models.Task task, DateTime selectedDate)
+        {
+            var isOverdue = task.EndDate.Date < selectedDate;
+            return new BrigadierTaskChecklistItem
             {
-                var isOverdue = task.EndDate.Date < selectedDate;
-                brigadierChecklistItems.Add(new BrigadierTaskChecklistItem
-                {
-                    Task = task,
-                    IsOverdue = isOverdue,
-                    ChecklistStatusText = isOverdue ? "Просрочена" : "На выбранную дату",
-                    IsMarkedCompleted = false,
-                    CompletionComment = string.Empty
-                });
-            }
+                Task = task,
+                IsOverdue = isOverdue,
+                ChecklistStatusText = isOverdue ? "Просрочена" : "На выбранную дату",
+                IsMarkedCompleted = false,
+                CompletionComment = string.Empty
+            };
+        }
 
+        private void UpdateBrigadierChecklistSummary(DateTime selectedDate, DateTime weekStart, int taskCount)
+        {
             if (txtBrigadierWeekRange != null)
             {
-                txtBrigadierWeekRange.Text = $"Неделя: {weekStart:dd.MM.yyyy} - {weekEnd:dd.MM.yyyy}";
+                txtBrigadierWeekRange.Text = $"Неделя: {weekStart:dd.MM.yyyy} - {weekStart.AddDays(6):dd.MM.yyyy}";
             }
 
             if (txtBrigadierTaskSummary != null)
             {
-                txtBrigadierTaskSummary.Text = checklistTasks.Count == 0
+                txtBrigadierTaskSummary.Text = taskCount == 0
                     ? $"На {selectedDate:dd.MM.yyyy} задач нет."
-                    : $"На {selectedDate:dd.MM.yyyy} задач в чек-листе: {checklistTasks.Count}.";
+                    : $"На {selectedDate:dd.MM.yyyy} задач в чек-листе: {taskCount}.";
             }
 
             if (txtBrigadierChecklistEmpty != null)
             {
-                txtBrigadierChecklistEmpty.Visibility = checklistTasks.Count == 0
+                txtBrigadierChecklistEmpty.Visibility = taskCount == 0
                     ? Visibility.Visible
                     : Visibility.Collapsed;
             }
@@ -1201,56 +1218,68 @@ namespace praktik
 
             try
             {
-                IEnumerable<Models.Task> filteredTasks = allTasks ?? new List<Models.Task>();
-
-                var searchText = txtTaskSearch?.Text?.Trim();
-                if (!string.IsNullOrWhiteSpace(searchText))
-                {
-                    filteredTasks = filteredTasks.Where(t =>
-                        !string.IsNullOrWhiteSpace(t.Title) &&
-                        t.Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
-                }
-
-                if (cbSiteFilter?.SelectedItem is Site selectedSiteFilter)
-                {
-                    filteredTasks = filteredTasks.Where(t => t.SiteId == selectedSiteFilter.SiteId);
-                }
-
-                if (cbCrewFilter?.SelectedItem is Crew selectedCrewFilter)
-                {
-                    filteredTasks = filteredTasks.Where(t => t.CrewId.HasValue && t.CrewId.Value == selectedCrewFilter.CrewId);
-                }
-
-                if (cbStatusFilter?.SelectedItem is TaskStatus selectedStatusFilter)
-                {
-                    filteredTasks = filteredTasks.Where(t => t.TaskStatusId == selectedStatusFilter.TaskStatusId);
-                }
-
-                if (cbPriorityFilter?.SelectedItem is Priority selectedPriorityFilter)
-                {
-                    filteredTasks = filteredTasks.Where(t => t.PriorityId == selectedPriorityFilter.PriorityId);
-                }
-
-                switch (GetTaskScopeFilterValue())
-                {
-                    case "active":
-                        filteredTasks = filteredTasks.Where(IsTaskActive);
-                        break;
-                    case "completed":
-                        filteredTasks = filteredTasks.Where(IsTaskCompleted);
-                        break;
-                    case "overdue":
-                        filteredTasks = filteredTasks.Where(IsTaskOverdue);
-                        break;
-                }
-
-                var result = filteredTasks.ToList();
+                var result = BuildFilteredTasks().ToList();
                 dgTasks.ItemsSource = result;
                 txtTaskFilterNoResults.Visibility = result.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при фильтрации задач: {ex.Message}");
+            }
+        }
+
+        private IEnumerable<Models.Task> BuildFilteredTasks()
+        {
+            IEnumerable<Models.Task> filteredTasks = allTasks ?? new List<Models.Task>();
+            var searchText = txtTaskSearch?.Text?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                filteredTasks = ApplyTaskSearchFilter(filteredTasks, searchText);
+            }
+
+            if (cbSiteFilter?.SelectedItem is Site selectedSiteFilter)
+            {
+                filteredTasks = filteredTasks.Where(task => task.SiteId == selectedSiteFilter.SiteId);
+            }
+
+            if (cbCrewFilter?.SelectedItem is Crew selectedCrewFilter)
+            {
+                filteredTasks = filteredTasks.Where(task => task.CrewId.HasValue && task.CrewId.Value == selectedCrewFilter.CrewId);
+            }
+
+            if (cbStatusFilter?.SelectedItem is TaskStatus selectedStatusFilter)
+            {
+                filteredTasks = filteredTasks.Where(task => task.TaskStatusId == selectedStatusFilter.TaskStatusId);
+            }
+
+            if (cbPriorityFilter?.SelectedItem is Priority selectedPriorityFilter)
+            {
+                filteredTasks = filteredTasks.Where(task => task.PriorityId == selectedPriorityFilter.PriorityId);
+            }
+
+            return ApplyTaskScopeFilter(filteredTasks);
+        }
+
+        private static IEnumerable<Models.Task> ApplyTaskSearchFilter(IEnumerable<Models.Task> tasks, string searchText)
+        {
+            return tasks.Where(task =>
+                !string.IsNullOrWhiteSpace(task.Title) &&
+                task.Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        private IEnumerable<Models.Task> ApplyTaskScopeFilter(IEnumerable<Models.Task> tasks)
+        {
+            switch (GetTaskScopeFilterValue())
+            {
+                case "active":
+                    return tasks.Where(IsTaskActive);
+                case "completed":
+                    return tasks.Where(IsTaskCompleted);
+                case "overdue":
+                    return tasks.Where(IsTaskOverdue);
+                default:
+                    return tasks;
             }
         }
 
@@ -2054,21 +2083,22 @@ namespace praktik
             UpdateCurrentReportType("tasks");
 
             var tasks = facade.GetTasks();
-            var report = tasks.Select(t => new
+            var rows = BuildTaskOverviewRows(tasks);
+            var report = rows.Select(row => new
             {
-                Название = t.Title,
-                Объект = t.Site?.SiteName ?? "Не указан",
-                Бригада = t.Crew?.CrewName ?? "Не назначена",
-                Приоритет = t.Priority?.PriorityName ?? "—",
-                Статус = t.TaskStatus?.TaskStatusName ?? "—",
-                Начало = t.StartDate.ToString("dd.MM.yyyy"),
-                Окончание = t.EndDate.ToString("dd.MM.yyyy")
+                Название = row.Title,
+                Объект = row.SiteName,
+                Бригада = row.CrewName,
+                Приоритет = row.PriorityName,
+                Статус = row.StatusName,
+                Начало = row.StartDateText,
+                Окончание = row.EndDateText
             }).ToList();
 
-            var completed = tasks.Count(t => t.TaskStatus?.TaskStatusName == "Завершено");
+            var completed = rows.Count(row => IsTaskStatus(row.StatusName, "Завершено"));
             var activeCrews = tasks.Where(t => t.CrewId.HasValue).Select(t => t.CrewId.Value).Distinct().Count();
-            var statusSlices = tasks
-                .GroupBy(t => t.TaskStatus?.TaskStatusName ?? "Без статуса")
+            var statusSlices = rows
+                .GroupBy(row => row.StatusName)
                 .Select(g => new ReportPreviewSlice { Label = g.Key, Value = g.Count() })
                 .OrderByDescending(g => g.Value)
                 .ToList();
@@ -2092,36 +2122,35 @@ namespace praktik
             UpdateCurrentReportType("tasks_by_site");
 
             var tasks = facade.GetTasks();
-            var report = tasks
-                .GroupBy(t => t.Site?.SiteName ?? "Не указан")
-                .Select(g => new
+            var rows = BuildTasksBySiteRows(tasks);
+            var report = rows
+                .Select(row => new
                 {
-                    Объект = g.Key,
-                    Всего_задач = g.Count(),
-                    Выполнено = g.Count(t => t.TaskStatus?.TaskStatusName == "Завершено"),
-                    В_работе = g.Count(t => t.TaskStatus?.TaskStatusName == "В работе"),
-                    Просрочено = g.Count(t => t.TaskStatus?.TaskStatusName == "Просрочено")
+                    Объект = row.SiteName,
+                    Всего_задач = row.TotalTasks,
+                    Выполнено = row.CompletedCount,
+                    В_работе = row.InProgressCount,
+                    Просрочено = row.OverdueCount
                 })
-                .OrderByDescending(g => g.Всего_задач)
                 .ToList();
 
-            var leader = report.FirstOrDefault();
-            var completed = report.Sum(r => r.Выполнено);
-            var slices = report
-                .Select(r => new ReportPreviewSlice { Label = r.Объект, Value = r.Всего_задач })
+            var leader = rows.FirstOrDefault();
+            var completed = rows.Sum(row => row.CompletedCount);
+            var slices = rows
+                .Select(row => new ReportPreviewSlice { Label = row.SiteName, Value = row.TotalTasks })
                 .ToList();
 
             dgReports.ItemsSource = report;
             ApplyReportPresentation(
                 "Задачи по объектам",
                 "Показывает плотность задач по стройплощадкам и помогает быстро увидеть самый загруженный объект.",
-                report.Count.ToString(),
+                rows.Count.ToString(),
                 "Объектов в срезе",
-                leader != null ? leader.Всего_задач.ToString() : "0",
-                leader != null ? $"Лидер: {leader.Объект}" : "Лидер не определён",
+                leader != null ? leader.TotalTasks.ToString() : "0",
+                leader != null ? $"Лидер: {leader.SiteName}" : "Лидер не определён",
                 FormatPercent(completed, tasks.Count),
                 "Завершено по всем объектам",
-                $"Срез по объектам. В экспорт попадут {report.Count} записей.",
+                $"Срез по объектам. В экспорт попадут {rows.Count} записей.",
                 slices);
         }
 
@@ -2130,38 +2159,36 @@ namespace praktik
             UpdateCurrentReportType("tasks_by_crew");
 
             var tasks = facade.GetTasks();
-            var report = tasks
-                .Where(t => t.CrewId != null)
-                .GroupBy(t => t.Crew?.CrewName ?? "Не назначена")
-                .Select(g => new
+            var rows = BuildTasksByCrewRows(tasks);
+            var report = rows
+                .Select(row => new
                 {
-                    Бригада = g.Key,
-                    Всего_задач = g.Count(),
-                    Выполнено = g.Count(t => t.TaskStatus?.TaskStatusName == "Завершено"),
-                    В_работе = g.Count(t => t.TaskStatus?.TaskStatusName == "В работе"),
-                    Просрочено = g.Count(t => t.TaskStatus?.TaskStatusName == "Просрочено")
+                    Бригада = row.CrewName,
+                    Всего_задач = row.TotalTasks,
+                    Выполнено = row.CompletedCount,
+                    В_работе = row.InProgressCount,
+                    Просрочено = row.OverdueCount
                 })
-                .OrderByDescending(g => g.Всего_задач)
                 .ToList();
 
-            var leader = report.FirstOrDefault();
-            var average = report.Count > 0 ? report.Average(r => r.Всего_задач) : 0;
-            var completed = report.Sum(r => r.Выполнено);
-            var slices = report
-                .Select(r => new ReportPreviewSlice { Label = r.Бригада, Value = r.Всего_задач })
+            var leader = rows.FirstOrDefault();
+            var average = rows.Count > 0 ? rows.Average(row => row.TotalTasks) : 0;
+            var completed = rows.Sum(row => row.CompletedCount);
+            var slices = rows
+                .Select(row => new ReportPreviewSlice { Label = row.CrewName, Value = row.TotalTasks })
                 .ToList();
 
             dgReports.ItemsSource = report;
             ApplyReportPresentation(
                 "Выполнение по бригадам",
                 "Сводка по загрузке бригад с акцентом на равномерность распределения и фактическое исполнение.",
-                report.Count.ToString(),
+                rows.Count.ToString(),
                 "Бригад в отчёте",
-                leader != null ? leader.Всего_задач.ToString() : "0",
-                leader != null ? $"Лидер: {leader.Бригада}" : "Лидер не определён",
+                leader != null ? leader.TotalTasks.ToString() : "0",
+                leader != null ? $"Лидер: {leader.CrewName}" : "Лидер не определён",
                 average > 0 ? average.ToString("0.0") : "0",
                 "Среднее задач на бригаду",
-                $"Срез по бригадам. В экспорт попадут {report.Count} записей.",
+                $"Срез по бригадам. В экспорт попадут {rows.Count} записей.",
                 slices);
         }
 
@@ -2169,29 +2196,27 @@ namespace praktik
         {
             UpdateCurrentReportType("overdue_tasks");
 
-            var tasks = facade.GetTasks();
-            var overdueTasks = tasks
-                .Where(t => t.EndDate < DateTime.Now && t.TaskStatus?.TaskStatusName != "Завершено")
-                .Select(t => new
+            var overdueTasks = BuildOverdueTaskRows(facade.GetTasks(), DateTime.Now);
+            var report = overdueTasks
+                .Select(row => new
                 {
-                    Название = t.Title,
-                    Объект = t.Site?.SiteName ?? "Не указан",
-                    Бригада = t.Crew?.CrewName ?? "Не назначена",
-                    Приоритет = t.Priority?.PriorityName ?? "—",
-                    Дата_окончания = t.EndDate,
-                    Просрочено_на_дней = (DateTime.Now - t.EndDate).Days
+                    Название = row.Title,
+                    Объект = row.SiteName,
+                    Бригада = row.CrewName,
+                    Приоритет = row.PriorityName,
+                    Дата_окончания = row.EndDate,
+                    Просрочено_на_дней = row.DelayDays
                 })
-                .OrderByDescending(t => t.Просрочено_на_дней)
                 .ToList();
 
             var affectedSites = overdueTasks
-                .GroupBy(t => t.Объект)
+                .GroupBy(row => row.SiteName)
                 .Select(g => new ReportPreviewSlice { Label = g.Key, Value = g.Count() })
                 .OrderByDescending(g => g.Value)
                 .ToList();
-            var maxDelay = overdueTasks.Count > 0 ? overdueTasks.Max(t => t.Просрочено_на_дней) : 0;
+            var maxDelay = overdueTasks.Count > 0 ? overdueTasks.Max(row => row.DelayDays) : 0;
 
-            dgReports.ItemsSource = overdueTasks;
+            dgReports.ItemsSource = report;
             ApplyReportPresentation(
                 "Просроченные задачи",
                 "Фокус на рисках по срокам: где скопились задержки и какой объект требует внимания в первую очередь.",
@@ -2203,6 +2228,75 @@ namespace praktik
                 "Объектов с риском",
                 $"Срез по просрочке. В экспорт попадут {overdueTasks.Count} записей.",
                 affectedSites);
+        }
+
+        private List<TaskOverviewReportRow> BuildTaskOverviewRows(IEnumerable<Models.Task> tasks)
+        {
+            return tasks.Select(task => new TaskOverviewReportRow
+            {
+                Title = task.Title,
+                SiteName = task.Site?.SiteName ?? "Не указан",
+                CrewName = task.Crew?.CrewName ?? "Не назначена",
+                PriorityName = task.Priority?.PriorityName ?? "—",
+                StatusName = task.TaskStatus?.TaskStatusName ?? "Без статуса",
+                StartDateText = task.StartDate.ToString("dd.MM.yyyy"),
+                EndDateText = task.EndDate.ToString("dd.MM.yyyy")
+            }).ToList();
+        }
+
+        private List<TasksBySiteReportRow> BuildTasksBySiteRows(IEnumerable<Models.Task> tasks)
+        {
+            return tasks
+                .GroupBy(task => task.Site?.SiteName ?? "Не указан")
+                .Select(group => new TasksBySiteReportRow
+                {
+                    SiteName = group.Key,
+                    TotalTasks = group.Count(),
+                    CompletedCount = group.Count(task => IsTaskStatus(task.TaskStatus?.TaskStatusName, "Завершено")),
+                    InProgressCount = group.Count(task => IsTaskStatus(task.TaskStatus?.TaskStatusName, "В работе")),
+                    OverdueCount = group.Count(task => IsTaskStatus(task.TaskStatus?.TaskStatusName, "Просрочено"))
+                })
+                .OrderByDescending(row => row.TotalTasks)
+                .ToList();
+        }
+
+        private List<TasksByCrewReportRow> BuildTasksByCrewRows(IEnumerable<Models.Task> tasks)
+        {
+            return tasks
+                .Where(task => task.CrewId != null)
+                .GroupBy(task => task.Crew?.CrewName ?? "Не назначена")
+                .Select(group => new TasksByCrewReportRow
+                {
+                    CrewName = group.Key,
+                    TotalTasks = group.Count(),
+                    CompletedCount = group.Count(task => IsTaskStatus(task.TaskStatus?.TaskStatusName, "Завершено")),
+                    InProgressCount = group.Count(task => IsTaskStatus(task.TaskStatus?.TaskStatusName, "В работе")),
+                    OverdueCount = group.Count(task => IsTaskStatus(task.TaskStatus?.TaskStatusName, "Просрочено"))
+                })
+                .OrderByDescending(row => row.TotalTasks)
+                .ToList();
+        }
+
+        private List<OverdueTaskReportRow> BuildOverdueTaskRows(IEnumerable<Models.Task> tasks, DateTime now)
+        {
+            return tasks
+                .Where(task => task.EndDate < now && !IsTaskStatus(task.TaskStatus?.TaskStatusName, "Завершено"))
+                .Select(task => new OverdueTaskReportRow
+                {
+                    Title = task.Title,
+                    SiteName = task.Site?.SiteName ?? "Не указан",
+                    CrewName = task.Crew?.CrewName ?? "Не назначена",
+                    PriorityName = task.Priority?.PriorityName ?? "—",
+                    EndDate = task.EndDate,
+                    DelayDays = (now - task.EndDate).Days
+                })
+                .OrderByDescending(row => row.DelayDays)
+                .ToList();
+        }
+
+        private static bool IsTaskStatus(string statusName, string expectedStatusName)
+        {
+            return string.Equals(statusName, expectedStatusName, StringComparison.OrdinalIgnoreCase);
         }
 
         private void ApplyReportPresentation(
@@ -2997,384 +3091,231 @@ namespace praktik
             currentReportType = reportType;
         }
 
-         private void ExportCsv_Click(object sender, RoutedEventArgs e)
+        private void ExportCsv_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var lines = new List<string>();
-                string reportName = "tasks";
-                
-                switch (currentReportType)
-                {
-                    case "tasks":
-                        var tasks = facade.GetTasks();
-                        lines.Add("Название;Объект;Бригада;Приоритет;Статус;Начало;Окончание");
-                        foreach (var t in tasks)
-                        {
-                            string crew = t.Crew != null ? t.Crew.CrewName : "";
-                            lines.Add(string.Join(";", new[]
-                            {
-                                t.Title,
-                                t.Site?.SiteName ?? "",
-                                crew,
-                                t.Priority?.PriorityName ?? "",
-                                t.TaskStatus?.TaskStatusName ?? "",
-                                t.StartDate.ToString("dd.MM.yyyy"),
-                                t.EndDate.ToString("dd.MM.yyyy")
-                            }));
-                        }
-                        reportName = "tasks";
-                        break;
-                        
-                    case "tasks_by_site":
-                        var tasksBySite = facade.GetTasks()
-                            .GroupBy(t => t.Site.SiteName)
-                            .Select(g => new
-                            {
-                                Объект = g.Key,
-                                Всего_задач = g.Count(),
-                                Выполнено = g.Count(t => t.TaskStatus.TaskStatusName == "Завершено"),
-                                В_работе = g.Count(t => t.TaskStatus.TaskStatusName == "В работе"),
-                                Просрочено = g.Count(t => t.TaskStatus.TaskStatusName == "Просрочено")
-                            })
-                            .ToList();
-                            
-                        lines.Add("Объект;Всего задач;Выполнено;В работе;Просрочено");
-                        foreach (var item in tasksBySite)
-                        {
-                            lines.Add(string.Join(";", new[]
-                            {
-                                item.Объект,
-                                item.Всего_задач.ToString(),
-                                item.Выполнено.ToString(),
-                                item.В_работе.ToString(),
-                                item.Просрочено.ToString()
-                            }));
-                        }
-                        reportName = "tasks_by_site";
-                        break;
-                        
-                    case "tasks_by_crew":
-                        var tasksByCrew = facade.GetTasks()
-                            .Where(t => t.CrewId != null)
-                            .GroupBy(t => t.Crew.CrewName)
-                            .Select(g => new
-                            {
-                                Бригада = g.Key,
-                                Всего_задач = g.Count(),
-                                Выполнено = g.Count(t => t.TaskStatus.TaskStatusName == "Завершено"),
-                                В_работе = g.Count(t => t.TaskStatus.TaskStatusName == "В работе"),
-                                Просрочено = g.Count(t => t.TaskStatus.TaskStatusName == "Просрочено")
-                            })
-                            .ToList();
-                            
-                        lines.Add("Бригада;Всего задач;Выполнено;В работе;Просрочено");
-                        foreach (var item in tasksByCrew)
-                        {
-                            lines.Add(string.Join(";", new[]
-                            {
-                                item.Бригада,
-                                item.Всего_задач.ToString(),
-                                item.Выполнено.ToString(),
-                                item.В_работе.ToString(),
-                                item.Просрочено.ToString()
-                            }));
-                        }
-                        reportName = "tasks_by_crew";
-                        break;
-                        
-                    case "overdue_tasks":
-                        var overdueTasks = facade.GetTasks()
-                            .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
-                            .Select(t => new
-                            {
-                                Название = t.Title,
-                                Объект = t.Site.SiteName,
-                                Бригада = t.Crew != null ? t.Crew.CrewName : "Не назначена",
-                                Приоритет = t.Priority.PriorityName,
-                                Дата_окончания = t.EndDate,
-                                Просрочено_на_дней = (DateTime.Now - t.EndDate).Days
-                            })
-                            .ToList();
-                            
-                        lines.Add("Название;Объект;Бригада;Приоритет;Дата окончания;Просрочено на дней");
-                        foreach (var item in overdueTasks)
-                        {
-                            lines.Add(string.Join(";", new[]
-                            {
-                                item.Название,
-                                item.Объект,
-                                item.Бригада,
-                                item.Приоритет,
-                                item.Дата_окончания.ToString("dd.MM.yyyy"),
-                                item.Просрочено_на_дней.ToString()
-                            }));
-                        }
-                        reportName = "overdue_tasks";
-                        break;
-                }
-                
-                string folderPath = GetReportsFolderPath();
-                string fileName = $"{reportName}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                string path = Path.Combine(folderPath, fileName);
-                
-                File.WriteAllLines(path, lines, System.Text.Encoding.UTF8);
-                OfferToOpenExportedFile(path, "CSV");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка экспорта CSV: {ex.Message}");
-            }
+            ExportDelimitedReport("csv", "CSV", ";");
         }
 
         private void ExportExcel_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var lines = new List<string>();
-                string reportName = "tasks";
-                
-                switch (currentReportType)
-                {
-                    case "tasks":
-                        var tasks = facade.GetTasks();
-                        lines.Add("Название\tОбъект\tБригада\tПриоритет\tСтатус\tНачало\tОкончание");
-                        foreach (var t in tasks)
-                        {
-                            string crew = t.Crew != null ? t.Crew.CrewName : "";
-                            lines.Add(string.Join("\t", new[]
-                            {
-                                t.Title,
-                                t.Site?.SiteName ?? "",
-                                crew,
-                                t.Priority?.PriorityName ?? "",
-                                t.TaskStatus?.TaskStatusName ?? "",
-                                t.StartDate.ToString("dd.MM.yyyy"),
-                                t.EndDate.ToString("dd.MM.yyyy")
-                            }));
-                        }
-                        reportName = "tasks";
-                        break;
-                        
-                    case "tasks_by_site":
-                        var tasksBySite = facade.GetTasks()
-                            .GroupBy(t => t.Site.SiteName)
-                            .Select(g => new
-                            {
-                                Объект = g.Key,
-                                Всего_задач = g.Count(),
-                                Выполнено = g.Count(t => t.TaskStatus.TaskStatusName == "Завершено"),
-                                В_работе = g.Count(t => t.TaskStatus.TaskStatusName == "В работе"),
-                                Просрочено = g.Count(t => t.TaskStatus.TaskStatusName == "Просрочено")
-                            })
-                            .ToList();
-                            
-                        lines.Add("Объект\tВсего задач\tВыполнено\tВ работе\tПросрочено");
-                        foreach (var item in tasksBySite)
-                        {
-                            lines.Add(string.Join("\t", new[]
-                            {
-                                item.Объект,
-                                item.Всего_задач.ToString(),
-                                item.Выполнено.ToString(),
-                                item.В_работе.ToString(),
-                                item.Просрочено.ToString()
-                            }));
-                        }
-                        reportName = "tasks_by_site";
-                        break;
-                        
-                    case "tasks_by_crew":
-                        var tasksByCrew = facade.GetTasks()
-                            .Where(t => t.CrewId != null)
-                            .GroupBy(t => t.Crew.CrewName)
-                            .Select(g => new
-                            {
-                                Бригада = g.Key,
-                                Всего_задач = g.Count(),
-                                Выполнено = g.Count(t => t.TaskStatus.TaskStatusName == "Завершено"),
-                                В_работе = g.Count(t => t.TaskStatus.TaskStatusName == "В работе"),
-                                Просрочено = g.Count(t => t.TaskStatus.TaskStatusName == "Просрочено")
-                            })
-                            .ToList();
-                            
-                        lines.Add("Бригада\tВсего задач\tВыполнено\tВ работе\tПросрочено");
-                        foreach (var item in tasksByCrew)
-                        {
-                            lines.Add(string.Join("\t", new[]
-                            {
-                                item.Бригада,
-                                item.Всего_задач.ToString(),
-                                item.Выполнено.ToString(),
-                                item.В_работе.ToString(),
-                                item.Просрочено.ToString()
-                            }));
-                        }
-                        reportName = "tasks_by_crew";
-                        break;
-                        
-                    case "overdue_tasks":
-                        var overdueTasks = facade.GetTasks()
-                            .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
-                            .Select(t => new
-                            {
-                                Название = t.Title,
-                                Объект = t.Site.SiteName,
-                                Бригада = t.Crew != null ? t.Crew.CrewName : "Не назначена",
-                                Приоритет = t.Priority.PriorityName,
-                                Дата_окончания = t.EndDate,
-                                Просрочено_на_дней = (DateTime.Now - t.EndDate).Days
-                            })
-                            .ToList();
-                            
-                        lines.Add("Название\tОбъект\tБригада\tПриоритет\tДата окончания\tПросрочено на дней");
-                        foreach (var item in overdueTasks)
-                        {
-                            lines.Add(string.Join("\t", new[]
-                            {
-                                item.Название,
-                                item.Объект,
-                                item.Бригада,
-                                item.Приоритет,
-                                item.Дата_окончания.ToString("dd.MM.yyyy"),
-                                item.Просрочено_на_дней.ToString()
-                            }));
-                        }
-                        reportName = "overdue_tasks";
-                        break;
-                }
-                
-                string folderPath = GetReportsFolderPath();
-                string fileName = $"{reportName}_{DateTime.Now:yyyyMMdd_HHmmss}.xls";
-                string path = Path.Combine(folderPath, fileName);
-                
-                File.WriteAllLines(path, lines, System.Text.Encoding.UTF8);
-                OfferToOpenExportedFile(path, "Excel");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка экспорта Excel: {ex.Message}");
-            }
+            ExportDelimitedReport("xls", "Excel", "\t");
         }
 
         private void ExportPdf_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var lines = new List<string>();
-                string reportName = "tasks";
-                string reportTitle = "ОТЧЁТ ПО ЗАДАЧАМ";
-                
-                switch (currentReportType)
-                {
-                    case "tasks":
-                        var tasks = facade.GetTasks();
-                        reportTitle = "ОТЧЁТ ПО ЗАДАЧАМ";
-                        lines.Add($"=== {reportTitle} ===\n");
-                        lines.Add($"Дата формирования: {DateTime.Now:dd.MM.yyyy HH:mm}\n");
-                        foreach (var t in tasks)
-                        {
-                            lines.Add($"• {t.Title} | {t.Site?.SiteName} | {t.Crew?.CrewName ?? "Без бригады"} | {t.Priority?.PriorityName} | {t.TaskStatus?.TaskStatusName} | {t.StartDate:dd.MM.yyyy}-{t.EndDate:dd.MM.yyyy}");
-                        }
-                        reportName = "tasks";
-                        break;
-                        
-                    case "tasks_by_site":
-                        var tasksBySite = facade.GetTasks()
-                            .GroupBy(t => t.Site.SiteName)
-                            .Select(g => new
-                            {
-                                Объект = g.Key,
-                                Всего_задач = g.Count(),
-                                Выполнено = g.Count(t => t.TaskStatus.TaskStatusName == "Завершено"),
-                                В_работе = g.Count(t => t.TaskStatus.TaskStatusName == "В работе"),
-                                Просрочено = g.Count(t => t.TaskStatus.TaskStatusName == "Просрочено")
-                            })
-                            .ToList();
-                            
-                        reportTitle = "ОТЧЁТ: ЗАДАЧИ ПО ОБЪЕКТАМ";
-                        lines.Add($"=== {reportTitle} ===\n");
-                        lines.Add($"Дата формирования: {DateTime.Now:dd.MM.yyyy HH:mm}\n");
-                        foreach (var item in tasksBySite)
-                        {
-                            lines.Add($"• Объект: {item.Объект}");
-                            lines.Add($"  Всего задач: {item.Всего_задач}");
-                            lines.Add($"  Выполнено: {item.Выполнено}");
-                            lines.Add($"  В работе: {item.В_работе}");
-                            lines.Add($"  Просрочено: {item.Просрочено}\n");
-                        }
-                        reportName = "tasks_by_site";
-                        break;
-                        
-                    case "tasks_by_crew":
-                        var tasksByCrew = facade.GetTasks()
-                            .Where(t => t.CrewId != null)
-                            .GroupBy(t => t.Crew.CrewName)
-                            .Select(g => new
-                            {
-                                Бригада = g.Key,
-                                Всего_задач = g.Count(),
-                                Выполнено = g.Count(t => t.TaskStatus.TaskStatusName == "Завершено"),
-                                В_работе = g.Count(t => t.TaskStatus.TaskStatusName == "В работе"),
-                                Просрочено = g.Count(t => t.TaskStatus.TaskStatusName == "Просрочено")
-                            })
-                            .ToList();
-                            
-                        reportTitle = "ОТЧЁТ: ВЫПОЛНЕНИЕ ПО БРИГАДАМ";
-                        lines.Add($"=== {reportTitle} ===\n");
-                        lines.Add($"Дата формирования: {DateTime.Now:dd.MM.yyyy HH:mm}\n");
-                        foreach (var item in tasksByCrew)
-                        {
-                            lines.Add($"• Бригада: {item.Бригада}");
-                            lines.Add($"  Всего задач: {item.Всего_задач}");
-                            lines.Add($"  Выполнено: {item.Выполнено}");
-                            lines.Add($"  В работе: {item.В_работе}");
-                            lines.Add($"  Просрочено: {item.Просрочено}\n");
-                        }
-                        reportName = "tasks_by_crew";
-                        break;
-                        
-                    case "overdue_tasks":
-                        var overdueTasks = facade.GetTasks()
-                            .Where(t => t.EndDate < DateTime.Now && t.TaskStatus.TaskStatusName != "Завершено")
-                            .Select(t => new
-                            {
-                                Название = t.Title,
-                                Объект = t.Site.SiteName,
-                                Бригада = t.Crew != null ? t.Crew.CrewName : "Не назначена",
-                                Приоритет = t.Priority.PriorityName,
-                                Дата_окончания = t.EndDate,
-                                Просрочено_на_дней = (DateTime.Now - t.EndDate).Days
-                            })
-                            .ToList();
-                            
-                        reportTitle = "ОТЧЁТ: ПРОСРОЧЕННЫЕ ЗАДАЧИ";
-                        lines.Add($"=== {reportTitle} ===\n");
-                        lines.Add($"Дата формирования: {DateTime.Now:dd.MM.yyyy HH:mm}\n");
-                        foreach (var item in overdueTasks)
-                        {
-                            lines.Add($"• {item.Название}");
-                            lines.Add($"  Объект: {item.Объект}");
-                            lines.Add($"  Бригада: {item.Бригада}");
-                            lines.Add($"  Приоритет: {item.Приоритет}");
-                            lines.Add($"  Дата окончания: {item.Дата_окончания:dd.MM.yyyy}");
-                            lines.Add($"  Просрочено на дней: {item.Просрочено_на_дней}\n");
-                        }
-                        reportName = "overdue_tasks";
-                        break;
-                }
-                
-                string folderPath = GetReportsFolderPath();
-                string fileName = $"{reportName}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-                string path = Path.Combine(folderPath, fileName);
-                
-                File.WriteAllLines(path, lines, System.Text.Encoding.UTF8);
+                var export = BuildTextReportExport();
+                var path = BuildReportFilePath(export.ReportName, "txt");
+                File.WriteAllLines(path, export.Lines, System.Text.Encoding.UTF8);
                 OfferToOpenExportedFile(path, "Файл отчёта");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка экспорта: {ex.Message}");
             }
+        }
+
+        private void ExportDelimitedReport(string extension, string fileLabel, string separator)
+        {
+            try
+            {
+                var export = BuildDelimitedReportExport(separator);
+                var path = BuildReportFilePath(export.ReportName, extension);
+                File.WriteAllLines(path, export.Lines, System.Text.Encoding.UTF8);
+                OfferToOpenExportedFile(path, fileLabel);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка экспорта {fileLabel}: {ex.Message}");
+            }
+        }
+
+        private ReportFileExport BuildDelimitedReportExport(string separator)
+        {
+            var tasks = facade.GetTasks();
+
+            switch (currentReportType)
+            {
+                case "tasks_by_site":
+                    return new ReportFileExport("tasks_by_site", BuildTasksBySiteDelimitedLines(BuildTasksBySiteRows(tasks), separator));
+                case "tasks_by_crew":
+                    return new ReportFileExport("tasks_by_crew", BuildTasksByCrewDelimitedLines(BuildTasksByCrewRows(tasks), separator));
+                case "overdue_tasks":
+                    return new ReportFileExport("overdue_tasks", BuildOverdueTaskDelimitedLines(BuildOverdueTaskRows(tasks, DateTime.Now), separator));
+                default:
+                    return new ReportFileExport("tasks", BuildTaskOverviewDelimitedLines(BuildTaskOverviewRows(tasks), separator));
+            }
+        }
+
+        private ReportFileExport BuildTextReportExport()
+        {
+            var tasks = facade.GetTasks();
+
+            switch (currentReportType)
+            {
+                case "tasks_by_site":
+                    return new ReportFileExport("tasks_by_site", BuildTasksBySiteTextLines(BuildTasksBySiteRows(tasks)));
+                case "tasks_by_crew":
+                    return new ReportFileExport("tasks_by_crew", BuildTasksByCrewTextLines(BuildTasksByCrewRows(tasks)));
+                case "overdue_tasks":
+                    return new ReportFileExport("overdue_tasks", BuildOverdueTaskTextLines(BuildOverdueTaskRows(tasks, DateTime.Now)));
+                default:
+                    return new ReportFileExport("tasks", BuildTaskOverviewTextLines(BuildTaskOverviewRows(tasks)));
+            }
+        }
+
+        private List<string> BuildTaskOverviewDelimitedLines(IEnumerable<TaskOverviewReportRow> rows, string separator)
+        {
+            var lines = new List<string>
+            {
+                JoinReportLine(separator, "Название", "Объект", "Бригада", "Приоритет", "Статус", "Начало", "Окончание")
+            };
+
+            lines.AddRange(rows.Select(row => JoinReportLine(
+                separator,
+                row.Title,
+                row.SiteName,
+                row.CrewName,
+                row.PriorityName,
+                row.StatusName,
+                row.StartDateText,
+                row.EndDateText)));
+
+            return lines;
+        }
+
+        private List<string> BuildTasksBySiteDelimitedLines(IEnumerable<TasksBySiteReportRow> rows, string separator)
+        {
+            var lines = new List<string>
+            {
+                JoinReportLine(separator, "Объект", "Всего задач", "Выполнено", "В работе", "Просрочено")
+            };
+
+            lines.AddRange(rows.Select(row => JoinReportLine(
+                separator,
+                row.SiteName,
+                row.TotalTasks.ToString(),
+                row.CompletedCount.ToString(),
+                row.InProgressCount.ToString(),
+                row.OverdueCount.ToString())));
+
+            return lines;
+        }
+
+        private List<string> BuildTasksByCrewDelimitedLines(IEnumerable<TasksByCrewReportRow> rows, string separator)
+        {
+            var lines = new List<string>
+            {
+                JoinReportLine(separator, "Бригада", "Всего задач", "Выполнено", "В работе", "Просрочено")
+            };
+
+            lines.AddRange(rows.Select(row => JoinReportLine(
+                separator,
+                row.CrewName,
+                row.TotalTasks.ToString(),
+                row.CompletedCount.ToString(),
+                row.InProgressCount.ToString(),
+                row.OverdueCount.ToString())));
+
+            return lines;
+        }
+
+        private List<string> BuildOverdueTaskDelimitedLines(IEnumerable<OverdueTaskReportRow> rows, string separator)
+        {
+            var lines = new List<string>
+            {
+                JoinReportLine(separator, "Название", "Объект", "Бригада", "Приоритет", "Дата окончания", "Просрочено на дней")
+            };
+
+            lines.AddRange(rows.Select(row => JoinReportLine(
+                separator,
+                row.Title,
+                row.SiteName,
+                row.CrewName,
+                row.PriorityName,
+                row.EndDate.ToString("dd.MM.yyyy"),
+                row.DelayDays.ToString())));
+
+            return lines;
+        }
+
+        private List<string> BuildTaskOverviewTextLines(IEnumerable<TaskOverviewReportRow> rows)
+        {
+            var lines = CreateTextReportHeader("ОТЧЁТ ПО ЗАДАЧАМ");
+            lines.AddRange(rows.Select(row =>
+                $"• {row.Title} | {row.SiteName} | {row.CrewName} | {row.PriorityName} | {row.StatusName} | {row.StartDateText}-{row.EndDateText}"));
+            return lines;
+        }
+
+        private List<string> BuildTasksBySiteTextLines(IEnumerable<TasksBySiteReportRow> rows)
+        {
+            var lines = CreateTextReportHeader("ОТЧЁТ: ЗАДАЧИ ПО ОБЪЕКТАМ");
+
+            foreach (var row in rows)
+            {
+                lines.Add($"• Объект: {row.SiteName}");
+                lines.Add($"  Всего задач: {row.TotalTasks}");
+                lines.Add($"  Выполнено: {row.CompletedCount}");
+                lines.Add($"  В работе: {row.InProgressCount}");
+                lines.Add($"  Просрочено: {row.OverdueCount}\n");
+            }
+
+            return lines;
+        }
+
+        private List<string> BuildTasksByCrewTextLines(IEnumerable<TasksByCrewReportRow> rows)
+        {
+            var lines = CreateTextReportHeader("ОТЧЁТ: ВЫПОЛНЕНИЕ ПО БРИГАДАМ");
+
+            foreach (var row in rows)
+            {
+                lines.Add($"• Бригада: {row.CrewName}");
+                lines.Add($"  Всего задач: {row.TotalTasks}");
+                lines.Add($"  Выполнено: {row.CompletedCount}");
+                lines.Add($"  В работе: {row.InProgressCount}");
+                lines.Add($"  Просрочено: {row.OverdueCount}\n");
+            }
+
+            return lines;
+        }
+
+        private List<string> BuildOverdueTaskTextLines(IEnumerable<OverdueTaskReportRow> rows)
+        {
+            var lines = CreateTextReportHeader("ОТЧЁТ: ПРОСРОЧЕННЫЕ ЗАДАЧИ");
+
+            foreach (var row in rows)
+            {
+                lines.Add($"• {row.Title}");
+                lines.Add($"  Объект: {row.SiteName}");
+                lines.Add($"  Бригада: {row.CrewName}");
+                lines.Add($"  Приоритет: {row.PriorityName}");
+                lines.Add($"  Дата окончания: {row.EndDate:dd.MM.yyyy}");
+                lines.Add($"  Просрочено на дней: {row.DelayDays}\n");
+            }
+
+            return lines;
+        }
+
+        private static List<string> CreateTextReportHeader(string reportTitle)
+        {
+            return new List<string>
+            {
+                $"=== {reportTitle} ===\n",
+                $"Дата формирования: {DateTime.Now:dd.MM.yyyy HH:mm}\n"
+            };
+        }
+
+        private static string JoinReportLine(string separator, params string[] values)
+        {
+            return string.Join(separator, values.Select(value => value ?? string.Empty));
+        }
+
+        private string BuildReportFilePath(string reportName, string extension)
+        {
+            var folderPath = GetReportsFolderPath();
+            var fileName = $"{reportName}_{DateTime.Now:yyyyMMdd_HHmmss}.{extension}";
+            return Path.Combine(folderPath, fileName);
         }
 
         private bool EnsureRoleManagementAccess()
@@ -4413,6 +4354,57 @@ namespace praktik
                 case "Closed": return "Закрыта";
                 default: return status;
             }
+        }
+
+        private sealed class ReportFileExport
+        {
+            public ReportFileExport(string reportName, List<string> lines)
+            {
+                ReportName = reportName;
+                Lines = lines ?? new List<string>();
+            }
+
+            public string ReportName { get; }
+            public List<string> Lines { get; }
+        }
+
+        private sealed class TaskOverviewReportRow
+        {
+            public string Title { get; set; }
+            public string SiteName { get; set; }
+            public string CrewName { get; set; }
+            public string PriorityName { get; set; }
+            public string StatusName { get; set; }
+            public string StartDateText { get; set; }
+            public string EndDateText { get; set; }
+        }
+
+        private sealed class TasksBySiteReportRow
+        {
+            public string SiteName { get; set; }
+            public int TotalTasks { get; set; }
+            public int CompletedCount { get; set; }
+            public int InProgressCount { get; set; }
+            public int OverdueCount { get; set; }
+        }
+
+        private sealed class TasksByCrewReportRow
+        {
+            public string CrewName { get; set; }
+            public int TotalTasks { get; set; }
+            public int CompletedCount { get; set; }
+            public int InProgressCount { get; set; }
+            public int OverdueCount { get; set; }
+        }
+
+        private sealed class OverdueTaskReportRow
+        {
+            public string Title { get; set; }
+            public string SiteName { get; set; }
+            public string CrewName { get; set; }
+            public string PriorityName { get; set; }
+            public DateTime EndDate { get; set; }
+            public int DelayDays { get; set; }
         }
 
         private sealed class BrigadierTaskChecklistItem

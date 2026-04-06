@@ -114,6 +114,36 @@ namespace praktik.Models.Patterns
         {
             errorMessage = null;
 
+            if (!TryValidateChecklistDecision(task, isCompleted, completedStatusId, incompleteStatusId, userId, comment, postponeDays, out errorMessage))
+            {
+                return false;
+            }
+
+            try
+            {
+                task.TaskStatusId = isCompleted ? completedStatusId : incompleteStatusId;
+                task.UpdatedAt = DateTime.Now;
+
+                if (!isCompleted)
+                {
+                    PostponeTask(task, postponeDays);
+                }
+
+                db.UpdateTask(task);
+                db.AddTaskReport(task.TaskId, userId, BuildChecklistReportText(isCompleted, comment));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Ошибка при обработке чек-листа: {ex.Message}";
+                return false;
+            }
+        }
+
+        private bool TryValidateChecklistDecision(Task task, bool isCompleted, int completedStatusId, int incompleteStatusId, int userId, string comment, int postponeDays, out string errorMessage)
+        {
+            errorMessage = null;
+
             if (task == null)
             {
                 errorMessage = "Задача не найдена";
@@ -126,60 +156,55 @@ namespace praktik.Models.Patterns
                 return false;
             }
 
-            if (isCompleted && completedStatusId <= 0)
+            if (isCompleted)
             {
-                errorMessage = "Не удалось определить статус завершения";
-                return false;
-            }
-
-            if (!isCompleted)
-            {
-                if (string.IsNullOrWhiteSpace(comment))
+                if (completedStatusId <= 0)
                 {
-                    errorMessage = "Для невыполненной задачи укажите причину в комментарии";
+                    errorMessage = "Не удалось определить статус завершения";
                     return false;
                 }
 
-                if (incompleteStatusId <= 0)
-                {
-                    errorMessage = "Не удалось определить статус невыполненной задачи";
-                    return false;
-                }
-
-                if (postponeDays <= 0)
-                {
-                    errorMessage = "Некорректно задан период переноса";
-                    return false;
-                }
-            }
-
-            try
-            {
-                task.TaskStatusId = isCompleted ? completedStatusId : incompleteStatusId;
-                task.UpdatedAt = DateTime.Now;
-
-                if (!isCompleted)
-                {
-                    task.StartDate = task.StartDate.Date.AddDays(postponeDays);
-                    task.EndDate = task.EndDate.Date.AddDays(postponeDays);
-                }
-
-                db.UpdateTask(task);
-
-                var reportText = isCompleted
-                    ? string.IsNullOrWhiteSpace(comment)
-                        ? "Задача отмечена выполненной бригадиром"
-                        : $"Задача выполнена: {comment.Trim()}"
-                    : $"Задача не выполнена и перенесена: {comment.Trim()}";
-
-                db.AddTaskReport(task.TaskId, userId, reportText);
                 return true;
             }
-            catch (Exception ex)
+
+            if (string.IsNullOrWhiteSpace(comment))
             {
-                errorMessage = $"Ошибка при обработке чек-листа: {ex.Message}";
+                errorMessage = "Для невыполненной задачи укажите причину в комментарии";
                 return false;
             }
+
+            if (incompleteStatusId <= 0)
+            {
+                errorMessage = "Не удалось определить статус невыполненной задачи";
+                return false;
+            }
+
+            if (postponeDays <= 0)
+            {
+                errorMessage = "Некорректно задан период переноса";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void PostponeTask(Task task, int postponeDays)
+        {
+            task.StartDate = task.StartDate.Date.AddDays(postponeDays);
+            task.EndDate = task.EndDate.Date.AddDays(postponeDays);
+        }
+
+        private static string BuildChecklistReportText(bool isCompleted, string comment)
+        {
+            var normalizedComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+            if (isCompleted)
+            {
+                return string.IsNullOrWhiteSpace(normalizedComment)
+                    ? "Задача отмечена выполненной бригадиром"
+                    : $"Задача выполнена: {normalizedComment}";
+            }
+
+            return $"Задача не выполнена и перенесена: {normalizedComment}";
         }
 
         /// <summary>
