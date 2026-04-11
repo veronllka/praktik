@@ -65,6 +65,7 @@ namespace praktik.Models
                     command.ExecuteNonQuery();
 
                     EnsureUserSettingsSchema(schemaConnection);
+                    EnsureDailyPlanSchema(schemaConnection);
                     SeedDefaultRolePermissions(schemaConnection);
                 }
 
@@ -1779,6 +1780,226 @@ namespace praktik.Models
                 command.Parameters.AddWithValue("@note", (object)note ?? DBNull.Value);
                 command.ExecuteNonQuery();
             }
+        }
+
+        // ---------------------------------------------------------------
+        // DailyPlan
+        // ---------------------------------------------------------------
+
+        private static void EnsureDailyPlanSchema(SqlConnection conn)
+        {
+            var createPlans = new SqlCommand(@"
+                IF OBJECT_ID('dbo.DailyPlans','U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.DailyPlans (
+                        PlanId          INT           IDENTITY(1,1) PRIMARY KEY,
+                        PlanDate        DATE          NOT NULL,
+                        CreatedByUserId INT           NOT NULL,
+                        CreatedAt       DATETIME2(3)  NOT NULL DEFAULT SYSUTCDATETIME(),
+                        Comment         NVARCHAR(400) NULL,
+                        Status          NVARCHAR(20)  NOT NULL DEFAULT N'Черновик',
+                        CONSTRAINT FK_DailyPlans_Users  FOREIGN KEY (CreatedByUserId) REFERENCES dbo.Users(UserId),
+                        CONSTRAINT CK_DailyPlans_Status CHECK (Status IN (N'Черновик', N'Утвержден'))
+                    );
+                    CREATE UNIQUE INDEX UX_DailyPlans_PlanDate ON dbo.DailyPlans(PlanDate);
+                END", conn);
+            createPlans.ExecuteNonQuery();
+
+            var createItems = new SqlCommand(@"
+                IF OBJECT_ID('dbo.DailyPlanItems','U') IS NULL
+                BEGIN
+                    CREATE TABLE dbo.DailyPlanItems (
+                        PlanItemId     INT           IDENTITY(1,1) PRIMARY KEY,
+                        PlanId         INT           NOT NULL,
+                        TaskId         INT           NOT NULL,
+                        CrewId         INT           NOT NULL,
+                        SortOrder      INT           NOT NULL DEFAULT 1,
+                        Note           NVARCHAR(300) NULL,
+                        MaterialsReady BIT           NOT NULL DEFAULT 1,
+                        CONSTRAINT FK_DailyPlanItems_Plans FOREIGN KEY (PlanId) REFERENCES dbo.DailyPlans(PlanId) ON DELETE CASCADE,
+                        CONSTRAINT FK_DailyPlanItems_Tasks FOREIGN KEY (TaskId) REFERENCES dbo.Tasks(TaskId),
+                        CONSTRAINT FK_DailyPlanItems_Crews FOREIGN KEY (CrewId) REFERENCES dbo.Crews(CrewId),
+                        CONSTRAINT CK_DailyPlanItems_SO   CHECK (SortOrder > 0)
+                    );
+                    CREATE UNIQUE INDEX UX_DailyPlanItems_Plan_Task ON dbo.DailyPlanItems(PlanId, TaskId);
+                END", conn);
+            createItems.ExecuteNonQuery();
+        }
+
+        public DailyPlan GetDailyPlanByDate(DateTime date)
+        {
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                var cmd = new SqlCommand(@"
+                    SELECT PlanId, PlanDate, CreatedByUserId, CreatedAt, ISNULL(Comment,'') AS Comment, Status
+                    FROM DailyPlans WHERE PlanDate = @date", conn);
+                cmd.Parameters.AddWithValue("@date", date.Date);
+
+                DailyPlan plan = null;
+                using (var r = cmd.ExecuteReader())
+                {
+                    if (r.Read())
+                    {
+                        plan = new DailyPlan
+                        {
+                            PlanId          = Convert.ToInt32(r["PlanId"]),
+                            PlanDate        = Convert.ToDateTime(r["PlanDate"]),
+                            CreatedByUserId = Convert.ToInt32(r["CreatedByUserId"]),
+                            CreatedAt       = Convert.ToDateTime(r["CreatedAt"]),
+                            Comment         = r["Comment"] as string,
+                            Status          = r["Status"] as string ?? "Черновик"
+                        };
+                    }
+                }
+
+                if (plan == null) return null;
+
+                var itemsCmd = new SqlCommand(@"
+                    SELECT PlanItemId, PlanId, TaskId, CrewId, SortOrder,
+                           ISNULL(Note,'') AS Note, MaterialsReady
+                    FROM DailyPlanItems WHERE PlanId = @planId
+                    ORDER BY CrewId, SortOrder", conn);
+                itemsCmd.Parameters.AddWithValue("@planId", plan.PlanId);
+                using (var r = itemsCmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        plan.Items.Add(new DailyPlanItem
+                        {
+                            PlanItemId     = Convert.ToInt32(r["PlanItemId"]),
+                            PlanId         = Convert.ToInt32(r["PlanId"]),
+                            TaskId         = Convert.ToInt32(r["TaskId"]),
+                            CrewId         = Convert.ToInt32(r["CrewId"]),
+                            SortOrder      = Convert.ToInt32(r["SortOrder"]),
+                            Note           = r["Note"] as string,
+                            MaterialsReady = Convert.ToBoolean(r["MaterialsReady"])
+                        });
+                    }
+                }
+                return plan;
+            }
+        }
+
+        public int SaveDailyPlan(DailyPlan plan, int userId)
+        {
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                using (var tx = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        int planId;
+                        if (plan.PlanId == 0)
+                        {
+                            // Insert or re-use existing plan for this date
+                            var checkCmd = new SqlCommand(
+                                "SELECT PlanId FROM DailyPlans WHERE PlanDate = @date", conn, tx);
+                            checkCmd.Parameters.AddWithValue("@date", plan.PlanDate.Date);
+                            var existing = checkCmd.ExecuteScalar();
+                            if (existing != null && existing != DBNull.Value)
+                            {
+                                planId = Convert.ToInt32(existing);
+                            }
+                            else
+                            {
+                                var insCmd = new SqlCommand(@"
+                                    INSERT INTO DailyPlans (PlanDate, CreatedByUserId, Comment, Status)
+                                    VALUES (@date, @userId, @comment, N'Черновик');
+                                    SELECT CAST(SCOPE_IDENTITY() AS INT);", conn, tx);
+                                insCmd.Parameters.AddWithValue("@date", plan.PlanDate.Date);
+                                insCmd.Parameters.AddWithValue("@userId", userId);
+                                insCmd.Parameters.AddWithValue("@comment", (object)plan.Comment ?? DBNull.Value);
+                                planId = Convert.ToInt32(insCmd.ExecuteScalar());
+                            }
+                        }
+                        else
+                        {
+                            planId = plan.PlanId;
+                            var updCmd = new SqlCommand(@"
+                                UPDATE DailyPlans SET Comment = @comment WHERE PlanId = @planId", conn, tx);
+                            updCmd.Parameters.AddWithValue("@planId", planId);
+                            updCmd.Parameters.AddWithValue("@comment", (object)plan.Comment ?? DBNull.Value);
+                            updCmd.ExecuteNonQuery();
+                        }
+
+                        // Replace all items
+                        var delCmd = new SqlCommand(
+                            "DELETE FROM DailyPlanItems WHERE PlanId = @planId", conn, tx);
+                        delCmd.Parameters.AddWithValue("@planId", planId);
+                        delCmd.ExecuteNonQuery();
+
+                        foreach (var item in plan.Items)
+                        {
+                            var insItem = new SqlCommand(@"
+                                INSERT INTO DailyPlanItems (PlanId, TaskId, CrewId, SortOrder, Note, MaterialsReady)
+                                VALUES (@planId, @taskId, @crewId, @sortOrder, @note, @materialsReady)", conn, tx);
+                            insItem.Parameters.AddWithValue("@planId",        planId);
+                            insItem.Parameters.AddWithValue("@taskId",        item.TaskId);
+                            insItem.Parameters.AddWithValue("@crewId",        item.CrewId);
+                            insItem.Parameters.AddWithValue("@sortOrder",     item.SortOrder);
+                            insItem.Parameters.AddWithValue("@note",          (object)item.Note ?? DBNull.Value);
+                            insItem.Parameters.AddWithValue("@materialsReady", item.MaterialsReady);
+                            insItem.ExecuteNonQuery();
+                        }
+
+                        tx.Commit();
+                        return planId;
+                    }
+                    catch
+                    {
+                        tx.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        public void ApproveDailyPlan(int planId)
+        {
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                var cmd = new SqlCommand(
+                    "UPDATE DailyPlans SET Status = N'Утвержден' WHERE PlanId = @planId", conn);
+                cmd.Parameters.AddWithValue("@planId", planId);
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public List<DailyPlanItem> GetApprovedPlanItemsForDate(DateTime date)
+        {
+            var items = new List<DailyPlanItem>();
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                var cmd = new SqlCommand(@"
+                    SELECT dpi.PlanItemId, dpi.PlanId, dpi.TaskId, dpi.CrewId,
+                           dpi.SortOrder, ISNULL(dpi.Note,'') AS Note, dpi.MaterialsReady
+                    FROM DailyPlanItems dpi
+                    INNER JOIN DailyPlans dp ON dp.PlanId = dpi.PlanId
+                    WHERE dp.PlanDate = @date AND dp.Status = N'Утвержден'
+                    ORDER BY dpi.CrewId, dpi.SortOrder", conn);
+                cmd.Parameters.AddWithValue("@date", date.Date);
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        items.Add(new DailyPlanItem
+                        {
+                            PlanItemId     = Convert.ToInt32(r["PlanItemId"]),
+                            PlanId         = Convert.ToInt32(r["PlanId"]),
+                            TaskId         = Convert.ToInt32(r["TaskId"]),
+                            CrewId         = Convert.ToInt32(r["CrewId"]),
+                            SortOrder      = Convert.ToInt32(r["SortOrder"]),
+                            Note           = r["Note"] as string,
+                            MaterialsReady = Convert.ToBoolean(r["MaterialsReady"])
+                        });
+                    }
+                }
+            }
+            return items;
         }
     }
 }

@@ -278,6 +278,7 @@
     <Compile Include="Models\Entities\Task.cs" />
     <Compile Include="Models\Entities\TaskReport.cs" />
     <Compile Include="Models\Entities\Role.cs" />
+    <Compile Include="Models\Entities\DailyPlan.cs" />
     <Compile Include="Models\Infrastructure\Logger.cs" />
     <Compile Include="Models\Entities\MaterialCatalog.cs" />
     <Compile Include="Models\Entities\MaterialRequest.cs" />
