@@ -1824,6 +1824,20 @@ namespace praktik.Models
                     CREATE UNIQUE INDEX UX_DailyPlanItems_Plan_Task ON dbo.DailyPlanItems(PlanId, TaskId);
                 END", conn);
             createItems.ExecuteNonQuery();
+
+            // Добавить недостающие столбцы, если таблица уже существовала без них
+            var addMissingColumns = new SqlCommand(@"
+                IF OBJECT_ID('dbo.DailyPlanItems','U') IS NOT NULL
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns
+                                   WHERE object_id = OBJECT_ID('dbo.DailyPlanItems') AND name = 'Note')
+                        ALTER TABLE dbo.DailyPlanItems ADD Note NVARCHAR(300) NULL;
+
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns
+                                   WHERE object_id = OBJECT_ID('dbo.DailyPlanItems') AND name = 'MaterialsReady')
+                        ALTER TABLE dbo.DailyPlanItems ADD MaterialsReady BIT NOT NULL DEFAULT 1;
+                END", conn);
+            addMissingColumns.ExecuteNonQuery();
         }
 
         public DailyPlan GetDailyPlanByDate(DateTime date)
