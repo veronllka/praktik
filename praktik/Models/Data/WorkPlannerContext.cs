@@ -1825,10 +1825,22 @@ namespace praktik.Models
                 END", conn);
             createItems.ExecuteNonQuery();
 
-            // Добавить недостающие столбцы, если таблица уже существовала без них
+            // Мигрировать / добавить недостающие столбцы, если таблица уже существовала со старой схемой
             var addMissingColumns = new SqlCommand(@"
                 IF OBJECT_ID('dbo.DailyPlanItems','U') IS NOT NULL
                 BEGIN
+                    -- Если столбец назывался SequenceOrder — переименовать в SortOrder
+                    IF EXISTS (SELECT 1 FROM sys.columns
+                               WHERE object_id = OBJECT_ID('dbo.DailyPlanItems') AND name = 'SequenceOrder')
+                       AND NOT EXISTS (SELECT 1 FROM sys.columns
+                               WHERE object_id = OBJECT_ID('dbo.DailyPlanItems') AND name = 'SortOrder')
+                        EXEC sp_rename 'dbo.DailyPlanItems.SequenceOrder', 'SortOrder', 'COLUMN';
+
+                    -- Добавить SortOrder если его нет совсем
+                    IF NOT EXISTS (SELECT 1 FROM sys.columns
+                                   WHERE object_id = OBJECT_ID('dbo.DailyPlanItems') AND name = 'SortOrder')
+                        ALTER TABLE dbo.DailyPlanItems ADD SortOrder INT NOT NULL DEFAULT 1;
+
                     IF NOT EXISTS (SELECT 1 FROM sys.columns
                                    WHERE object_id = OBJECT_ID('dbo.DailyPlanItems') AND name = 'Note')
                         ALTER TABLE dbo.DailyPlanItems ADD Note NVARCHAR(300) NULL;
