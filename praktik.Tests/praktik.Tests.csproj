@@ -25,6 +25,7 @@
     <Compile Include="..\praktik\Models\Entities\MaterialRequest.cs" Link="Source\Models\Entities\MaterialRequest.cs" />
     <Compile Include="..\praktik\Models\Entities\MaterialRequestItem.cs" Link="Source\Models\Entities\MaterialRequestItem.cs" />
     <Compile Include="..\praktik\Models\Entities\Priority.cs" Link="Source\Models\Entities\Priority.cs" />
+    <Compile Include="..\praktik\Models\Entities\DailyPlan.cs" Link="Source\Models\Entities\DailyPlan.cs" />
     <Compile Include="..\praktik\Models\Entities\Role.cs" Link="Source\Models\Entities\Role.cs" />
     <Compile Include="..\praktik\Models\Entities\Site.cs" Link="Source\Models\Entities\Site.cs" />
     <Compile Include="..\praktik\Models\Entities\Task.cs" Link="Source\Models\Entities\Task.cs" />

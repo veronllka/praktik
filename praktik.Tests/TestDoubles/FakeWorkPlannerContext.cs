@@ -147,5 +147,42 @@ namespace praktik.Tests.TestDoubles
                 MaterialRequests[index] = request;
             }
         }
+
+        public List<DailyPlan> DailyPlans { get; } = new List<DailyPlan>();
+
+        public DailyPlan GetDailyPlanByDate(DateTime date)
+        {
+            return DailyPlans.FirstOrDefault(p => p.PlanDate.Date == date.Date);
+        }
+
+        public int SaveDailyPlan(DailyPlan plan, int userId)
+        {
+            var existing = DailyPlans.FirstOrDefault(p => p.PlanDate.Date == plan.PlanDate.Date);
+            if (existing != null)
+            {
+                DailyPlans.Remove(existing);
+            }
+            if (plan.PlanId == 0)
+            {
+                plan.PlanId = DailyPlans.Count + 1;
+            }
+            DailyPlans.Add(plan);
+            return plan.PlanId;
+        }
+
+        public void ApproveDailyPlan(int planId)
+        {
+            var plan = DailyPlans.FirstOrDefault(p => p.PlanId == planId);
+            if (plan != null)
+            {
+                plan.Status = "Утвержден";
+            }
+        }
+
+        public List<DailyPlanItem> GetApprovedPlanItemsForDate(DateTime date)
+        {
+            var plan = DailyPlans.FirstOrDefault(p => p.PlanDate.Date == date.Date && p.Status == "Утвержден");
+            return plan?.Items ?? new List<DailyPlanItem>();
+        }
     }
 }
