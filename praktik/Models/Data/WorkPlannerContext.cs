@@ -1843,6 +1843,28 @@ namespace praktik.Models
                 BEGIN
                     DECLARE @cn NVARCHAR(200);
 
+                    -- Удалить все индексы на столбце SequenceOrder (кроме PK)
+                    DECLARE @idx NVARCHAR(200);
+                    SELECT @idx = i.name
+                    FROM sys.indexes i
+                    JOIN sys.index_columns ic ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+                    JOIN sys.columns c        ON c.object_id  = ic.object_id AND c.column_id  = ic.column_id
+                    WHERE i.object_id = OBJECT_ID('dbo.DailyPlanItems')
+                      AND c.name = N'SequenceOrder'
+                      AND i.is_primary_key = 0 AND i.type > 0;
+                    WHILE @idx IS NOT NULL
+                    BEGIN
+                        EXEC('DROP INDEX [' + @idx + '] ON dbo.DailyPlanItems');
+                        SET @idx = NULL;
+                        SELECT @idx = i.name
+                        FROM sys.indexes i
+                        JOIN sys.index_columns ic ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+                        JOIN sys.columns c        ON c.object_id  = ic.object_id AND c.column_id  = ic.column_id
+                        WHERE i.object_id = OBJECT_ID('dbo.DailyPlanItems')
+                          AND c.name = N'SequenceOrder'
+                          AND i.is_primary_key = 0 AND i.type > 0;
+                    END;
+
                     -- Удалить DEFAULT constraint на SequenceOrder если есть
                     SELECT @cn = dc.name
                     FROM sys.default_constraints dc
