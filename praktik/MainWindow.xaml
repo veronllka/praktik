@@ -152,6 +152,12 @@
                                     <TextBlock Text="Управление пользователями" Margin="16,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
+                    <ListBoxItem x:Name="DailyPlanMenuItem">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CalendarCheck" Width="24" Height="24" VerticalAlignment="Center"/>
+                            <TextBlock Text="План на день" Margin="16,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
             </DockPanel>
         </materialDesign:DrawerHost.LeftDrawerContent>
@@ -755,9 +761,40 @@
                                                             </Border.Style>
                                                             <TextBlock Text="{Binding ChecklistStatusText}" FontWeight="SemiBold"/>
                                                         </Border>
+                                                        <!-- Значок из плана диспетчера -->
+                                                        <Border Background="#E3F2FD" CornerRadius="10" Padding="10,6"
+                                                                Margin="0,0,8,8"
+                                                                Visibility="{Binding PlanOrderBadgeVisibility}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="CalendarCheck"
+                                                                                         Width="14" Height="14"
+                                                                                         Foreground="#1565C0"
+                                                                                         VerticalAlignment="Center"
+                                                                                         Margin="0,0,4,0"/>
+                                                                <TextBlock Text="{Binding PlanOrderText}"
+                                                                           Foreground="#1565C0"
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="12"/>
+                                                            </StackPanel>
+                                                        </Border>
                                                     </WrapPanel>
 
                                                     <StackPanel Grid.Row="2" Margin="0,8,0,0">
+                                                        <!-- Заметка диспетчера из плана -->
+                                                        <Border Background="#EEF4FF" CornerRadius="6"
+                                                                Padding="10,6" Margin="0,0,0,10"
+                                                                Visibility="{Binding PlanNoteVisibility}">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <materialDesign:PackIcon Kind="NoteText" Width="14" Height="14"
+                                                                                         Foreground="#3949AB"
+                                                                                         VerticalAlignment="Center"
+                                                                                         Margin="0,0,6,0"/>
+                                                                <TextBlock Text="{Binding PlanNote}"
+                                                                           Foreground="#3949AB"
+                                                                           FontSize="12"
+                                                                           TextWrapping="Wrap"/>
+                                                            </StackPanel>
+                                                        </Border>
                                                         <CheckBox Content="Задача выполнена"
                                                                   IsChecked="{Binding IsMarkedCompleted, Mode=TwoWay}"
                                                                   FontWeight="SemiBold"
@@ -1528,6 +1565,356 @@
                         </Grid>
                     </Grid>
                 </Grid>
+
+                <!-- ===== ПЛАН НА ДЕНЬ (Диспетчер) ===== -->
+                <Grid x:Name="DailyPlanContent" Visibility="Collapsed" Grid.ColumnSpan="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Шапка: выбор даты + статус плана -->
+                    <materialDesign:Card Grid.Row="0" Margin="0,0,0,12">
+                        <StackPanel Margin="16">
+                            <WrapPanel>
+                                <Button Content="← Пред."
+                                        Click="BtnDailyPlanPrevDay_Click"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="0,0,8,8"/>
+                                <DatePicker x:Name="dpDailyPlanDate"
+                                            SelectedDateChanged="DpDailyPlanDate_SelectedDateChanged"
+                                            Width="160" Margin="0,0,8,8"/>
+                                <Button Content="Сегодня"
+                                        Click="BtnDailyPlanToday_Click"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="0,0,8,8"/>
+                                <Button Content="След. →"
+                                        Click="BtnDailyPlanNextDay_Click"
+                                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                                        Margin="0,0,24,8"/>
+                                <Border x:Name="bdDailyPlanStatus" CornerRadius="4" Padding="12,4"
+                                        Background="{DynamicResource AppPanelBrush}"
+                                        VerticalAlignment="Center" Margin="0,0,0,8">
+                                    <TextBlock x:Name="txtDailyPlanStatus" Text="Нет плана"
+                                               FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </Border>
+                            </WrapPanel>
+                            <TextBlock x:Name="txtDailyPlanInfo"
+                                       Foreground="{DynamicResource AppMutedTextBrush}"
+                                       FontSize="12" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Основная область: левая панель задач + правая панель плана -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="380"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- ЛЕВАЯ: доступные задачи -->
+                        <Grid Grid.Column="0" Margin="0,0,8,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <materialDesign:Card Grid.Row="0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <StackPanel Grid.Row="0" Margin="16,16,16,8">
+                                        <TextBlock Text="Доступные задачи"
+                                                   Style="{StaticResource SubHeaderTextStyle}"/>
+                                        <TextBlock Text="Нажмите «Выбрать» на задаче, чтобы добавить её в план."
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"
+                                                   FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                                  Margin="8,0,8,8">
+                                        <StackPanel>
+                                            <TextBlock x:Name="txtNoAvailableTasks"
+                                                       Text="На выбранную дату задач нет."
+                                                       Margin="8,8,0,0"
+                                                       Foreground="{DynamicResource AppMutedTextBrush}"
+                                                       Visibility="Collapsed"/>
+                                            <ItemsControl x:Name="icAvailablePlanTasks">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <materialDesign:Card Margin="0,0,0,8" Padding="12">
+                                                            <Grid>
+                                                                <Grid.RowDefinitions>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                    <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
+
+                                                                <TextBlock Grid.Row="0"
+                                                                           Text="{Binding Title}"
+                                                                           FontWeight="SemiBold"
+                                                                           FontSize="14"
+                                                                           TextWrapping="Wrap"
+                                                                           Foreground="{DynamicResource AppTextBrush}"/>
+
+                                                                <WrapPanel Grid.Row="1" Margin="0,6,0,0">
+                                                                    <Border Background="{DynamicResource AppPanelBrush}"
+                                                                            CornerRadius="8" Padding="8,3" Margin="0,0,6,4">
+                                                                        <TextBlock Text="{Binding SiteName}" FontSize="11"/>
+                                                                    </Border>
+                                                                    <Border Background="{DynamicResource AppPanelBrush}"
+                                                                            CornerRadius="8" Padding="8,3" Margin="0,0,6,4">
+                                                                        <TextBlock Text="{Binding PriorityName}" FontSize="11"/>
+                                                                    </Border>
+                                                                    <Border Background="{DynamicResource AppPanelBrush}"
+                                                                            CornerRadius="8" Padding="8,3" Margin="0,0,6,4">
+                                                                        <TextBlock Text="{Binding StatusName}" FontSize="11"/>
+                                                                    </Border>
+                                                                    <Border Background="{DynamicResource AppPanelBrush}"
+                                                                            CornerRadius="8" Padding="8,3" Margin="0,0,0,4">
+                                                                        <TextBlock Text="{Binding DateRange}" FontSize="11"/>
+                                                                    </Border>
+                                                                </WrapPanel>
+
+                                                                <Border Grid.Row="2"
+                                                                        Background="#FFF3CD"
+                                                                        CornerRadius="4"
+                                                                        Padding="8,4"
+                                                                        Margin="0,4,0,0"
+                                                                        Visibility="{Binding MaterialWarningVisibility}">
+                                                                    <TextBlock Text="⚠ Материалы не готовы"
+                                                                               FontSize="11"
+                                                                               Foreground="#856404"/>
+                                                                </Border>
+
+                                                                <Grid Grid.Row="3" Margin="0,8,0,0">
+                                                                    <Button Content="Выбрать →"
+                                                                            Tag="{Binding TaskId}"
+                                                                            Click="BtnSelectPlanTask_Click"
+                                                                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                                            Height="28" FontSize="12"
+                                                                            HorizontalAlignment="Left"
+                                                                            Visibility="{Binding NotInPlanVisibility}"/>
+                                                                    <StackPanel Orientation="Horizontal"
+                                                                                Visibility="{Binding InPlanVisibility}"
+                                                                                VerticalAlignment="Center">
+                                                                        <materialDesign:PackIcon Kind="CheckCircle"
+                                                                                                 Foreground="Green"
+                                                                                                 Width="16" Height="16"
+                                                                                                 VerticalAlignment="Center"/>
+                                                                        <TextBlock Text="В плане"
+                                                                                   Foreground="Green"
+                                                                                   Margin="4,0"
+                                                                                   VerticalAlignment="Center"
+                                                                                   FontWeight="SemiBold"
+                                                                                   FontSize="12"/>
+                                                                    </StackPanel>
+                                                                </Grid>
+                                                            </Grid>
+                                                        </materialDesign:Card>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </materialDesign:Card>
+
+                            <!-- Панель добавления задачи в план -->
+                            <materialDesign:Card Grid.Row="1"
+                                                 x:Name="pnlAddToPlan"
+                                                 Visibility="Collapsed"
+                                                 Margin="0,8,0,0">
+                                <StackPanel Margin="16">
+                                    <TextBlock Text="Добавить в план"
+                                               Style="{StaticResource SubHeaderTextStyle}"
+                                               Margin="0,0,0,8"/>
+                                    <TextBlock x:Name="txtAddToPlanTaskName"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap"
+                                               Margin="0,0,0,12"
+                                               Foreground="{DynamicResource AppTextBrush}"/>
+                                    <ComboBox x:Name="cbPlanCrewSelect"
+                                              materialDesign:HintAssist.Hint="Бригада *"
+                                              Style="{StaticResource MaterialDesignFloatingHintComboBox}"
+                                              DisplayMemberPath="CrewName"
+                                              Margin="0,0,0,12"/>
+                                    <TextBox x:Name="txtPlanItemNote"
+                                             materialDesign:HintAssist.Hint="Заметка (необязательно)"
+                                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                             Margin="0,0,0,12"/>
+                                    <CheckBox x:Name="chkPlanItemMaterials"
+                                              Content="Материалы готовы"
+                                              IsChecked="True"
+                                              Margin="0,0,0,12"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="btnConfirmAddToPlan"
+                                                Content="ДОБАВИТЬ"
+                                                Click="BtnConfirmAddToPlan_Click"
+                                                Style="{StaticResource MaterialDesignRaisedButton}"
+                                                Margin="0,0,8,0"/>
+                                        <Button Content="ОТМЕНА"
+                                                Click="BtnCancelAddToPlan_Click"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </materialDesign:Card>
+                        </Grid>
+
+                        <!-- ПРАВАЯ: план бригад -->
+                        <materialDesign:Card Grid.Column="1" Margin="8,0,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Text="План бригад на день"
+                                           Style="{StaticResource SubHeaderTextStyle}"
+                                           Margin="16,16,16,8"/>
+                                <ScrollViewer Grid.Row="1"
+                                              VerticalScrollBarVisibility="Auto"
+                                              Margin="12,0,12,12">
+                                    <StackPanel>
+                                        <TextBlock x:Name="txtNoPlanItems"
+                                                   Text="Добавьте задачи из левой панели, чтобы сформировать план."
+                                                   HorizontalAlignment="Center"
+                                                   Margin="24"
+                                                   TextWrapping="Wrap"
+                                                   TextAlignment="Center"
+                                                   Foreground="{DynamicResource AppMutedTextBrush}"
+                                                   Visibility="Visible"/>
+                                        <ItemsControl x:Name="icDailyPlanCrews">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Margin="0,0,0,16"
+                                                            BorderBrush="{DynamicResource AppBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="8">
+                                                        <StackPanel>
+                                                            <!-- Заголовок бригады -->
+                                                            <Border Background="{DynamicResource PrimaryHueMidBrush}"
+                                                                    CornerRadius="7,7,0,0"
+                                                                    Padding="16,10">
+                                                                <TextBlock Text="{Binding CrewName}"
+                                                                           FontWeight="Bold"
+                                                                           Foreground="White"
+                                                                           FontSize="14"/>
+                                                            </Border>
+                                                            <!-- Задачи бригады -->
+                                                            <ItemsControl ItemsSource="{Binding Items}"
+                                                                          Margin="8,8,8,8">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate>
+                                                                        <Border Margin="0,0,0,6"
+                                                                                Background="{DynamicResource AppSurfaceBrush}"
+                                                                                CornerRadius="6"
+                                                                                Padding="10,8">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="32"/>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                    <ColumnDefinition Width="150"/>
+                                                                                    <ColumnDefinition Width="32"/>
+                                                                                    <ColumnDefinition Width="Auto"/>
+                                                                                </Grid.ColumnDefinitions>
+
+                                                                                <TextBlock Grid.Column="0"
+                                                                                           Text="{Binding SortOrderText}"
+                                                                                           FontWeight="Bold"
+                                                                                           FontSize="14"
+                                                                                           Foreground="{DynamicResource PrimaryHueMidBrush}"
+                                                                                           VerticalAlignment="Center"
+                                                                                           HorizontalAlignment="Center"/>
+
+                                                                                <StackPanel Grid.Column="1" Margin="6,0">
+                                                                                    <TextBlock Text="{Binding Title}"
+                                                                                               FontWeight="SemiBold"
+                                                                                               FontSize="13"
+                                                                                               TextWrapping="Wrap"/>
+                                                                                    <TextBlock Text="{Binding SiteName}"
+                                                                                               FontSize="11"
+                                                                                               Foreground="{DynamicResource AppMutedTextBrush}"/>
+                                                                                </StackPanel>
+
+                                                                                <TextBox Grid.Column="2"
+                                                                                         Text="{Binding Note, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                                         materialDesign:HintAssist.Hint="Заметка"
+                                                                                         Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                                                                         FontSize="11"
+                                                                                         Margin="4,0"
+                                                                                         VerticalAlignment="Center"/>
+
+                                                                                <CheckBox Grid.Column="3"
+                                                                                          IsChecked="{Binding MaterialsReady, Mode=TwoWay}"
+                                                                                          ToolTip="Материалы готовы"
+                                                                                          VerticalAlignment="Center"
+                                                                                          HorizontalAlignment="Center"/>
+
+                                                                                <StackPanel Grid.Column="4"
+                                                                                            Orientation="Horizontal"
+                                                                                            VerticalAlignment="Center">
+                                                                                    <Button Content="↑"
+                                                                                            Tag="{Binding}"
+                                                                                            Click="BtnPlanItemMoveUp_Click"
+                                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                                            Width="28" Height="28"
+                                                                                            Padding="0" MinWidth="0"/>
+                                                                                    <Button Content="↓"
+                                                                                            Tag="{Binding}"
+                                                                                            Click="BtnPlanItemMoveDown_Click"
+                                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                                            Width="28" Height="28"
+                                                                                            Padding="0" MinWidth="0"/>
+                                                                                    <Button Content="✕"
+                                                                                            Tag="{Binding}"
+                                                                                            Click="BtnPlanItemRemove_Click"
+                                                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                                                            Width="28" Height="28"
+                                                                                            Padding="0" MinWidth="0"
+                                                                                            Foreground="#E53935"/>
+                                                                                </StackPanel>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </Grid>
+                        </materialDesign:Card>
+                    </Grid>
+
+                    <!-- Нижняя панель: сохранить / утвердить -->
+                    <materialDesign:Card Grid.Row="2" Margin="0,12,0,0">
+                        <StackPanel Margin="16" Orientation="Horizontal">
+                            <Button x:Name="btnSaveDailyPlan"
+                                    Content="СОХРАНИТЬ ЧЕРНОВИК"
+                                    Click="BtnSaveDailyPlan_Click"
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Margin="0,0,12,0"/>
+                            <Button x:Name="btnApproveDailyPlan"
+                                    Content="УТВЕРДИТЬ ПЛАН"
+                                    Click="BtnApproveDailyPlan_Click"
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Margin="0,0,24,0"/>
+                            <TextBlock x:Name="txtDailyPlanSaveStatus"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AppMutedTextBrush}"
+                                       FontSize="12"/>
+                        </StackPanel>
+                    </materialDesign:Card>
+                </Grid>
+                <!-- ===== КОНЕЦ ПЛАНА НА ДЕНЬ ===== -->
+
             </Grid>
         </DockPanel>
     </materialDesign:DrawerHost>

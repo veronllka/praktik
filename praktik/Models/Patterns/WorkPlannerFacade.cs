@@ -412,5 +412,17 @@ namespace praktik.Models.Patterns
         public void DeleteCrew(int crewId) => db.DeleteCrew(crewId);
 
         #endregion
+
+        #region DailyPlan Operations
+
+        public DailyPlan GetDailyPlanByDate(DateTime date) => db.GetDailyPlanByDate(date);
+
+        public int SaveDailyPlan(DailyPlan plan, int userId) => db.SaveDailyPlan(plan, userId);
+
+        public void ApproveDailyPlan(int planId) => db.ApproveDailyPlan(planId);
+
+        public List<DailyPlanItem> GetApprovedPlanItemsForDate(DateTime date) => db.GetApprovedPlanItemsForDate(date);
+
+        #endregion
     }
 }

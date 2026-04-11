@@ -58,6 +58,7 @@ namespace praktik.Models
         public const string ReportsExport = "reports.export";
         public const string MaterialRequestsView = "material_requests.view";
         public const string MaterialRequestsManage = "material_requests.manage";
+        public const string DailyPlanView = "daily_plan.view";
 
         private static readonly IReadOnlyList<RolePermissionDefinition> definitions =
             new List<RolePermissionDefinition>
@@ -75,7 +76,8 @@ namespace praktik.Models
                 new RolePermissionDefinition(ReportsView, "Разделы", "Отчеты", "Просмотр аналитики и формирование отчетов."),
                 new RolePermissionDefinition(ReportsExport, "Операции", "Экспорт отчетов", "Сохранение отчетов в файл."),
                 new RolePermissionDefinition(MaterialRequestsView, "Разделы", "Заявки на материалы", "Просмотр реестра заявок на материалы."),
-                new RolePermissionDefinition(MaterialRequestsManage, "Операции", "Обработка заявок на материалы", "Создание, редактирование и согласование заявок.")
+                new RolePermissionDefinition(MaterialRequestsManage, "Операции", "Обработка заявок на материалы", "Создание, редактирование и согласование заявок."),
+                new RolePermissionDefinition(DailyPlanView, "Разделы", "План на день", "Создание и управление ежедневным планом работы бригад.")
             };
 
         private static readonly IReadOnlyDictionary<string, RolePermissionDefinition> definitionMap =
@@ -120,7 +122,8 @@ namespace praktik.Models
                         ReportsView,
                         ReportsExport,
                         MaterialRequestsView,
-                        MaterialRequestsManage
+                        MaterialRequestsManage,
+                        DailyPlanView
                     };
 
                 case "бригадир":

@@ -14,5 +14,9 @@ namespace praktik.Models
         void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null, string attachmentUrl = null);
         List<MaterialRequest> GetMaterialRequests(int? taskId = null, int? requestId = null);
         void UpdateMaterialRequest(MaterialRequest request);
+        DailyPlan GetDailyPlanByDate(DateTime date);
+        int SaveDailyPlan(DailyPlan plan, int userId);
+        void ApproveDailyPlan(int planId);
+        List<DailyPlanItem> GetApprovedPlanItemsForDate(DateTime date);
     }
 }

@@ -45,11 +45,22 @@ namespace praktik
         private string currentReportChartType = "bar";
         private bool isUpdatingBrigadierChecklistDate;
 
+        // DailyPlan state
+        private DateTime dailyPlanDate = DateTime.Today;
+        private DailyPlan currentDailyPlan;
+        private int selectedPlanTaskId = -1;
+        private readonly ObservableCollection<AvailablePlanTaskItem> availablePlanTasks = new ObservableCollection<AvailablePlanTaskItem>();
+        private readonly ObservableCollection<CrewPlanGroup> dailyPlanCrewGroups = new ObservableCollection<CrewPlanGroup>();
+        private List<Crew> dailyPlanCrews = new List<Crew>();
+        private bool isUpdatingDailyPlanDate;
+
         public MainWindow()
         {
             InitializeComponent();
             facade = new WorkPlannerFacade();
             icBrigadierTasks.ItemsSource = brigadierChecklistItems;
+            icAvailablePlanTasks.ItemsSource = availablePlanTasks;
+            icDailyPlanCrews.ItemsSource = dailyPlanCrewGroups;
             AppThemeManager.ApplyTheme(LoginWindow.CurrentUser);
             UpdateRoleManagementView();
             LoadCurrentPermissions();
@@ -240,6 +251,7 @@ namespace praktik
         private bool CanExportReports() => HasPermission(RolePermissionCatalog.ReportsExport);
         private bool CanViewMaterialRequests() => HasAnyPermission(RolePermissionCatalog.MaterialRequestsView, RolePermissionCatalog.MaterialRequestsManage);
         private bool CanManageMaterialRequests() => HasPermission(RolePermissionCatalog.MaterialRequestsManage);
+        private bool CanViewDailyPlan() => HasPermission(RolePermissionCatalog.DailyPlanView);
 
         private bool EnsurePermission(string permissionCode, string accessDeniedMessage)
         {
@@ -363,6 +375,7 @@ namespace praktik
             SetMenuVisibility(ReportsMenuItem, canViewReports);
             SetMenuVisibility(MaterialRequestsMenuItem, canViewMaterialRequests);
             SetMenuVisibility(RolesMenuItem, isAdminRole);
+            SetMenuVisibility(DailyPlanMenuItem, CanViewDailyPlan());
 
             SetHelpSectionsVisibility(
                 canViewDashboard,
@@ -559,6 +572,7 @@ namespace praktik
             ReportsContent.Visibility = Visibility.Collapsed;
             MaterialRequestsContent.Visibility = Visibility.Collapsed;
             RolesContent.Visibility = Visibility.Collapsed;
+            DailyPlanContent.Visibility = Visibility.Collapsed;
 
             switch (NavigationListBox.SelectedIndex)
             {
@@ -601,6 +615,11 @@ namespace praktik
                     RolesContent.Visibility = Visibility.Visible;
                     PageTitle.Text = "Управление пользователями";
                     LoadRoleManagementData();
+                    break;
+                case 8:
+                    DailyPlanContent.Visibility = Visibility.Visible;
+                    PageTitle.Text = "План на день";
+                    LoadDailyPlan();
                     break;
             }
         }
@@ -943,12 +962,51 @@ namespace praktik
             var weekStart = GetStartOfWeek(selectedDate);
             var checklistTasks = BuildBrigadierChecklistTasks(selectedDate);
 
-            foreach (var checklistItem in checklistTasks.Select(task => CreateBrigadierChecklistItem(task, selectedDate)))
+            // Try to get approved plan for this date to show plan order in checklist
+            List<DailyPlanItem> approvedPlanItems;
+            try { approvedPlanItems = facade.GetApprovedPlanItemsForDate(selectedDate); }
+            catch { approvedPlanItems = new List<DailyPlanItem>(); }
+
+            // Get current user's crew (brigadier is foreman of their crew)
+            int currentUserId = LoginWindow.CurrentUser?.UserId ?? 0;
+            var userCrew = facade.GetCrews().FirstOrDefault(c => c.BrigadierId == currentUserId);
+            int myCrewId = userCrew?.CrewId ?? 0;
+
+            // Filter plan items for this brigadier's crew
+            var myPlanItems = approvedPlanItems
+                .Where(p => p.CrewId == myCrewId || myCrewId == 0)
+                .ToDictionary(p => p.TaskId, p => p);
+
+            // Sort: plan items first (by order), then remaining tasks
+            List<Models.Task> orderedTasks;
+            if (myPlanItems.Count > 0)
             {
-                brigadierChecklistItems.Add(checklistItem);
+                var inPlan = checklistTasks
+                    .Where(t => myPlanItems.ContainsKey(t.TaskId))
+                    .OrderBy(t => myPlanItems[t.TaskId].SortOrder)
+                    .ToList();
+                var notInPlan = checklistTasks
+                    .Where(t => !myPlanItems.ContainsKey(t.TaskId))
+                    .ToList();
+                orderedTasks = inPlan.Concat(notInPlan).ToList();
+            }
+            else
+            {
+                orderedTasks = checklistTasks;
             }
 
-            UpdateBrigadierChecklistSummary(selectedDate, weekStart, checklistTasks.Count);
+            foreach (var task in orderedTasks)
+            {
+                var item = CreateBrigadierChecklistItem(task, selectedDate);
+                if (myPlanItems.TryGetValue(task.TaskId, out var planItem))
+                {
+                    item.PlanOrderText = $"Пункт плана №{planItem.SortOrder}";
+                    item.PlanNote = string.IsNullOrWhiteSpace(planItem.Note) ? null : planItem.Note;
+                }
+                brigadierChecklistItems.Add(item);
+            }
+
+            UpdateBrigadierChecklistSummary(selectedDate, weekStart, orderedTasks.Count);
         }
 
         private void ResetBrigadierChecklistView()
@@ -4356,6 +4414,483 @@ namespace praktik
             }
         }
 
+        // =====================================================================
+        // ПЛАН НА ДЕНЬ — логика
+        // =====================================================================
+
+        private void LoadDailyPlan()
+        {
+            try
+            {
+                isUpdatingDailyPlanDate = true;
+                dpDailyPlanDate.SelectedDate = dailyPlanDate;
+                isUpdatingDailyPlanDate = false;
+
+                // Загрузить список бригад
+                dailyPlanCrews = facade.GetCrews();
+                cbPlanCrewSelect.ItemsSource = dailyPlanCrews;
+
+                // Загрузить сохранённый план
+                currentDailyPlan = facade.GetDailyPlanByDate(dailyPlanDate);
+
+                // Построить группы бригад из плана
+                RebuildPlanCrewGroups();
+
+                // Построить список доступных задач
+                RefreshAvailablePlanTasks();
+
+                // Обновить статус
+                UpdateDailyPlanStatusDisplay();
+
+                // Скрыть панель добавления
+                pnlAddToPlan.Visibility = Visibility.Collapsed;
+                selectedPlanTaskId = -1;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки плана: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RebuildPlanCrewGroups()
+        {
+            dailyPlanCrewGroups.Clear();
+
+            if (currentDailyPlan == null) return;
+
+            var crews = facade.GetCrews();
+            var tasks = allTasks ?? new List<Models.Task>();
+
+            var grouped = currentDailyPlan.Items
+                .GroupBy(i => i.CrewId)
+                .OrderBy(g => g.Key);
+
+            foreach (var group in grouped)
+            {
+                var crew = crews.FirstOrDefault(c => c.CrewId == group.Key);
+                var crewGroup = new CrewPlanGroup
+                {
+                    CrewId   = group.Key,
+                    CrewName = crew?.CrewName ?? $"Бригада #{group.Key}"
+                };
+
+                foreach (var item in group.OrderBy(i => i.SortOrder))
+                {
+                    var task = tasks.FirstOrDefault(t => t.TaskId == item.TaskId);
+                    crewGroup.Items.Add(new DailyPlanItemViewModel
+                    {
+                        PlanItemId     = item.PlanItemId,
+                        TaskId         = item.TaskId,
+                        Title          = task?.Title ?? $"Задача #{item.TaskId}",
+                        SiteName       = task?.Site?.SiteName ?? "—",
+                        CrewId         = item.CrewId,
+                        CrewName       = crewGroup.CrewName,
+                        SortOrder      = item.SortOrder,
+                        Note           = item.Note ?? string.Empty,
+                        MaterialsReady = item.MaterialsReady
+                    });
+                }
+
+                dailyPlanCrewGroups.Add(crewGroup);
+            }
+
+            txtNoPlanItems.Visibility = dailyPlanCrewGroups.Count == 0
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void RefreshAvailablePlanTasks()
+        {
+            availablePlanTasks.Clear();
+
+            var plannedTaskIds = new HashSet<int>(
+                dailyPlanCrewGroups.SelectMany(g => g.Items).Select(i => i.TaskId));
+
+            // Загрузить все заявки на материалы (для предупреждений)
+            List<MaterialRequest> allRequests;
+            try { allRequests = facade.GetMaterialRequests(); }
+            catch { allRequests = new List<MaterialRequest>(); }
+
+            var eligibleTasks = GetEligiblePlanTasks(dailyPlanDate);
+
+            foreach (var task in eligibleTasks)
+            {
+                bool hasMaterialWarning = HasMaterialWarningForTask(task.TaskId, allRequests);
+                availablePlanTasks.Add(new AvailablePlanTaskItem
+                {
+                    Task               = task,
+                    IsInPlan           = plannedTaskIds.Contains(task.TaskId),
+                    HasMaterialWarning = hasMaterialWarning
+                });
+            }
+
+            txtNoAvailableTasks.Visibility = availablePlanTasks.Count == 0
+                ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private List<Models.Task> GetEligiblePlanTasks(DateTime date)
+        {
+            var d = date.Date;
+            return (allTasks ?? new List<Models.Task>())
+                .Where(t => t.TaskStatus?.TaskStatusName != "Завершено")
+                .Where(t => (t.StartDate.Date <= d && t.EndDate.Date >= d)
+                         || t.EndDate.Date < d)
+                .OrderByDescending(t => t.PriorityId)
+                .ThenBy(t => t.EndDate)
+                .ThenBy(t => t.Title)
+                .ToList();
+        }
+
+        private static bool HasMaterialWarningForTask(int taskId, List<MaterialRequest> requests)
+        {
+            var taskReqs = requests.Where(r => r.TaskId == taskId).ToList();
+            if (!taskReqs.Any()) return false;
+            var pendingStatuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                { "Draft", "Submitted", "Approved" };
+            return taskReqs.Any(r => pendingStatuses.Contains(r.Status ?? string.Empty));
+        }
+
+        private void UpdateDailyPlanStatusDisplay()
+        {
+            bool isApproved = currentDailyPlan?.IsApproved == true;
+            bool hasPlan    = currentDailyPlan != null;
+
+            if (isApproved)
+            {
+                txtDailyPlanStatus.Text = "Утверждён";
+                bdDailyPlanStatus.Background = new SolidColorBrush(Color.FromRgb(67, 160, 71));
+                txtDailyPlanStatus.Foreground = System.Windows.Media.Brushes.White;
+            }
+            else if (hasPlan)
+            {
+                txtDailyPlanStatus.Text = "Черновик";
+                bdDailyPlanStatus.Background = (Brush)FindResource("AppPanelBrush");
+                txtDailyPlanStatus.Foreground = (Brush)FindResource("AppTextBrush");
+            }
+            else
+            {
+                txtDailyPlanStatus.Text = "Нет плана";
+                bdDailyPlanStatus.Background = (Brush)FindResource("AppPanelBrush");
+                txtDailyPlanStatus.Foreground = (Brush)FindResource("AppMutedTextBrush");
+            }
+
+            int itemCount = dailyPlanCrewGroups.Sum(g => g.Items.Count);
+            txtDailyPlanInfo.Text = itemCount == 0
+                ? $"Дата: {dailyPlanDate:dd.MM.yyyy (dddd)}"
+                : $"Дата: {dailyPlanDate:dd.MM.yyyy (dddd)} — задач в плане: {itemCount}";
+
+            btnSaveDailyPlan.IsEnabled    = !isApproved;
+            btnApproveDailyPlan.IsEnabled = hasPlan && !isApproved;
+            icDailyPlanCrews.IsEnabled    = !isApproved;
+            pnlAddToPlan.IsEnabled        = !isApproved;
+        }
+
+        private void SetDailyPlanDate(DateTime date)
+        {
+            dailyPlanDate = date.Date;
+            isUpdatingDailyPlanDate = true;
+            dpDailyPlanDate.SelectedDate = dailyPlanDate;
+            isUpdatingDailyPlanDate = false;
+            selectedPlanTaskId = -1;
+            pnlAddToPlan.Visibility = Visibility.Collapsed;
+            LoadDailyPlan();
+        }
+
+        private void DpDailyPlanDate_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (isUpdatingDailyPlanDate || dpDailyPlanDate?.SelectedDate == null) return;
+            dailyPlanDate = dpDailyPlanDate.SelectedDate.Value.Date;
+            selectedPlanTaskId = -1;
+            pnlAddToPlan.Visibility = Visibility.Collapsed;
+            LoadDailyPlan();
+        }
+
+        private void BtnDailyPlanPrevDay_Click(object sender, RoutedEventArgs e)
+            => SetDailyPlanDate(dailyPlanDate.AddDays(-1));
+
+        private void BtnDailyPlanToday_Click(object sender, RoutedEventArgs e)
+            => SetDailyPlanDate(DateTime.Today);
+
+        private void BtnDailyPlanNextDay_Click(object sender, RoutedEventArgs e)
+            => SetDailyPlanDate(dailyPlanDate.AddDays(1));
+
+        private void BtnSelectPlanTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement btn) || !(btn.Tag is int taskId)) return;
+            if (currentDailyPlan?.IsApproved == true) return;
+
+            var task = availablePlanTasks.FirstOrDefault(t => t.TaskId == taskId);
+            if (task == null || task.IsInPlan) return;
+
+            selectedPlanTaskId = taskId;
+            txtAddToPlanTaskName.Text = task.Title;
+            txtPlanItemNote.Text = string.Empty;
+            chkPlanItemMaterials.IsChecked = !task.HasMaterialWarning;
+            cbPlanCrewSelect.SelectedItem = null;
+
+            // Если у задачи есть бригада, предвыбрать её
+            var taskObj = task.Task;
+            if (taskObj?.CrewId.HasValue == true)
+            {
+                cbPlanCrewSelect.SelectedItem =
+                    dailyPlanCrews.FirstOrDefault(c => c.CrewId == taskObj.CrewId.Value);
+            }
+
+            pnlAddToPlan.Visibility = Visibility.Visible;
+        }
+
+        private void BtnConfirmAddToPlan_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(cbPlanCrewSelect.SelectedItem is Crew crew))
+            {
+                MessageBox.Show("Выберите бригаду.", "Добавление в план", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (selectedPlanTaskId < 0) return;
+
+            var task = availablePlanTasks.FirstOrDefault(t => t.TaskId == selectedPlanTaskId);
+            if (task == null) return;
+
+            // Найти или создать группу для этой бригады
+            var group = dailyPlanCrewGroups.FirstOrDefault(g => g.CrewId == crew.CrewId);
+            if (group == null)
+            {
+                group = new CrewPlanGroup { CrewId = crew.CrewId, CrewName = crew.CrewName };
+                dailyPlanCrewGroups.Add(group);
+            }
+
+            int nextOrder = group.Items.Count == 0 ? 1 : group.Items.Max(i => i.SortOrder) + 1;
+
+            group.Items.Add(new DailyPlanItemViewModel
+            {
+                TaskId         = task.TaskId,
+                Title          = task.Title,
+                SiteName       = task.SiteName,
+                CrewId         = crew.CrewId,
+                CrewName       = crew.CrewName,
+                SortOrder      = nextOrder,
+                Note           = txtPlanItemNote.Text.Trim(),
+                MaterialsReady = chkPlanItemMaterials.IsChecked == true
+            });
+
+            txtNoPlanItems.Visibility = Visibility.Collapsed;
+
+            // Скрыть панель
+            pnlAddToPlan.Visibility = Visibility.Collapsed;
+            selectedPlanTaskId = -1;
+
+            // Обновить флаги доступных задач
+            RefreshAvailablePlanTasks();
+            UpdateDailyPlanStatusDisplay();
+            txtDailyPlanSaveStatus.Text = "Есть несохранённые изменения";
+        }
+
+        private void BtnCancelAddToPlan_Click(object sender, RoutedEventArgs e)
+        {
+            pnlAddToPlan.Visibility = Visibility.Collapsed;
+            selectedPlanTaskId = -1;
+        }
+
+        private void BtnPlanItemRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement btn) || !(btn.Tag is DailyPlanItemViewModel item)) return;
+
+            var group = dailyPlanCrewGroups.FirstOrDefault(g => g.CrewId == item.CrewId);
+            if (group == null) return;
+
+            group.Items.Remove(item);
+            if (group.Items.Count == 0)
+                dailyPlanCrewGroups.Remove(group);
+            else
+                RecalcSortOrders(group);
+
+            txtNoPlanItems.Visibility = dailyPlanCrewGroups.Count == 0
+                ? Visibility.Visible : Visibility.Collapsed;
+
+            RefreshAvailablePlanTasks();
+            UpdateDailyPlanStatusDisplay();
+            txtDailyPlanSaveStatus.Text = "Есть несохранённые изменения";
+        }
+
+        private void BtnPlanItemMoveUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement btn) || !(btn.Tag is DailyPlanItemViewModel item)) return;
+            var group = dailyPlanCrewGroups.FirstOrDefault(g => g.CrewId == item.CrewId);
+            if (group == null) return;
+
+            int idx = group.Items.IndexOf(item);
+            if (idx <= 0) return;
+
+            group.Items.Move(idx, idx - 1);
+            RecalcSortOrders(group);
+            txtDailyPlanSaveStatus.Text = "Есть несохранённые изменения";
+        }
+
+        private void BtnPlanItemMoveDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (!(sender is FrameworkElement btn) || !(btn.Tag is DailyPlanItemViewModel item)) return;
+            var group = dailyPlanCrewGroups.FirstOrDefault(g => g.CrewId == item.CrewId);
+            if (group == null) return;
+
+            int idx = group.Items.IndexOf(item);
+            if (idx < 0 || idx >= group.Items.Count - 1) return;
+
+            group.Items.Move(idx, idx + 1);
+            RecalcSortOrders(group);
+            txtDailyPlanSaveStatus.Text = "Есть несохранённые изменения";
+        }
+
+        private static void RecalcSortOrders(CrewPlanGroup group)
+        {
+            for (int i = 0; i < group.Items.Count; i++)
+                group.Items[i].SortOrder = i + 1;
+        }
+
+        private void BtnSaveDailyPlan_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentDailyPlan?.IsApproved == true)
+            {
+                MessageBox.Show("Утверждённый план нельзя редактировать.", "Сохранение", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                var plan = BuildPlanFromUI();
+                int userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                int planId = facade.SaveDailyPlan(plan, userId);
+                plan.PlanId = planId;
+                currentDailyPlan = plan;
+                txtDailyPlanSaveStatus.Text = $"Сохранено {DateTime.Now:HH:mm}";
+                UpdateDailyPlanStatusDisplay();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnApproveDailyPlan_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentDailyPlan?.PlanId == 0 || currentDailyPlan == null)
+            {
+                MessageBox.Show("Сначала сохраните план, затем утвердите его.", "Утверждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (currentDailyPlan.IsApproved)
+            {
+                MessageBox.Show("План уже утверждён.", "Утверждение", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (dailyPlanCrewGroups.Sum(g => g.Items.Count) == 0)
+            {
+                MessageBox.Show("Нельзя утвердить пустой план. Добавьте хотя бы одну задачу.", "Утверждение", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"Утвердить план на {dailyPlanDate:dd.MM.yyyy}?\nПосле утверждения план нельзя будет изменить.",
+                "Утверждение плана", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                // Сначала сохранить текущее состояние
+                var plan = BuildPlanFromUI();
+                plan.PlanId = currentDailyPlan.PlanId;
+                int userId = LoginWindow.CurrentUser?.UserId ?? 0;
+                facade.SaveDailyPlan(plan, userId);
+
+                // Затем утвердить
+                facade.ApproveDailyPlan(currentDailyPlan.PlanId);
+                currentDailyPlan.Status = "Утвержден";
+                txtDailyPlanSaveStatus.Text = "План утверждён";
+                UpdateDailyPlanStatusDisplay();
+                MessageBox.Show("План утверждён. Бригадиры увидят задачи в своём чек-листе.", "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при утверждении: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private DailyPlan BuildPlanFromUI()
+        {
+            var plan = new DailyPlan
+            {
+                PlanId          = currentDailyPlan?.PlanId ?? 0,
+                PlanDate        = dailyPlanDate,
+                CreatedByUserId = LoginWindow.CurrentUser?.UserId ?? 0,
+                Status          = currentDailyPlan?.Status ?? "Черновик"
+            };
+
+            foreach (var group in dailyPlanCrewGroups)
+            {
+                int order = 1;
+                foreach (var item in group.Items)
+                {
+                    plan.Items.Add(new DailyPlanItem
+                    {
+                        TaskId         = item.TaskId,
+                        CrewId         = group.CrewId,
+                        SortOrder      = order++,
+                        Note           = item.Note,
+                        MaterialsReady = item.MaterialsReady
+                    });
+                }
+            }
+
+            return plan;
+        }
+
+        // =====================================================================
+        // Inner view-model classes for DailyPlan
+        // =====================================================================
+
+        private sealed class AvailablePlanTaskItem
+        {
+            public Models.Task Task         { get; set; }
+            public bool        IsInPlan     { get; set; }
+            public bool        HasMaterialWarning { get; set; }
+
+            public int    TaskId      => Task?.TaskId ?? 0;
+            public string Title       => Task?.Title ?? string.Empty;
+            public string SiteName    => Task?.Site?.SiteName ?? "—";
+            public string PriorityName => Task?.Priority?.PriorityName ?? "—";
+            public string StatusName  => Task?.TaskStatus?.TaskStatusName ?? "—";
+            public string DateRange   => $"{Task?.StartDate:dd.MM} – {Task?.EndDate:dd.MM.yyyy}";
+
+            public Visibility MaterialWarningVisibility => HasMaterialWarning ? Visibility.Visible : Visibility.Collapsed;
+            public Visibility NotInPlanVisibility       => IsInPlan ? Visibility.Collapsed : Visibility.Visible;
+            public Visibility InPlanVisibility          => IsInPlan ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private sealed class DailyPlanItemViewModel
+        {
+            public int    PlanItemId     { get; set; }
+            public int    TaskId         { get; set; }
+            public string Title          { get; set; }
+            public string SiteName       { get; set; }
+            public int    CrewId         { get; set; }
+            public string CrewName       { get; set; }
+            public int    SortOrder      { get; set; }
+            public string Note           { get; set; }
+            public bool   MaterialsReady { get; set; }
+
+            public string SortOrderText => $"#{SortOrder}";
+        }
+
+        private sealed class CrewPlanGroup
+        {
+            public int    CrewId   { get; set; }
+            public string CrewName { get; set; }
+            public ObservableCollection<DailyPlanItemViewModel> Items { get; set; }
+                = new ObservableCollection<DailyPlanItemViewModel>();
+        }
+
         private sealed class ReportFileExport
         {
             public ReportFileExport(string reportName, List<string> lines)
@@ -4437,6 +4972,14 @@ namespace praktik
             public string LastNoteTooltip => string.IsNullOrWhiteSpace(Task?.LastNoteTooltip) ? "Заметок нет" : Task.LastNoteTooltip;
             public bool IsOverdue { get; set; }
             public string ChecklistStatusText { get; set; }
+
+            // DailyPlan integration
+            public string PlanOrderText { get; set; }
+            public Visibility PlanOrderBadgeVisibility
+                => string.IsNullOrEmpty(PlanOrderText) ? Visibility.Collapsed : Visibility.Visible;
+            public string PlanNote { get; set; }
+            public Visibility PlanNoteVisibility
+                => string.IsNullOrEmpty(PlanNote) ? Visibility.Collapsed : Visibility.Visible;
 
             public bool IsMarkedCompleted { get; set; }
             public string CompletionComment { get; set; }
