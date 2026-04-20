@@ -1,7 +1,23 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="uri:settings" CurrentProfile="(Default)">
   <Profiles>
     <Profile Name="(Default)" />
   </Profiles>
-  <Settings />
+  <Settings>
+    <Setting Name="AnimationsEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="AutoDisableOnHighCpu" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="CpuThreshold" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">80</Value>
+    </Setting>
+    <Setting Name="AutoDisableOnLowBattery" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="BatteryThreshold" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">20</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

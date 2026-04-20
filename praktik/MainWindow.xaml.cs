@@ -7,11 +7,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using praktik.Models;
 using praktik.Models.Patterns;
 using praktik.Models.Patterns.States;
+using praktik.Services;
 using System.IO;
 
 namespace praktik
@@ -570,6 +572,69 @@ namespace praktik
         {
             if (NavigationListBox.SelectedIndex < 0) return;
 
+            HideAllContentPanels();
+
+            Grid newPanel = null;
+            string newTitle = string.Empty;
+            Action loadAction = null;
+
+            switch (NavigationListBox.SelectedIndex)
+            {
+                case 0:
+                    newPanel = DashboardContent;
+                    newTitle = "Главная";
+                    loadAction = LoadDashboard;
+                    break;
+                case 1:
+                    newPanel = SitesContent;
+                    newTitle = "Стройплощадки";
+                    loadAction = LoadSites;
+                    break;
+                case 2:
+                    newPanel = CrewsContent;
+                    newTitle = "Бригады";
+                    loadAction = LoadCrews;
+                    break;
+                case 3:
+                    newPanel = TasksContent;
+                    newTitle = IsBrigadierMode() ? "Чек-лист бригады" : "Задачи";
+                    loadAction = LoadTasks;
+                    break;
+                case 4:
+                    newPanel = CalendarContent;
+                    newTitle = "Календарь";
+                    loadAction = LoadCalendar;
+                    break;
+                case 5:
+                    newPanel = ReportsContent;
+                    newTitle = "Отчёты";
+                    loadAction = LoadCurrentReportView;
+                    break;
+                case 6:
+                    newPanel = MaterialRequestsContent;
+                    newTitle = "Заявки на материалы";
+                    loadAction = LoadMaterialRequests;
+                    break;
+                case 7:
+                    newPanel = RolesContent;
+                    newTitle = "Управление пользователями";
+                    loadAction = LoadRoleManagementData;
+                    break;
+                case 8:
+                    newPanel = DailyPlanContent;
+                    newTitle = "План на день";
+                    loadAction = LoadDailyPlan;
+                    break;
+            }
+
+            if (newPanel == null) return;
+
+            PageTitle.Text = newTitle;
+            ShowPanelAnimated(newPanel, loadAction);
+        }
+
+        private void HideAllContentPanels()
+        {
             DashboardContent.Visibility = Visibility.Collapsed;
             SitesContent.Visibility = Visibility.Collapsed;
             CrewsContent.Visibility = Visibility.Collapsed;
@@ -579,55 +644,33 @@ namespace praktik
             MaterialRequestsContent.Visibility = Visibility.Collapsed;
             RolesContent.Visibility = Visibility.Collapsed;
             DailyPlanContent.Visibility = Visibility.Collapsed;
+        }
 
-            switch (NavigationListBox.SelectedIndex)
+        private void ShowPanelAnimated(Grid panel, Action loadAction)
+        {
+            panel.Visibility = Visibility.Visible;
+            loadAction?.Invoke();
+
+            if (!AnimationService.Instance.AnimationsEnabled) return;
+
+            panel.Opacity = 0;
+            var anim = new DoubleAnimation(0, 1, new Duration(TimeSpan.FromMilliseconds(220)))
             {
-                case 0:
-                    DashboardContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Главная";
-                    LoadDashboard();
-                    break;
-                case 1:
-                    SitesContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Стройплощадки";
-                    LoadSites();
-                    break;
-                case 2:
-                    CrewsContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Бригады";
-                    LoadCrews();
-                    break;
-                case 3:
-                    TasksContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = IsBrigadierMode() ? "Чек-лист бригады" : "Задачи";
-                    LoadTasks();
-                    break;
-                case 4:
-                    CalendarContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Календарь";
-                    LoadCalendar();
-                    break;
-                case 5:
-                    ReportsContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Отчёты";
-                    LoadCurrentReportView();
-                    break;
-                case 6:
-                    MaterialRequestsContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Заявки на материалы";
-                    LoadMaterialRequests();
-                    break;
-                case 7:
-                    RolesContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "Управление пользователями";
-                    LoadRoleManagementData();
-                    break;
-                case 8:
-                    DailyPlanContent.Visibility = Visibility.Visible;
-                    PageTitle.Text = "План на день";
-                    LoadDailyPlan();
-                    break;
-            }
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+            panel.BeginAnimation(UIElement.OpacityProperty, anim);
+        }
+
+        public void ShowLoading()
+        {
+            if (LoadingSpinner != null)
+                LoadingSpinner.Visibility = Visibility.Visible;
+        }
+
+        public void HideLoading()
+        {
+            if (LoadingSpinner != null)
+                LoadingSpinner.Visibility = Visibility.Collapsed;
         }
 
          private void DgSites_SelectionChanged(object sender, SelectionChangedEventArgs e)

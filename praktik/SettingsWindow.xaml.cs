@@ -3,8 +3,11 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 using praktik.Models;
 using praktik.Models.Patterns;
+using praktik.Services;
 
 namespace praktik
 {
@@ -12,12 +15,17 @@ namespace praktik
     {
         private readonly WorkPlannerFacade facade = new WorkPlannerFacade();
         private User currentUser;
+        private DispatcherTimer _liveStatsTimer;
+        private bool _suppressAnimSettingsChanged;
 
         public SettingsWindow()
         {
             InitializeComponent();
             LoadCurrentUser();
             UpdatePasswordValidation();
+            LoadAnimationSettings();
+            StartLiveStatsTimer();
+            AnimationService.Instance.AnimationStateChanged += OnAnimationStateChanged;
         }
 
         private bool IsPasswordChangeRequested =>
@@ -221,6 +229,7 @@ namespace praktik
 
                 LoginWindow.CurrentUser = currentUser;
                 AppThemeManager.ApplyTheme(currentUser);
+                ApplyAnimationSettingsToService();
 
                 MessageBox.Show("Настройки сохранены.", "Настройки", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
@@ -242,15 +251,145 @@ namespace praktik
         {
             base.OnClosing(e);
 
-            if (DialogResult == true)
-            {
-                return;
-            }
+            _liveStatsTimer?.Stop();
+            AnimationService.Instance.AnimationStateChanged -= OnAnimationStateChanged;
+
+            if (DialogResult == true) return;
 
             if (LoginWindow.CurrentUser != null)
-            {
                 AppThemeManager.ApplyTheme(LoginWindow.CurrentUser);
+        }
+
+        // ── Animation settings ──────────────────────────────────────────────
+
+        private void LoadAnimationSettings()
+        {
+            _suppressAnimSettingsChanged = true;
+            var svc = AnimationService.Instance;
+
+            chkAnimationsEnabled.IsChecked = svc.UserEnabledAnimations;
+            chkAutoDisableCpu.IsChecked = svc.AutoDisableOnHighCpu;
+            chkAutoDisableBattery.IsChecked = svc.AutoDisableOnLowBattery;
+            sliderCpuThreshold.Value = svc.CpuThreshold;
+            sliderBatteryThreshold.Value = svc.BatteryThreshold;
+
+            _suppressAnimSettingsChanged = false;
+            UpdateAnimationControlsState();
+            UpdateAnimStatusIndicator();
+        }
+
+        private void AnimationSettings_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_suppressAnimSettingsChanged) return;
+            UpdateAnimationControlsState();
+        }
+
+        private void SliderCpuThreshold_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (runCpuThreshold != null)
+                runCpuThreshold.Text = ((int)e.NewValue).ToString();
+        }
+
+        private void SliderBatteryThreshold_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (runBatteryThreshold != null)
+                runBatteryThreshold.Text = ((int)e.NewValue).ToString();
+        }
+
+        private void UpdateAnimationControlsState()
+        {
+            bool animOn = chkAnimationsEnabled.IsChecked == true;
+            bool cpuOn = chkAutoDisableCpu.IsChecked == true;
+            bool batOn = chkAutoDisableBattery.IsChecked == true;
+
+            pnlCpuSettings.IsEnabled = animOn;
+            pnlBatterySettings.IsEnabled = animOn;
+            pnlCpuThreshold.IsEnabled = cpuOn;
+            pnlBatteryThreshold.IsEnabled = batOn;
+
+            UpdateAnimStatusIndicator();
+        }
+
+        private void OnAnimationStateChanged(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke((Action)UpdateAnimStatusIndicator);
+        }
+
+        private void UpdateAnimStatusIndicator()
+        {
+            var svc = AnimationService.Instance;
+            bool enabled = svc.AnimationsEnabled;
+
+            string status;
+            string dotStyle;
+
+            if (!svc.UserEnabledAnimations)
+            {
+                status = "Анимации отключены пользователем";
+                dotStyle = "StatusDotRed";
             }
+            else if (!enabled && svc.AutoDisableOnHighCpu && svc.CurrentCpuUsage > svc.CpuThreshold)
+            {
+                status = $"Отключены — высокая нагрузка CPU ({svc.CurrentCpuUsage:F0}%)";
+                dotStyle = "StatusDotYellow";
+            }
+            else if (!enabled && svc.IsOnBattery)
+            {
+                status = $"Отключены — низкий заряд ({svc.CurrentBatteryLevel:F0}%)";
+                dotStyle = "StatusDotYellow";
+            }
+            else
+            {
+                status = "Анимации включены";
+                dotStyle = "StatusDotGreen";
+            }
+
+            txtAnimStatus.Text = status;
+            dotAnimStatus.Style = (Style)TryFindResource(dotStyle);
+        }
+
+        private void StartLiveStatsTimer()
+        {
+            _liveStatsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            _liveStatsTimer.Tick += (_, __) => UpdateLiveStats();
+            _liveStatsTimer.Start();
+            UpdateLiveStats();
+        }
+
+        private void UpdateLiveStats()
+        {
+            var svc = AnimationService.Instance;
+
+            txtLiveCpu.Text = $"{svc.CurrentCpuUsage:F0}%";
+            txtLiveCpu.Foreground = svc.CurrentCpuUsage > svc.CpuThreshold
+                ? (Brush)TryFindResource("AppDangerBrush") ?? Brushes.Red
+                : (Brush)TryFindResource("AppAccentBrush") ?? Brushes.CornflowerBlue;
+
+            if (svc.CurrentBatteryLevel < 100 || svc.IsOnBattery)
+            {
+                txtLiveBattery.Text = $"{svc.CurrentBatteryLevel:F0}%";
+                txtLiveBattery.Foreground = svc.CurrentBatteryLevel < svc.BatteryThreshold
+                    ? (Brush)TryFindResource("AppDangerBrush") ?? Brushes.Red
+                    : (Brush)TryFindResource("AppSuccessBrush") ?? Brushes.Green;
+            }
+            else
+            {
+                txtLiveBattery.Text = "AC";
+                txtLiveBattery.Foreground = (Brush)TryFindResource("AppSuccessBrush") ?? Brushes.Green;
+            }
+
+            UpdateAnimStatusIndicator();
+        }
+
+        private void ApplyAnimationSettingsToService()
+        {
+            var svc = AnimationService.Instance;
+            svc.UserEnabledAnimations = chkAnimationsEnabled.IsChecked == true;
+            svc.AutoDisableOnHighCpu = chkAutoDisableCpu.IsChecked == true;
+            svc.CpuThreshold = (int)sliderCpuThreshold.Value;
+            svc.AutoDisableOnLowBattery = chkAutoDisableBattery.IsChecked == true;
+            svc.BatteryThreshold = (int)sliderBatteryThreshold.Value;
+            svc.SaveAndApply();
         }
     }
 }

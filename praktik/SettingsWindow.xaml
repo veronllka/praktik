@@ -4,23 +4,28 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:appControls="clr-namespace:praktik.Controls"
         mc:Ignorable="d"
         Title="Настройки"
-        Width="680"
-        Height="760"
-        MinWidth="640"
-        MinHeight="700"
+        Width="700"
+        Height="860"
+        MinWidth="660"
+        MinHeight="820"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource MaterialDesignPaper}">
+        Background="{DynamicResource AppBackgroundBrush}">
     <Window.Resources>
-        <Style x:Key="SettingsCardBorderStyle" TargetType="Border">
-            <Setter Property="Padding" Value="20"/>
-            <Setter Property="Margin" Value="0,0,0,16"/>
-            <Setter Property="CornerRadius" Value="16"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
-            <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
+        <Style x:Key="SettingsCardBorderStyle" TargetType="Border" BasedOn="{StaticResource AppleCard}">
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <Style x:Key="SectionLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource AppSubtleTextBrush}"/>
+            <Setter Property="TextTransform" Value="Uppercase"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+            <Setter Property="LetterSpacing" Value="0.8"/>
         </Style>
 
         <Style x:Key="AccentOptionStyle" TargetType="RadioButton">
@@ -30,49 +35,61 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <Border x:Name="AccentBorder"
-                                Width="170"
-                                Padding="14"
-                                CornerRadius="14"
+                                Width="160" Padding="14" CornerRadius="14"
                                 BorderThickness="1.5"
-                                BorderBrush="{DynamicResource MaterialDesignDivider}"
-                                Background="{DynamicResource MaterialDesignPaper}">
+                                BorderBrush="{DynamicResource AppBorderBrush}"
+                                Background="{DynamicResource AppSurfaceAltBrush}">
                             <ContentPresenter />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="AccentBorder" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}" />
-                                <Setter TargetName="AccentBorder" Property="Background" Value="{DynamicResource PrimaryHueLightBrush}" />
+                                <Setter TargetName="AccentBorder" Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
+                                <Setter TargetName="AccentBorder" Property="Background" Value="{DynamicResource AppAccentSoftBrush}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="AccentBorder" Property="BorderBrush" Value="{DynamicResource PrimaryHueMidBrush}" />
+                                <Setter TargetName="AccentBorder" Property="BorderBrush" Value="{DynamicResource AppAccentBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Row style for settings items with toggle -->
+        <Style x:Key="SettingsRowStyle" TargetType="Border">
+            <Setter Property="Padding" Value="0,10"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+        <Style x:Key="SettingsRowLastStyle" TargetType="Border">
+            <Setter Property="Padding" Value="10,0"/>
+        </Style>
     </Window.Resources>
 
-    <Grid Background="{DynamicResource MaterialDesignPaper}">
+    <Grid Background="{DynamicResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <materialDesign:ColorZone Grid.Row="0"
-                                  Mode="PrimaryMid"
-                                  Padding="24">
+        <!-- Apple-style header -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource AppNavigationBrush}"
+                Padding="24,20">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Opacity="0.2" Direction="270"/>
+            </Border.Effect>
             <StackPanel>
                 <TextBlock Text="Настройки"
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Foreground="{DynamicResource PrimaryHueMidForegroundBrush}"/>
-                <TextBlock Text="Смена пароля, выбор темы и цветовой гаммы для текущего пользователя."
-                           Margin="0,8,0,0"
-                           Foreground="{DynamicResource PrimaryHueMidForegroundBrush}"
+                           FontSize="22" FontWeight="Bold"
+                           Foreground="{DynamicResource AppTextBrush}"/>
+                <TextBlock Text="Смена пароля, внешний вид, анимации и производительность."
+                           Margin="0,6,0,0" FontSize="13"
+                           Foreground="{DynamicResource AppMutedTextBrush}"
                            TextWrapping="Wrap"/>
             </StackPanel>
-        </materialDesign:ColorZone>
+        </Border>
 
         <ScrollViewer Grid.Row="1"
                       VerticalScrollBarVisibility="Auto">
@@ -87,12 +104,12 @@
 
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="AccountCircleOutline"
-                                                     Width="26"
-                                                     Height="26"
+                                                     Width="22" Height="22"
                                                      Margin="0,0,10,0"
+                                                     Foreground="{DynamicResource AppAccentBrush}"
                                                      VerticalAlignment="Center"/>
                             <TextBlock Text="Текущий пользователь"
-                                       FontSize="18"
+                                       FontSize="16"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
 
@@ -168,12 +185,12 @@
 
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="PaletteOutline"
-                                                     Width="24"
-                                                     Height="24"
+                                                     Width="22" Height="22"
                                                      Margin="0,0,10,0"
+                                                     Foreground="{DynamicResource AppAccentBrush}"
                                                      VerticalAlignment="Center"/>
                             <TextBlock Text="Внешний вид"
-                                       FontSize="18"
+                                       FontSize="16"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
 
@@ -277,12 +294,12 @@
 
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="LockReset"
-                                                     Width="24"
-                                                     Height="24"
+                                                     Width="22" Height="22"
                                                      Margin="0,0,10,0"
+                                                     Foreground="{DynamicResource AppAccentBrush}"
                                                      VerticalAlignment="Center"/>
                             <TextBlock Text="Смена пароля"
-                                       FontSize="18"
+                                       FontSize="16"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
 
@@ -342,32 +359,210 @@
 
                         <TextBlock x:Name="txtPasswordError"
                                    Grid.Row="6"
-                                   Foreground="#D32F2F"
+                                   Foreground="{DynamicResource AppDangerBrush}"
                                    FontWeight="SemiBold"
                                    TextWrapping="Wrap"/>
                     </Grid>
+                </Border>
+
+                <!-- ═══ ANIMATION & PERFORMANCE PANEL ═════════════════════ -->
+                <Border Style="{StaticResource SettingsCardBorderStyle}">
+                    <StackPanel>
+                        <!-- Header row -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                            <materialDesign:PackIcon Kind="LightningBolt"
+                                                     Width="22" Height="22"
+                                                     Margin="0,0,10,0"
+                                                     Foreground="{DynamicResource AppAccentBrush}"
+                                                     VerticalAlignment="Center"/>
+                            <StackPanel>
+                                <TextBlock Text="Анимации и производительность"
+                                           FontSize="16" FontWeight="SemiBold"/>
+                                <TextBlock Text="Анимации автоматически отключаются при высокой нагрузке."
+                                           FontSize="12" Margin="0,3,0,0"
+                                           Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Main toggle -->
+                        <Border Style="{StaticResource SettingsRowStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Включить анимации" FontWeight="Medium"/>
+                                    <TextBlock Text="Плавные переходы между страницами и анимированные иконки."
+                                               FontSize="12" Foreground="{DynamicResource AppMutedTextBrush}"
+                                               Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <CheckBox x:Name="chkAnimationsEnabled"
+                                          Grid.Column="1"
+                                          Style="{StaticResource AppleToggleSwitch}"
+                                          VerticalAlignment="Center"
+                                          Checked="AnimationSettings_Changed"
+                                          Unchecked="AnimationSettings_Changed"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- CPU auto-disable -->
+                        <Border Style="{StaticResource SettingsRowStyle}" x:Name="pnlCpuSettings">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Авто-откл. при высокой нагрузке CPU"
+                                                   FontWeight="Medium"/>
+                                        <TextBlock Text="Анимации отключатся, когда процессор превысит порог."
+                                                   FontSize="12" Foreground="{DynamicResource AppMutedTextBrush}"
+                                                   Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="chkAutoDisableCpu"
+                                              Grid.Column="1"
+                                              Style="{StaticResource AppleToggleSwitch}"
+                                              VerticalAlignment="Center"
+                                              Checked="AnimationSettings_Changed"
+                                              Unchecked="AnimationSettings_Changed"/>
+                                </Grid>
+                                <!-- CPU threshold slider -->
+                                <Grid x:Name="pnlCpuThreshold" Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource AppSubtleTextBrush}"
+                                                   Margin="0,0,0,6">
+                                            <Run Text="Порог CPU: "/>
+                                            <Run x:Name="runCpuThreshold" Text="80"/>
+                                            <Run Text="%"/>
+                                        </TextBlock>
+                                        <Slider x:Name="sliderCpuThreshold"
+                                                Style="{StaticResource AppleSlider}"
+                                                Minimum="50" Maximum="95" Value="80"
+                                                SmallChange="5" LargeChange="10"
+                                                TickFrequency="5" IsSnapToTickEnabled="True"
+                                                ValueChanged="SliderCpuThreshold_Changed"/>
+                                    </StackPanel>
+                                    <!-- Live CPU indicator -->
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right"
+                                                VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <TextBlock Text="сейчас" FontSize="10"
+                                                   Foreground="{DynamicResource AppSubtleTextBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="txtLiveCpu" Text="—%"
+                                                   FontSize="13" FontWeight="Bold"
+                                                   Foreground="{DynamicResource AppAccentBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Battery auto-disable -->
+                        <Border x:Name="pnlBatterySettings" Padding="0,10">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Авто-откл. при низком заряде батареи"
+                                                   FontWeight="Medium"/>
+                                        <TextBlock Text="Экономит энергию при работе от аккумулятора."
+                                                   FontSize="12" Foreground="{DynamicResource AppMutedTextBrush}"
+                                                   Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="chkAutoDisableBattery"
+                                              Grid.Column="1"
+                                              Style="{StaticResource AppleToggleSwitch}"
+                                              VerticalAlignment="Center"
+                                              Checked="AnimationSettings_Changed"
+                                              Unchecked="AnimationSettings_Changed"/>
+                                </Grid>
+                                <!-- Battery threshold slider -->
+                                <Grid x:Name="pnlBatteryThreshold">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock FontSize="12" Foreground="{DynamicResource AppSubtleTextBrush}"
+                                                   Margin="0,0,0,6">
+                                            <Run Text="Порог заряда: "/>
+                                            <Run x:Name="runBatteryThreshold" Text="20"/>
+                                            <Run Text="%"/>
+                                        </TextBlock>
+                                        <Slider x:Name="sliderBatteryThreshold"
+                                                Style="{StaticResource AppleSlider}"
+                                                Minimum="5" Maximum="50" Value="20"
+                                                SmallChange="5" LargeChange="10"
+                                                TickFrequency="5" IsSnapToTickEnabled="True"
+                                                ValueChanged="SliderBatteryThreshold_Changed"/>
+                                    </StackPanel>
+                                    <!-- Live battery indicator -->
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right"
+                                                VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <TextBlock Text="сейчас" FontSize="10"
+                                                   Foreground="{DynamicResource AppSubtleTextBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                        <TextBlock x:Name="txtLiveBattery" Text="—%"
+                                                   FontSize="13" FontWeight="Bold"
+                                                   Foreground="{DynamicResource AppSuccessBrush}"
+                                                   HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Live status row -->
+                        <Border Background="{DynamicResource AppSurfaceAltBrush}"
+                                CornerRadius="10" Padding="14,10" Margin="0,8,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse x:Name="dotAnimStatus"
+                                             Style="{StaticResource StatusDotGreen}"
+                                             VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock x:Name="txtAnimStatus"
+                                               Text="Анимации включены"
+                                               FontSize="12" FontWeight="Medium"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <appControls:AnimatedSpinner x:Name="perfSpinner"
+                                                              Grid.Column="2"
+                                                              Width="16" Height="16"
+                                                              Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </ScrollViewer>
 
         <Border Grid.Row="2"
-                Padding="20,16"
-                BorderThickness="1,1,0,0"
-                BorderBrush="{DynamicResource MaterialDesignDivider}"
-                Background="{DynamicResource MaterialDesignPaper}">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right">
+                Padding="20,14"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource AppBorderBrush}"
+                Background="{DynamicResource AppNavigationBrush}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Отмена"
-                        Width="120"
-                        Height="38"
-                        Margin="0,0,12,0"
-                        Style="{StaticResource MaterialDesignOutlinedButton}"
+                        Width="110" Height="38" Margin="0,0,10,0"
+                        Style="{StaticResource AppleGhostButton}"
                         Click="BtnCancel_Click"/>
                 <Button x:Name="btnSave"
                         Content="Сохранить изменения"
-                        Width="220"
-                        Height="38"
-                        Style="{StaticResource MaterialDesignRaisedButton}"
+                        Width="210" Height="38"
+                        Style="{StaticResource ApplePrimaryButton}"
                         Click="BtnSave_Click"/>
             </StackPanel>
         </Border>

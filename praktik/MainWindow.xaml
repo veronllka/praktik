@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:praktik"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:appControls="clr-namespace:praktik.Controls"
         mc:Ignorable="d"
         Background="{DynamicResource AppBackgroundBrush}">
     <materialDesign:DrawerHost IsLeftDrawerOpen="{Binding ElementName=MenuToggleButton, Path=IsChecked}"
@@ -163,72 +164,105 @@
         </materialDesign:DrawerHost.LeftDrawerContent>
 
         <DockPanel>
-            <materialDesign:ColorZone Padding="16" materialDesign:ElevationAssist.Elevation="Dp4"
-                                    Mode="PrimaryMid" DockPanel.Dock="Top">
+            <!-- ── Apple-inspired top bar ─────────────────────────── -->
+            <Border DockPanel.Dock="Top"
+                    Background="{DynamicResource AppNavigationBrush}"
+                    Padding="12,10">
+                <Border.Effect>
+                    <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="2"
+                                      Opacity="0.25" Direction="270"/>
+                </Border.Effect>
                 <DockPanel>
+                    <!-- Animated hamburger toggle -->
                     <ToggleButton x:Name="MenuToggleButton"
-                                Style="{StaticResource MaterialDesignHamburgerToggleButton}" />
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  Padding="8"
+                                  ToolTip="Меню"
+                                  VerticalAlignment="Center">
+                        <appControls:AnimatedHamburgerIcon x:Name="HamburgerIcon"
+                                                            IsOpen="{Binding IsChecked, ElementName=MenuToggleButton}"/>
+                    </ToggleButton>
 
-                    <TextBlock x:Name="PageTitle" Text="Главная" 
-                             Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                             VerticalAlignment="Center" Margin="16,0"/>
+                    <!-- Page title + loading spinner -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
+                        <TextBlock x:Name="PageTitle" Text="Главная"
+                                   FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppTextBrush}"
+                                   VerticalAlignment="Center"/>
+                        <appControls:AnimatedSpinner x:Name="LoadingSpinner"
+                                                      Margin="10,0,0,0"
+                                                      Width="18" Height="18"
+                                                      Visibility="Collapsed"
+                                                      VerticalAlignment="Center"/>
+                    </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Border Background="{DynamicResource PrimaryHueDarkBrush}" CornerRadius="4" Margin="0,0,16,0" Padding="8,4">
+                    <!-- Right-side controls -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                VerticalAlignment="Center">
+                        <!-- User badge -->
+                        <Border Background="{DynamicResource AppSurfaceAltBrush}"
+                                CornerRadius="20" Margin="0,0,8,0" Padding="12,5">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Account" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="White"/>
-                                <TextBlock x:Name="UserInfo" Text="Загрузка..." 
-                                         VerticalAlignment="Center" Foreground="White" Margin="0,0,8,0"/>
-                                <Button x:Name="LogoutBtn" 
-                                      Style="{StaticResource MaterialDesignFlatButton}"
-                                      Height="24" Padding="4,0"
-                                      ToolTip="Выйти из аккаунта"
-                                      Foreground="White">
-                                    <materialDesign:PackIcon Kind="Logout" />
+                                <materialDesign:PackIcon Kind="AccountCircleOutline"
+                                                         Width="16" Height="16"
+                                                         VerticalAlignment="Center"
+                                                         Foreground="{DynamicResource AppAccentBrush}"
+                                                         Margin="0,0,6,0"/>
+                                <TextBlock x:Name="UserInfo" Text="Загрузка..."
+                                           FontSize="12" FontWeight="Medium"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AppTextBrush}"
+                                           Margin="0,0,8,0"/>
+                                <Button x:Name="LogoutBtn"
+                                        Background="Transparent" BorderThickness="0"
+                                        Padding="4,0" Height="20"
+                                        ToolTip="Выйти из аккаунта"
+                                        Cursor="Hand">
+                                    <materialDesign:PackIcon Kind="LogoutVariant"
+                                                             Width="14" Height="14"
+                                                             Foreground="{DynamicResource AppMutedTextBrush}"/>
                                 </Button>
                             </StackPanel>
                         </Border>
 
                         <Button x:Name="btnQuickThemeToggle"
-                                ToolTip="Быстрое переключение темы"
-                                Margin="0,0,16,0"
+                                ToolTip="Тема" Margin="0,0,4,0"
                                 Click="BtnQuickThemeToggle_Click"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="8">
-                            <materialDesign:PackIcon x:Name="QuickThemeToggleIcon" Kind="WeatherNight" />
+                                Background="Transparent" BorderThickness="0" Padding="8">
+                            <materialDesign:PackIcon x:Name="QuickThemeToggleIcon"
+                                                     Kind="WeatherNight" Width="18" Height="18"
+                                                     Foreground="{DynamicResource AppMutedTextBrush}"/>
                         </Button>
 
                         <Button x:Name="btnOpenSettings"
-                                ToolTip="Настройки"
-                                Margin="0,0,16,0"
+                                ToolTip="Настройки" Margin="0,0,4,0"
                                 Click="BtnOpenSettings_Click"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="8">
-                            <materialDesign:PackIcon Kind="CogOutline" />
+                                Background="Transparent" BorderThickness="0" Padding="8">
+                            <materialDesign:PackIcon Kind="CogOutline" Width="18" Height="18"
+                                                     Foreground="{DynamicResource AppMutedTextBrush}"/>
                         </Button>
 
-                        <Button x:Name="btnScanQR" 
-                                ToolTip="Сканировать QR-код"
-                                Margin="0,0,16,0"
+                        <Button x:Name="btnScanQR"
+                                ToolTip="Сканировать QR-код" Margin="0,0,4,0"
                                 Click="BtnScanQR_Click"
-                                Background="Transparent"
-                                BorderThickness="0"
-                                Padding="8">
-                            <materialDesign:PackIcon Kind="QrcodeScan" />
+                                Background="Transparent" BorderThickness="0" Padding="8">
+                            <materialDesign:PackIcon Kind="QrcodeScan" Width="18" Height="18"
+                                                     Foreground="{DynamicResource AppMutedTextBrush}"/>
                         </Button>
-                        <ToggleButton x:Name="HelpButton" 
-                                    Style="{StaticResource MaterialDesignActionToggleButton}"
-                                    ToolTip="Справка по функциям"
-                                    Margin="0,0,16,0">
-                            <materialDesign:PackIcon Kind="HelpCircleOutline" />
+
+                        <ToggleButton x:Name="HelpButton"
+                                      Style="{StaticResource MaterialDesignActionToggleButton}"
+                                      ToolTip="Справка" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="HelpCircleOutline" Width="18" Height="18"/>
                         </ToggleButton>
-                        <Button Content="ЗАКРЫТЬ" Click="MenuExit_Click" 
-                              Style="{StaticResource MaterialDesignOutlinedButton}"/>
+
+                        <Button Content="Выход" Click="MenuExit_Click"
+                                Style="{StaticResource AppleGhostButton}"
+                                Padding="14,6" FontSize="12"/>
                     </StackPanel>
                 </DockPanel>
-            </materialDesign:ColorZone>
+            </Border>
 
             <Grid x:Name="MainContent">
                 <Grid.ColumnDefinitions>

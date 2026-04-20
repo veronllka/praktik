@@ -5,6 +5,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:appControls="clr-namespace:praktik.Controls"
              Startup="Application_Startup">
     <Application.Resources>
         <ResourceDictionary>
@@ -15,6 +16,7 @@
                 
                 <materialDesign:BundledTheme BaseTheme="Dark" PrimaryColor="Brown" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign2.Defaults.xaml" />
+                <ResourceDictionary Source="Styles/AnimatedIcons.xaml" />
                 
                 <ResourceDictionary>
                     <SolidColorBrush x:Key="AppBackgroundBrush" Color="#111318"/>
@@ -83,27 +85,38 @@
                     </Style>
 
                     <Style TargetType="ListBoxItem">
-                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
                         <Setter Property="Background" Value="Transparent"/>
                         <Setter Property="Padding" Value="12,10"/>
-                        <Setter Property="Margin" Value="8,0,8,6"/>
+                        <Setter Property="Margin" Value="8,0,8,4"/>
                         <Setter Property="Cursor" Value="Hand"/>
                         <Setter Property="Template">
                             <Setter.Value>
                                 <ControlTemplate TargetType="ListBoxItem">
-                                    <Border x:Name="ListBoxItemBorder"
-                                            Background="{TemplateBinding Background}"
-                                            CornerRadius="14"
-                                            Padding="{TemplateBinding Padding}">
-                                        <ContentPresenter VerticalAlignment="Center"/>
-                                    </Border>
+                                    <Grid>
+                                        <!-- Apple-style active left accent bar -->
+                                        <Border x:Name="ActiveBar"
+                                                Width="3" HorizontalAlignment="Left"
+                                                CornerRadius="0,2,2,0"
+                                                Background="{DynamicResource AppAccentBrush}"
+                                                Opacity="0"/>
+                                        <Border x:Name="ListBoxItemBorder"
+                                                Background="{TemplateBinding Background}"
+                                                CornerRadius="12"
+                                                Margin="4,0,0,0"
+                                                Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter VerticalAlignment="Center"/>
+                                        </Border>
+                                    </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter TargetName="ListBoxItemBorder" Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
                                             <Setter TargetName="ListBoxItemBorder" Property="Background" Value="{DynamicResource AppSelectionBrush}"/>
-                                            <Setter Property="Foreground" Value="{DynamicResource AppSelectionTextBrush}"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource AppAccentBrush}"/>
+                                            <Setter TargetName="ActiveBar" Property="Opacity" Value="1"/>
                                         </Trigger>
                                         <Trigger Property="IsEnabled" Value="False">
                                             <Setter Property="Opacity" Value="0.45"/>
@@ -274,6 +287,41 @@
                         <Setter Property="FontWeight" Value="Medium"/>
                         <Setter Property="Margin" Value="0,8,0,4"/>
                         <Setter Property="Foreground" Value="{DynamicResource AppMutedTextBrush}"/>
+                    </Style>
+
+                    <!-- Smooth scrollbar -->
+                    <Style TargetType="ScrollBar">
+                        <Setter Property="Width" Value="6"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Opacity" Value="0.6"/>
+                    </Style>
+
+                    <Style TargetType="ToolTip">
+                        <Setter Property="Background" Value="{DynamicResource AppPanelBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource AppTextBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="Padding" Value="10,6"/>
+                        <Setter Property="FontSize" Value="12"/>
+                        <Setter Property="Effect">
+                            <Setter.Value>
+                                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.3"/>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ToolTip">
+                                    <Border Background="{TemplateBinding Background}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="8"
+                                            Padding="{TemplateBinding Padding}"
+                                            Effect="{TemplateBinding Effect}">
+                                        <ContentPresenter/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
 
                     <Style TargetType="ContextMenu">
