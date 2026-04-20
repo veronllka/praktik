@@ -332,14 +332,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <Target Name="EnsureDesignTimeXamlFiles" AfterTargets="MarkupCompilePass1">
-    <Copy SourceFiles="$(IntermediateOutputPath)CrewMembersWindow.g.cs"
-          DestinationFiles="$(IntermediateOutputPath)CrewMembersWindow.g.i.cs"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(IntermediateOutputPath)CrewMembersWindow.g.cs')" />
-    <Copy SourceFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs"
-          DestinationFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.i.cs"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs')" />
+    <Copy SourceFiles="$(IntermediateOutputPath)CrewMembersWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)CrewMembersWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)CrewMembersWindow.g.cs')" />
+    <Copy SourceFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs')" />
   </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

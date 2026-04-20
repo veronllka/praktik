@@ -14,6 +14,9 @@ namespace praktik.Models
     public class WorkPlannerContext : IDisposable, IWorkPlannerContext
     {
         private const int DefaultCrewEmployeeRoleId = 3;
+        private const int SqlDuplicateKeyNumber = 2601;
+        private const int SqlUniqueConstraintViolationNumber = 2627;
+        private const string DuplicateCrewNameMessage = "Бригада с таким названием уже существует. Измените название бригады.";
         private static readonly object RoleSecuritySchemaSync = new object();
         private static bool roleSecuritySchemaEnsured;
         private string connectionString;
@@ -926,27 +929,47 @@ namespace praktik.Models
 
         public void AddCrew(Crew crew)
         {
-            using (var connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                var command = new SqlCommand("INSERT INTO Crews (CrewName, ForemanUserId) VALUES (@name, @brigadierId)", connection);
-                command.Parameters.AddWithValue("@name", crew.CrewName);
-                command.Parameters.AddWithValue("@brigadierId", (object)(crew.BrigadierId ?? (int?)null) ?? DBNull.Value);
-                command.ExecuteNonQuery();
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    var command = new SqlCommand("INSERT INTO Crews (CrewName, ForemanUserId) VALUES (@name, @brigadierId)", connection);
+                    command.Parameters.AddWithValue("@name", crew.CrewName);
+                    command.Parameters.AddWithValue("@brigadierId", (object)(crew.BrigadierId ?? (int?)null) ?? DBNull.Value);
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (SqlException ex) when (IsDuplicateKeyException(ex))
+            {
+                throw new InvalidOperationException(DuplicateCrewNameMessage, ex);
             }
         }
 
         public void UpdateCrew(Crew crew)
         {
-            using (var connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                var command = new SqlCommand("UPDATE Crews SET CrewName = @name, ForemanUserId = @brigadierId WHERE CrewId = @id", connection);
-                command.Parameters.AddWithValue("@name", crew.CrewName);
-                command.Parameters.AddWithValue("@brigadierId", (object)(crew.BrigadierId ?? (int?)null) ?? DBNull.Value);
-                command.Parameters.AddWithValue("@id", crew.CrewId);
-                command.ExecuteNonQuery();
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    var command = new SqlCommand("UPDATE Crews SET CrewName = @name, ForemanUserId = @brigadierId WHERE CrewId = @id", connection);
+                    command.Parameters.AddWithValue("@name", crew.CrewName);
+                    command.Parameters.AddWithValue("@brigadierId", (object)(crew.BrigadierId ?? (int?)null) ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@id", crew.CrewId);
+                    command.ExecuteNonQuery();
+                }
             }
+            catch (SqlException ex) when (IsDuplicateKeyException(ex))
+            {
+                throw new InvalidOperationException(DuplicateCrewNameMessage, ex);
+            }
+        }
+
+        private static bool IsDuplicateKeyException(SqlException ex)
+        {
+            return ex.Number == SqlDuplicateKeyNumber
+                || ex.Number == SqlUniqueConstraintViolationNumber;
         }
 
         public void DeleteCrew(int crewId)

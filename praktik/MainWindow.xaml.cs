@@ -23,6 +23,7 @@ namespace praktik
     public partial class MainWindow : UserControl
     {
         private readonly WorkPlannerFacade facade;
+        private const string DuplicateCrewNameMessage = "Бригада с таким названием уже существует. Измените название бригады.";
         private readonly HashSet<string> currentPermissionCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly ObservableCollection<BrigadierTaskChecklistItem> brigadierChecklistItems = new ObservableCollection<BrigadierTaskChecklistItem>();
         private readonly Brush calendarTaskHighlightBrush = new SolidColorBrush(Color.FromRgb(30, 136, 229));
@@ -214,6 +215,11 @@ namespace praktik
                 || normalizedRole == "administrator";
         }
 
+        private static bool IsDispatcherRole(string normalizedRole)
+        {
+            return normalizedRole == "диспетчер" || normalizedRole == "dispatcher";
+        }
+
         private void LoadCurrentPermissions()
         {
             currentPermissionCodes.Clear();
@@ -332,7 +338,7 @@ namespace praktik
             btnDeleteCrew.IsEnabled = CanManageCrews();
             btnDuplicateTask.Visibility = Visibility.Collapsed;
             btnDuplicateTask.Visibility = CanDuplicateTasks() ? Visibility.Visible : Visibility.Collapsed;
-            btnCrewMembers.IsEnabled = CanManageCrewMembers();
+            btnCrewMembers.IsEnabled = CanManageCrewMembers() && dgCrews.SelectedItem != null;
             btnCrewMembers.Visibility = CanManageCrewMembers() ? Visibility.Visible : Visibility.Collapsed;
             btnAddTask.IsEnabled = CanManageTasks();
             btnUpdateTask.IsEnabled = CanManageTasks();
@@ -734,16 +740,12 @@ namespace praktik
             try
             {
                 var crews = facade.GetCrews();
-                dgCrews.ItemsSource = crews;
                 cbBrigadiers.ItemsSource = facade.GetUsers().Where(u => u.Role == "Бригадир").ToList();
+                dgCrews.ItemsSource = crews;
                 selectedCrew = null;
-                btnCrewMembers.IsEnabled = CanManageCrewMembers();
+                dgCrews.SelectedItem = null;
+                btnCrewMembers.IsEnabled = false;
 
-                if (CanManageCrewMembers() && crews.Count > 0)
-                {
-                    dgCrews.SelectedIndex = 0;
-                }
-                
                 var children = CrewsContent.Children.OfType<UIElement>().ToList();
                 foreach (var child in children)
                 {
@@ -763,17 +765,19 @@ namespace praktik
         private void DgCrews_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var canManageMembers = CanManageCrewMembers();
-            btnCrewMembers.IsEnabled = canManageMembers;
+            btnCrewMembers.IsEnabled = canManageMembers && dgCrews.SelectedItem != null;
 
             if (dgCrews.SelectedItem is Models.Crew crew)
             {
                 selectedCrew = crew;
                 txtCrewName.Text = crew.CrewName;
-                cbBrigadiers.SelectedItem = crew.Brigadier;
+                SelectBrigadierForCrew(crew);
             }
             else
             {
                 selectedCrew = null;
+                txtCrewName.Text = "";
+                cbBrigadiers.SelectedItem = null;
             }
         }
 
@@ -784,21 +788,50 @@ namespace praktik
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtCrewName.Text) || cbBrigadiers.SelectedItem == null)
+            var crewName = txtCrewName.Text.Trim();
+            if (string.IsNullOrWhiteSpace(crewName) || cbBrigadiers.SelectedItem == null)
             {
                 MessageBox.Show("Введите название бригады и выберите бригадира");
                 return;
             }
 
+            if (!(cbBrigadiers.SelectedItem is User brigadier))
+            {
+                MessageBox.Show("Ошибка при получении данных бригадира");
+                return;
+            }
+
             var crew = new Crew
             {
-                CrewName = txtCrewName.Text,
-                BrigadierId = (cbBrigadiers.SelectedItem as User).UserId
+                CrewName = crewName,
+                BrigadierId = brigadier.UserId
             };
 
-            facade.AddCrew(crew);
-            LoadCrews();
-            ClearCrewFields();
+            try
+            {
+                if (CrewNameExists(crewName))
+                {
+                    MessageBox.Show(DuplicateCrewNameMessage);
+                    return;
+                }
+
+                facade.AddCrew(crew);
+                LoadCrews();
+                ClearCrewFields();
+                MessageBox.Show("Бригада успешно добавлена");
+            }
+            catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+            {
+                MessageBox.Show(DuplicateCrewNameMessage);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == DuplicateCrewNameMessage)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при добавлении бригады: {ex.Message}");
+            }
         }
 
         private void BtnUpdateCrew_Click(object sender, RoutedEventArgs e)
@@ -809,37 +842,52 @@ namespace praktik
             }
 
             try
-        {
-            if (selectedCrew == null)
             {
-                MessageBox.Show("Выберите бригаду для обновления");
-                return;
-            }
-                
-                if (string.IsNullOrWhiteSpace(txtCrewName.Text))
+                if (selectedCrew == null)
+                {
+                    MessageBox.Show("Выберите бригаду для обновления");
+                    return;
+                }
+
+                var crewName = txtCrewName.Text.Trim();
+                if (string.IsNullOrWhiteSpace(crewName))
                 {
                     MessageBox.Show("Введите название бригады");
                     return;
                 }
-                
+
                 if (cbBrigadiers.SelectedItem == null)
                 {
                     MessageBox.Show("Выберите бригадира");
                     return;
                 }
-                
+
                 if (!(cbBrigadiers.SelectedItem is User brigadier))
                 {
                     MessageBox.Show("Ошибка при получении данных бригадира");
-                return;
-            }
+                    return;
+                }
 
-            selectedCrew.CrewName = txtCrewName.Text;
+                if (CrewNameExists(crewName, selectedCrew.CrewId))
+                {
+                    MessageBox.Show(DuplicateCrewNameMessage);
+                    return;
+                }
+
+                selectedCrew.CrewName = crewName;
                 selectedCrew.BrigadierId = brigadier.UserId;
 
-            facade.UpdateCrew(selectedCrew);
-            LoadCrews();
+                facade.UpdateCrew(selectedCrew);
+                LoadCrews();
                 MessageBox.Show("Бригада успешно обновлена");
+            }
+            catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+            {
+                MessageBox.Show(DuplicateCrewNameMessage);
+            }
+            catch (InvalidOperationException ex) when (ex.Message == DuplicateCrewNameMessage)
+            {
+                MessageBox.Show(ex.Message);
             }
             catch (Exception ex)
             {
@@ -893,9 +941,34 @@ namespace praktik
 
         private void ClearCrewFields()
         {
+            if (dgCrews != null)
+            {
+                dgCrews.SelectedItem = null;
+            }
+
             txtCrewName.Text = "";
             cbBrigadiers.SelectedItem = null;
             selectedCrew = null;
+        }
+
+        private void SelectBrigadierForCrew(Crew crew)
+        {
+            if (crew?.BrigadierId == null)
+            {
+                cbBrigadiers.SelectedItem = null;
+                return;
+            }
+
+            cbBrigadiers.SelectedItem = cbBrigadiers.ItemsSource
+                ?.OfType<User>()
+                .FirstOrDefault(user => user.UserId == crew.BrigadierId.Value);
+        }
+
+        private bool CrewNameExists(string crewName, int? exceptCrewId = null)
+        {
+            return facade.GetCrews().Any(crew =>
+                (!exceptCrewId.HasValue || crew.CrewId != exceptCrewId.Value)
+                && string.Equals(crew.CrewName?.Trim(), crewName, StringComparison.OrdinalIgnoreCase));
         }
 
         private void LoadTasks()
@@ -1386,6 +1459,38 @@ namespace praktik
             }
 
             return tasks;
+        }
+
+        private List<MaterialRequest> GetMaterialRequestsVisibleForCurrentUser(List<MaterialRequest> requests)
+        {
+            var role = RolePermissionCatalog.NormalizeRoleName(roleOverride ?? LoginWindow.CurrentUser?.Role);
+            var currentUser = LoginWindow.CurrentUser;
+
+            if (IsAdminRole(role) || IsDispatcherRole(role))
+            {
+                return requests;
+            }
+
+            if ((role == "бригадир" || role == "foreman") && currentUser != null)
+            {
+                var crewIds = new HashSet<int>(
+                    facade.GetCrews()
+                        .Where(c => c.BrigadierId.HasValue && c.BrigadierId.Value == currentUser.UserId)
+                        .Select(c => c.CrewId));
+
+                return requests
+                    .Where(r => r.Task != null
+                        && r.Task.CrewId.HasValue
+                        && crewIds.Contains(r.Task.CrewId.Value))
+                    .ToList();
+            }
+
+            if (currentUser != null)
+            {
+                return requests.Where(r => r.CreatedByUserId == currentUser.UserId).ToList();
+            }
+
+            return new List<MaterialRequest>();
         }
 
         private bool IsTaskCompleted(Models.Task task)
@@ -3390,8 +3495,7 @@ namespace praktik
         private static bool CanEditRolePermissions(string roleName)
         {
             var normalizedRole = RolePermissionCatalog.NormalizeRoleName(roleName);
-            return normalizedRole == "диспетчер"
-                || normalizedRole == "dispatcher"
+            return IsDispatcherRole(normalizedRole)
                 || normalizedRole == "бригадир"
                 || normalizedRole == "foreman";
         }
@@ -4030,7 +4134,7 @@ namespace praktik
 
             materialRequests.Clear();
 
-            var allRequests = facade.GetMaterialRequests();
+            var allRequests = GetMaterialRequestsVisibleForCurrentUser(facade.GetMaterialRequests());
             var filtered = allRequests.AsQueryable();
 
             if (cbMRStatusFilter != null && cbMRStatusFilter.SelectedItem is ComboBoxItem statusItem &&
@@ -4058,7 +4162,7 @@ namespace praktik
             var tasks = facade.GetTasks();
             foreach (var req in filtered.ToList())
             {
-                var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId);
+                var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId) ?? req.Task;
                 materialRequests.Add(new MaterialRequestRegistryDisplay(req, task));
             }
 
