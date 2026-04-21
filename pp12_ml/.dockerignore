@@ -1,0 +1,5 @@
+.venv/
+notebooks/*_executed.ipynb
+__pycache__/
+*.pyc
+.ipynb_checkpoints/

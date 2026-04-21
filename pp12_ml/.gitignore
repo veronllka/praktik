@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+notebooks/*_executed.ipynb
+!artifacts/
+!artifacts/*.joblib

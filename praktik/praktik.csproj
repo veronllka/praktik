@@ -45,6 +45,12 @@
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="zxing">
+      <HintPath>$(NuGetPackageRoot)zxing.net\0.16.9\lib\net47\zxing.dll</HintPath>
+    </Reference>
+    <Reference Include="zxing.presentation">
+      <HintPath>$(NuGetPackageRoot)zxing.net\0.16.9\lib\net47\zxing.presentation.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -261,22 +267,8 @@
     </Compile>
     <Compile Include="AppThemeManager.cs" />
     <Compile Include="Services\AnimationService.cs" />
-    <Page Include="Controls\AnimatedSpinner.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="Controls\AnimatedSpinner.xaml.cs">
-      <DependentUpon>AnimatedSpinner.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Page Include="Controls\AnimatedHamburgerIcon.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="Controls\AnimatedHamburgerIcon.xaml.cs">
-      <DependentUpon>AnimatedHamburgerIcon.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Include="Controls\AnimatedSpinner.cs" />
+    <Compile Include="Controls\AnimatedHamburgerIcon.cs" />
     <Page Include="Styles\AnimatedIcons.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

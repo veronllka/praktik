@@ -1,0 +1,5 @@
+-r service/requirements.txt
+nbformat>=5.10,<6.0
+nbclient>=0.10,<1.0
+ipykernel>=6.0
+notebook>=7.0,<8.0

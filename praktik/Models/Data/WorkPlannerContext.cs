@@ -19,22 +19,19 @@ namespace praktik.Models
         private const string DuplicateCrewNameMessage = "Бригада с таким названием уже существует. Измените название бригады.";
         private static readonly object RoleSecuritySchemaSync = new object();
         private static bool roleSecuritySchemaEnsured;
-        private string connectionString;
+        private readonly string connectionString;
         private SqlConnection connection;
 
         public void Dispose()
         {
-            if (connection != null)
-            {
-                connection.Dispose();
-                connection = null;
-            }
+            connection?.Dispose();
+            connection = null;
         }
 
         public WorkPlannerContext()
         {
             var cs = ConfigurationManager.ConnectionStrings["WorkPlannerConnection"];
-            connectionString = cs != null ? cs.ConnectionString : "Server=WIN-IT3KG728UQJ\\SQLEXPRESS;Database=BrigadePlanner;Trusted_Connection=True;MultipleActiveResultSets=True;";
+            connectionString = cs?.ConnectionString ?? "Server=WIN-IT3KG728UQJ\\SQLEXPRESS;Database=BrigadePlanner;Trusted_Connection=True;MultipleActiveResultSets=True;";
             EnsureRoleSecuritySchema();
         }
 
@@ -1682,7 +1679,7 @@ namespace praktik.Models
                         
                         LogMaterialRequestStatusChange(requestId, oldStatus, newStatus, userId, comment, connection, transaction);
                         
-                        string reportText = GetStatusChangeReportText(oldStatus, newStatus, comment);
+                        string reportText = GetStatusChangeReportText(newStatus, comment);
                         AddServiceTaskReport(taskId, userId, reportText, connection, transaction);
                         
                         UpdateTaskLabelForMaterialRequest(taskId, newStatus, connection, transaction);
@@ -1728,7 +1725,7 @@ namespace praktik.Models
         }
 
         // Получение текста для отчета при изменении статуса
-        private string GetStatusChangeReportText(string oldStatus, string newStatus, string comment)
+        private string GetStatusChangeReportText(string newStatus, string comment)
         {
             switch (newStatus)
             {

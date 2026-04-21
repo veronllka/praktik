@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 
@@ -15,8 +16,8 @@ namespace praktik.Services
             new Lazy<AnimationService>(() => new AnimationService());
         public static AnimationService Instance => _lazy.Value;
 
-        private PerformanceCounter _cpuCounter;
-        private Timer _monitorTimer;
+        private readonly PerformanceCounter _cpuCounter;
+        private readonly Timer _monitorTimer;
         private bool _animationsEnabled = true;
 
         public event EventHandler AnimationStateChanged;
@@ -50,7 +51,7 @@ namespace praktik.Services
         private AnimationService()
         {
             LoadSettings();
-            TryInitCpuCounter();
+            _cpuCounter = TryCreateCpuCounter();
             _monitorTimer = new Timer(_ => Monitor(), null, 1500, 3000);
         }
 
@@ -83,14 +84,18 @@ namespace praktik.Services
             EvaluateState();
         }
 
-        private void TryInitCpuCounter()
+        private PerformanceCounter TryCreateCpuCounter()
         {
             try
             {
-                _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-                _cpuCounter.NextValue(); // First call always returns 0 — warm up
+                var counter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                counter.NextValue();
+                return counter;
             }
-            catch { }
+            catch
+            {
+                return null;
+            }
         }
 
         private void Monitor()
@@ -100,10 +105,14 @@ namespace praktik.Services
 
             try
             {
-                var ps = System.Windows.Forms.SystemInformation.PowerStatus;
-                IsOnBattery = ps.PowerLineStatus == System.Windows.Forms.PowerLineStatus.Offline;
-                float level = ps.BatteryLifePercent;
-                CurrentBatteryLevel = level >= 0f ? level * 100f : 100f;
+                SystemPowerStatus powerStatus;
+                if (GetSystemPowerStatus(out powerStatus))
+                {
+                    IsOnBattery = powerStatus.ACLineStatus == 0;
+                    CurrentBatteryLevel = powerStatus.BatteryLifePercent <= 100
+                        ? powerStatus.BatteryLifePercent
+                        : 100f;
+                }
             }
             catch { }
 
@@ -116,6 +125,20 @@ namespace praktik.Services
             if (AutoDisableOnHighCpu && CurrentCpuUsage > CpuThreshold) { AnimationsEnabled = false; return; }
             if (AutoDisableOnLowBattery && IsOnBattery && CurrentBatteryLevel < BatteryThreshold) { AnimationsEnabled = false; return; }
             AnimationsEnabled = true;
+        }
+
+        [DllImport("kernel32.dll")]
+        private static extern bool GetSystemPowerStatus(out SystemPowerStatus systemPowerStatus);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SystemPowerStatus
+        {
+            public byte ACLineStatus;
+            public byte BatteryFlag;
+            public byte BatteryLifePercent;
+            public byte SystemStatusFlag;
+            public int BatteryLifeTime;
+            public int BatteryFullLifeTime;
         }
     }
 }
