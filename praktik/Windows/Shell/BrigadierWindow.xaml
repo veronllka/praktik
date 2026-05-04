@@ -26,7 +26,7 @@
               Grid.Row="0"
               Height="42"
               VerticalAlignment="Top"
-              Background="Transparent"
+              Background="{DynamicResource AppBackgroundGradientBrush}"
               MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
               Panel.ZIndex="50">
             <StackPanel Orientation="Horizontal"
@@ -49,8 +49,10 @@
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        Margin="0,0,12,0">
+                        Margin="0">
                 <Button Click="BtnMinimize_Click"
+                        Width="46"
+                        Height="42"
                         Style="{StaticResource GlassTitleBarButtonStyle}"
                         ToolTip="Свернуть">
                     <TextBlock Text="&#xE738;" FontFamily="Segoe MDL2 Assets"
@@ -59,6 +61,8 @@
                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                 </Button>
                 <Button Click="BtnMaximize_Click"
+                        Width="46"
+                        Height="42"
                         Style="{StaticResource GlassTitleBarButtonStyle}"
                         ToolTip="Развернуть">
                     <TextBlock Text="&#xE922;" FontFamily="Segoe MDL2 Assets"
@@ -67,6 +71,8 @@
                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
                 </Button>
                 <Button Click="BtnClose_Click"
+                        Width="46"
+                        Height="42"
                         Style="{StaticResource GlassCloseTitleBarButtonStyle}"
                         ToolTip="Закрыть">
                     <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets"

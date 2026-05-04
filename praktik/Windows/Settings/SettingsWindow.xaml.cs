@@ -218,6 +218,11 @@ namespace praktik
                 return "LightBlue";
             }
 
+            if (rbAccentBrown.IsChecked == true)
+            {
+                return "Brown";
+            }
+
             return AppThemeManager.DefaultAccentColor;
         }
 

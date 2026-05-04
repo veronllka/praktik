@@ -94,7 +94,7 @@
 
     <Style x:Key="GlassPrimaryButtonStyle" TargetType="Button">
         <Setter Property="Height" Value="56"/>
-        <Setter Property="Background" Value="{StaticResource GlassPrimaryGradientBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource GlassPrimaryGradientBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderBrush" Value="#5AFFFFFF"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -116,7 +116,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource GlassPrimaryHoverBrush}"/>
+                            <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource GlassPrimaryHoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.9"/>

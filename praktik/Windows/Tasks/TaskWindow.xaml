@@ -21,8 +21,8 @@
                         <!-- Название и описание -->
                         <Border Margin="0,0,0,12"
                                 Padding="20"
-                                Background="{StaticResource GlassCardBrush}"
-                                BorderBrush="{StaticResource GlassShellBorderBrush}"
+                                Background="{DynamicResource GlassCardBrush}"
+                                BorderBrush="{DynamicResource GlassShellBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="18">
                             <Border.Effect>
@@ -66,8 +66,8 @@
                         <!-- Даты -->
                         <Border Margin="0,0,0,12"
                                 Padding="20"
-                                Background="{StaticResource GlassCardBrush}"
-                                BorderBrush="{StaticResource GlassShellBorderBrush}"
+                                Background="{DynamicResource GlassCardBrush}"
+                                BorderBrush="{DynamicResource GlassShellBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="18">
                             <Border.Effect>
@@ -93,8 +93,8 @@
 
                         <!-- Объект, бригада, приоритет -->
                         <Border Padding="20"
-                                Background="{StaticResource GlassCardBrush}"
-                                BorderBrush="{StaticResource GlassShellBorderBrush}"
+                                Background="{DynamicResource GlassCardBrush}"
+                                BorderBrush="{DynamicResource GlassShellBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="18">
                             <Border.Effect>
@@ -169,8 +169,8 @@
 
                     <Border Grid.Row="1"
                             Margin="0,0,0,12"
-                            Background="{StaticResource GlassCardBrush}"
-                            BorderBrush="{StaticResource GlassShellBorderBrush}"
+                            Background="{DynamicResource GlassCardBrush}"
+                            BorderBrush="{DynamicResource GlassShellBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="18"
                             ClipToBounds="True">
