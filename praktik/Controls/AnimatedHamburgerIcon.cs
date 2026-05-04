@@ -84,8 +84,10 @@ namespace praktik.Controls
 
         private void AnimateToggle(bool open)
         {
-            bool animate = AnimationService.Instance.AnimationsEnabled;
-            var dur = animate ? new Duration(System.TimeSpan.FromMilliseconds(220)) : new Duration(System.TimeSpan.Zero);
+            double mul = AnimationService.Instance.DurationMultiplier;
+            var dur = mul <= 0
+                ? new Duration(System.TimeSpan.Zero)
+                : new Duration(System.TimeSpan.FromMilliseconds(220 * mul));
             var ease = new CubicEase { EasingMode = EasingMode.EaseInOut };
 
             if (open)

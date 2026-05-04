@@ -62,5 +62,59 @@ namespace praktik.Properties
             get { return ((int)(this["BatteryThreshold"])); }
             set { this["BatteryThreshold"] = value; }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AutoDisableOnHighRam
+        {
+            get { return ((bool)(this["AutoDisableOnHighRam"])); }
+            set { this["AutoDisableOnHighRam"] = value; }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("85")]
+        public int RamThreshold
+        {
+            get { return ((int)(this["RamThreshold"])); }
+            set { this["RamThreshold"] = value; }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int PerformanceMode
+        {
+            get { return ((int)(this["PerformanceMode"])); }
+            set { this["PerformanceMode"] = value; }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Liquid")]
+        public string UiStyle
+        {
+            get { return ((string)(this["UiStyle"])); }
+            set { this["UiStyle"] = value; }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Segoe UI")]
+        public string UiFontFamily
+        {
+            get { return ((string)(this["UiFontFamily"])); }
+            set { this["UiFontFamily"] = value; }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("34")]
+        public int GlassOpacity
+        {
+            get { return ((int)(this["GlassOpacity"])); }
+            set { this["GlassOpacity"] = value; }
+        }
     }
 }

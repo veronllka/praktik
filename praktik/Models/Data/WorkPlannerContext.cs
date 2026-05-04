@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 
+#if !USE_IN_MEMORY_CONTEXT
+
 namespace praktik.Models
 {
     /// <summary>
@@ -217,17 +219,20 @@ namespace praktik.Models
         /// <returns>Объект User, если найден, иначе null.</returns>
         public User GetUser(string username, string password)
         {
+            username = (username ?? string.Empty).Trim();
+            password = (password ?? string.Empty).Trim();
+
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 var command = new SqlCommand(@"SELECT TOP 1 u.UserId, u.RoleId, u.LoginName, u.FullName, u.PasswordPlain, u.PreferredTheme, u.AccentColor, r.RoleName
                                               FROM Users u
                                               LEFT JOIN Roles r ON r.RoleId = u.RoleId
-                                              WHERE u.LoginName = @username
-                                                AND u.PasswordPlain = @password
+                                              WHERE LTRIM(RTRIM(u.LoginName)) = @username
+                                                AND LTRIM(RTRIM(u.PasswordPlain)) = @password
                                                 AND u.IsActive = 1", connection);
-                command.Parameters.AddWithValue("@username", username);
-                command.Parameters.AddWithValue("@password", password);
+                command.Parameters.Add("@username", System.Data.SqlDbType.NVarChar, 64).Value = username;
+                command.Parameters.Add("@password", System.Data.SqlDbType.NVarChar, 255).Value = password;
                 using (var reader = command.ExecuteReader())
                 {
                     if (reader.Read())
@@ -2103,3 +2108,972 @@ namespace praktik.Models
         }
     }
 }
+#else
+namespace praktik.Models
+{
+    public class WorkPlannerContext : IDisposable, IWorkPlannerContext
+    {
+        private static readonly object Sync = new object();
+        private static bool seeded;
+        private static int nextUserId = 1;
+        private static int nextRoleId = 1;
+        private static int nextSiteId = 1;
+        private static int nextCrewId = 1;
+        private static int nextTaskId = 1;
+        private static int nextTaskReportId = 1;
+        private static int nextTaskPrintLogId = 1;
+        private static int nextMaterialId = 1;
+        private static int nextMaterialRequestId = 1;
+        private static int nextMaterialRequestItemId = 1;
+        private static int nextDailyPlanId = 1;
+        private static int nextDailyPlanItemId = 1;
+
+        private static readonly List<User> Users = new List<User>();
+        private static readonly List<Role> Roles = new List<Role>();
+        private static readonly Dictionary<int, HashSet<string>> RolePermissions =
+            new Dictionary<int, HashSet<string>>();
+        private static readonly List<Site> Sites = new List<Site>();
+        private static readonly List<Crew> Crews = new List<Crew>();
+        private static readonly List<CrewMember> CrewMembers = new List<CrewMember>();
+        private static readonly List<Task> Tasks = new List<Task>();
+        private static readonly List<Priority> Priorities = new List<Priority>();
+        private static readonly List<TaskStatus> TaskStatuses = new List<TaskStatus>();
+        private static readonly List<TaskReport> TaskReports = new List<TaskReport>();
+        private static readonly List<TaskPrintLog> TaskPrintLogs = new List<TaskPrintLog>();
+        private static readonly List<MaterialCatalog> Materials = new List<MaterialCatalog>();
+        private static readonly List<MaterialRequest> MaterialRequests = new List<MaterialRequest>();
+        private static readonly List<DailyPlan> DailyPlans = new List<DailyPlan>();
+
+        public WorkPlannerContext()
+        {
+            // SQL Server access is disabled by request. This context works as an in-memory stub.
+            EnsureSeeded();
+        }
+
+        public void Dispose()
+        {
+        }
+
+        private static void EnsureSeeded()
+        {
+            lock (Sync)
+            {
+                if (seeded)
+                {
+                    return;
+                }
+
+                var adminRole = AddSeedRole("admin");
+                var dispatcherRole = AddSeedRole("dispatcher");
+                var foremanRole = AddSeedRole("foreman");
+                AddSeedRole("worker");
+
+                AddSeedUser("admin", "admin", "Demo Admin", adminRole.RoleId);
+                AddSeedUser("dispatcher", "dispatcher", "Demo Dispatcher", dispatcherRole.RoleId);
+                var foreman = AddSeedUser("foreman", "foreman", "Demo Foreman", foremanRole.RoleId);
+
+                Priorities.AddRange(new[]
+                {
+                    new Priority { PriorityId = 1, PriorityName = "Низкий" },
+                    new Priority { PriorityId = 2, PriorityName = "Нормальный" },
+                    new Priority { PriorityId = 3, PriorityName = "Высокий" },
+                    new Priority { PriorityId = 4, PriorityName = "Критический" }
+                });
+
+                TaskStatuses.AddRange(new[]
+                {
+                    new TaskStatus { TaskStatusId = 1, TaskStatusName = "Новая" },
+                    new TaskStatus { TaskStatusId = 2, TaskStatusName = "В работе" },
+                    new TaskStatus { TaskStatusId = 3, TaskStatusName = "Завершено" },
+                    new TaskStatus { TaskStatusId = 4, TaskStatusName = "Просрочено" }
+                });
+
+                var site = new Site
+                {
+                    SiteId = nextSiteId++,
+                    SiteCode = "DEMO-01",
+                    SiteName = "Демо-объект",
+                    Address = "Локальная заглушка без SQL Server"
+                };
+                Sites.Add(site);
+
+                var crew = new Crew
+                {
+                    CrewId = nextCrewId++,
+                    CrewName = "Демо-бригада",
+                    BrigadierId = foreman.UserId
+                };
+                Crews.Add(crew);
+                CrewMembers.Add(new CrewMember
+                {
+                    CrewId = crew.CrewId,
+                    UserId = foreman.UserId,
+                    JoinedAt = DateTime.Today.AddDays(-7)
+                });
+
+                Tasks.Add(new Task
+                {
+                    TaskId = nextTaskId++,
+                    SiteId = site.SiteId,
+                    CrewId = crew.CrewId,
+                    Title = "Демо-задача без SQL Server",
+                    Description = "Эта запись создана в памяти, чтобы приложение запускалось без подключения к SQL Server.",
+                    StartDate = DateTime.Today,
+                    EndDate = DateTime.Today.AddDays(3),
+                    PriorityId = 2,
+                    TaskStatusId = 1,
+                    CreatedBy = 1,
+                    CreatedAt = DateTime.Now
+                });
+
+                Materials.AddRange(new[]
+                {
+                    new MaterialCatalog
+                    {
+                        MaterialId = nextMaterialId++,
+                        Code = "MAT-001",
+                        Name = "Бетон",
+                        Unit = "м3",
+                        IsActive = true,
+                        CreatedAt = DateTime.Now
+                    },
+                    new MaterialCatalog
+                    {
+                        MaterialId = nextMaterialId++,
+                        Code = "MAT-002",
+                        Name = "Арматура",
+                        Unit = "кг",
+                        IsActive = true,
+                        CreatedAt = DateTime.Now
+                    }
+                });
+
+                seeded = true;
+                HydrateAll();
+            }
+        }
+
+        private static Role AddSeedRole(string roleName)
+        {
+            var role = new Role { RoleId = nextRoleId++, RoleName = roleName };
+            Roles.Add(role);
+            RolePermissions[role.RoleId] =
+                new HashSet<string>(RolePermissionCatalog.GetDefaultPermissions(roleName), StringComparer.OrdinalIgnoreCase);
+            return role;
+        }
+
+        private static User AddSeedUser(string username, string password, string fullName, int roleId)
+        {
+            var role = Roles.FirstOrDefault(r => r.RoleId == roleId);
+            var user = new User
+            {
+                UserId = nextUserId++,
+                RoleId = roleId,
+                Username = username,
+                Password = password,
+                FullName = fullName,
+                Role = role?.RoleName,
+                PreferredTheme = AppThemeManager.DefaultBaseTheme,
+                AccentColor = AppThemeManager.DefaultAccentColor
+            };
+            Users.Add(user);
+            return user;
+        }
+
+        private static void HydrateAll()
+        {
+            foreach (var user in Users)
+            {
+                user.Role = Roles.FirstOrDefault(r => r.RoleId == user.RoleId)?.RoleName ?? user.Role;
+            }
+
+            foreach (var crew in Crews)
+            {
+                crew.Brigadier = crew.BrigadierId.HasValue
+                    ? Users.FirstOrDefault(u => u.UserId == crew.BrigadierId.Value)
+                    : null;
+            }
+
+            foreach (var task in Tasks)
+            {
+                HydrateTask(task);
+            }
+
+            foreach (var request in MaterialRequests)
+            {
+                HydrateMaterialRequest(request);
+            }
+
+            foreach (var report in TaskReports)
+            {
+                var task = Tasks.FirstOrDefault(t => t.TaskId == report.TaskId);
+                var user = Users.FirstOrDefault(u => u.UserId == report.ReportedByUserId);
+                report.Task = task;
+                report.User = user;
+                report.TaskTitle = task?.Title;
+                report.ReporterName = user?.DisplayName;
+            }
+        }
+
+        private static Task HydrateTask(Task task)
+        {
+            if (task == null)
+            {
+                return null;
+            }
+
+            task.Site = Sites.FirstOrDefault(s => s.SiteId == task.SiteId);
+            task.Crew = task.CrewId.HasValue ? Crews.FirstOrDefault(c => c.CrewId == task.CrewId.Value) : null;
+            task.Priority = Priorities.FirstOrDefault(p => p.PriorityId == task.PriorityId);
+            task.TaskStatus = TaskStatuses.FirstOrDefault(s => s.TaskStatusId == task.TaskStatusId);
+            task.Creator = Users.FirstOrDefault(u => u.UserId == task.CreatedBy);
+            return task;
+        }
+
+        private static MaterialRequest HydrateMaterialRequest(MaterialRequest request)
+        {
+            if (request == null)
+            {
+                return null;
+            }
+
+            request.Task = HydrateTask(Tasks.FirstOrDefault(t => t.TaskId == request.TaskId));
+            request.CreatedByUser = Users.FirstOrDefault(u => u.UserId == request.CreatedByUserId);
+            foreach (var item in request.Items)
+            {
+                item.Request = request;
+                item.Material = Materials.FirstOrDefault(m => m.MaterialId == item.MaterialId);
+            }
+            return request;
+        }
+
+        private static string GenerateSiteCode()
+        {
+            return $"SITE-{nextSiteId:000}";
+        }
+
+        public List<User> GetUsers()
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return Users.OrderBy(u => u.DisplayName).ToList();
+            }
+        }
+
+        public User GetUser(string username, string password)
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return Users.FirstOrDefault(u =>
+                    string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(u.Password, password, StringComparison.Ordinal));
+            }
+        }
+
+        public User GetUserById(int userId)
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return Users.FirstOrDefault(u => u.UserId == userId);
+            }
+        }
+
+        public List<Site> GetSites()
+        {
+            lock (Sync)
+            {
+                return Sites.OrderBy(s => s.SiteName).ToList();
+            }
+        }
+
+        public void AddSite(Site site)
+        {
+            if (site == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                site.SiteId = site.SiteId == 0 ? nextSiteId++ : site.SiteId;
+                site.SiteCode = string.IsNullOrWhiteSpace(site.SiteCode) ? GenerateSiteCode() : site.SiteCode;
+                Sites.Add(site);
+            }
+        }
+
+        public void UpdateSite(Site site)
+        {
+            if (site == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                var index = Sites.FindIndex(s => s.SiteId == site.SiteId);
+                if (index >= 0)
+                {
+                    Sites[index] = site;
+                }
+            }
+        }
+
+        public void DeleteSite(int siteId)
+        {
+            lock (Sync)
+            {
+                Sites.RemoveAll(s => s.SiteId == siteId);
+            }
+        }
+
+        public List<Crew> GetCrews()
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return Crews.OrderBy(c => c.CrewName).ToList();
+            }
+        }
+
+        public List<CrewMember> GetCrewMembers(int crewId, bool activeOnly = true)
+        {
+            lock (Sync)
+            {
+                return CrewMembers
+                    .Where(m => m.CrewId == crewId && (!activeOnly || m.LeftAt == null))
+                    .Select(m =>
+                    {
+                        m.User = Users.FirstOrDefault(u => u.UserId == m.UserId);
+                        return m;
+                    })
+                    .OrderBy(m => m.LeftAt.HasValue)
+                    .ThenBy(m => m.User?.DisplayName)
+                    .ToList();
+            }
+        }
+
+        public List<User> GetAvailableUsersForCrew(int crewId)
+        {
+            lock (Sync)
+            {
+                var activeUserIds = new HashSet<int>(
+                    CrewMembers.Where(m => m.CrewId == crewId && m.LeftAt == null).Select(m => m.UserId));
+                return Users.Where(u => !activeUserIds.Contains(u.UserId)).OrderBy(u => u.DisplayName).ToList();
+            }
+        }
+
+        public bool AddCrewMember(int crewId, int userId, DateTime joinedAt, out string errorMessage)
+        {
+            lock (Sync)
+            {
+                errorMessage = null;
+                if (!Crews.Any(c => c.CrewId == crewId))
+                {
+                    errorMessage = "Бригада не найдена.";
+                    return false;
+                }
+
+                if (!Users.Any(u => u.UserId == userId))
+                {
+                    errorMessage = "Пользователь не найден.";
+                    return false;
+                }
+
+                if (CrewMembers.Any(m => m.CrewId == crewId && m.UserId == userId && m.LeftAt == null))
+                {
+                    errorMessage = "Пользователь уже состоит в бригаде.";
+                    return false;
+                }
+
+                CrewMembers.Add(new CrewMember { CrewId = crewId, UserId = userId, JoinedAt = joinedAt });
+                return true;
+            }
+        }
+
+        public bool RemoveCrewMember(int crewId, int userId, DateTime leftAt, out string errorMessage)
+        {
+            lock (Sync)
+            {
+                errorMessage = null;
+                var member = CrewMembers.FirstOrDefault(m => m.CrewId == crewId && m.UserId == userId && m.LeftAt == null);
+                if (member == null)
+                {
+                    errorMessage = "Сотрудник не найден в активном составе бригады.";
+                    return false;
+                }
+
+                member.LeftAt = leftAt;
+                return true;
+            }
+        }
+
+        public List<Task> GetTasks()
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return Tasks.OrderByDescending(t => t.CreatedAt).ToList();
+            }
+        }
+
+        public Task GetTaskById(int taskId)
+        {
+            lock (Sync)
+            {
+                return HydrateTask(Tasks.FirstOrDefault(t => t.TaskId == taskId));
+            }
+        }
+
+        public List<Priority> GetPriorities()
+        {
+            lock (Sync)
+            {
+                return Priorities.OrderBy(p => p.PriorityId).ToList();
+            }
+        }
+
+        public List<TaskStatus> GetTaskStatuses()
+        {
+            lock (Sync)
+            {
+                return TaskStatuses.OrderBy(s => s.TaskStatusId).ToList();
+            }
+        }
+
+        public int GetNewTaskStatusId(string statusName)
+        {
+            lock (Sync)
+            {
+                return TaskStatuses
+                    .FirstOrDefault(s => string.Equals(s.TaskStatusName, statusName, StringComparison.OrdinalIgnoreCase))
+                    ?.TaskStatusId ?? 0;
+            }
+        }
+
+        public void AddTask(Task task)
+        {
+            if (task == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                task.TaskId = task.TaskId == 0 ? nextTaskId++ : task.TaskId;
+                task.CreatedAt = task.CreatedAt == default(DateTime) ? DateTime.Now : task.CreatedAt;
+                Tasks.Add(task);
+                HydrateTask(task);
+            }
+        }
+
+        public void UpdateTask(Task task)
+        {
+            if (task == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                task.UpdatedAt = DateTime.Now;
+                var index = Tasks.FindIndex(t => t.TaskId == task.TaskId);
+                if (index >= 0)
+                {
+                    Tasks[index] = task;
+                }
+                else
+                {
+                    Tasks.Add(task);
+                }
+                HydrateTask(task);
+            }
+        }
+
+        public void RecordTaskPrint(int taskId, int userId, string templateName, DateTime printedAt)
+        {
+            lock (Sync)
+            {
+                var task = Tasks.FirstOrDefault(t => t.TaskId == taskId);
+                if (task == null)
+                {
+                    throw new InvalidOperationException("Задача не найдена.");
+                }
+
+                task.LastPrintedAt = printedAt;
+                TaskPrintLogs.Add(new TaskPrintLog
+                {
+                    LogId = nextTaskPrintLogId++,
+                    TaskId = taskId,
+                    PrintedByUserId = userId,
+                    PrintedAt = printedAt,
+                    TemplateName = templateName,
+                    PrintedByName = Users.FirstOrDefault(u => u.UserId == userId)?.DisplayName
+                });
+            }
+        }
+
+        public List<TaskPrintLog> GetTaskPrintLogs(int taskId)
+        {
+            lock (Sync)
+            {
+                return TaskPrintLogs
+                    .Where(l => l.TaskId == taskId)
+                    .OrderByDescending(l => l.PrintedAt)
+                    .ThenByDescending(l => l.LogId)
+                    .ToList();
+            }
+        }
+
+        public void UpdateTaskStatus(int taskId, int statusId, int userId, string comment)
+        {
+            lock (Sync)
+            {
+                var task = Tasks.FirstOrDefault(t => t.TaskId == taskId);
+                if (task == null)
+                {
+                    return;
+                }
+
+                task.TaskStatusId = statusId;
+                task.UpdatedAt = DateTime.Now;
+                AddTaskReport(taskId, userId, string.IsNullOrWhiteSpace(comment) ? "Статус задачи изменен." : comment);
+                HydrateTask(task);
+            }
+        }
+
+        public void DeleteTask(int taskId)
+        {
+            lock (Sync)
+            {
+                Tasks.RemoveAll(t => t.TaskId == taskId);
+                TaskReports.RemoveAll(r => r.TaskId == taskId);
+                MaterialRequests.RemoveAll(r => r.TaskId == taskId);
+            }
+        }
+
+        public void AddCrew(Crew crew)
+        {
+            if (crew == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                crew.CrewId = crew.CrewId == 0 ? nextCrewId++ : crew.CrewId;
+                Crews.Add(crew);
+                HydrateAll();
+            }
+        }
+
+        public void UpdateCrew(Crew crew)
+        {
+            if (crew == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                var index = Crews.FindIndex(c => c.CrewId == crew.CrewId);
+                if (index >= 0)
+                {
+                    Crews[index] = crew;
+                }
+                HydrateAll();
+            }
+        }
+
+        public void DeleteCrew(int crewId)
+        {
+            lock (Sync)
+            {
+                Crews.RemoveAll(c => c.CrewId == crewId);
+                CrewMembers.RemoveAll(m => m.CrewId == crewId);
+                foreach (var task in Tasks.Where(t => t.CrewId == crewId))
+                {
+                    task.CrewId = null;
+                }
+                HydrateAll();
+            }
+        }
+
+        public List<Role> GetRoles()
+        {
+            lock (Sync)
+            {
+                return Roles.OrderBy(r => r.RoleId).ToList();
+            }
+        }
+
+        public List<string> GetRolePermissionCodes(int roleId)
+        {
+            lock (Sync)
+            {
+                return RolePermissions.TryGetValue(roleId, out var permissions)
+                    ? permissions.ToList()
+                    : new List<string>();
+            }
+        }
+
+        public List<string> GetRolePermissionCodes(string roleName)
+        {
+            lock (Sync)
+            {
+                var role = Roles.FirstOrDefault(r => string.Equals(r.RoleName, roleName, StringComparison.OrdinalIgnoreCase));
+                return role == null ? new List<string>() : GetRolePermissionCodes(role.RoleId);
+            }
+        }
+
+        public int CreateRole(string roleName, IEnumerable<string> permissionCodes)
+        {
+            lock (Sync)
+            {
+                var role = new Role { RoleId = nextRoleId++, RoleName = roleName };
+                Roles.Add(role);
+                RolePermissions[role.RoleId] = new HashSet<string>(
+                    RolePermissionCatalog.Sanitize(permissionCodes),
+                    StringComparer.OrdinalIgnoreCase);
+                return role.RoleId;
+            }
+        }
+
+        public void UpdateUserRole(int userId, int roleId)
+        {
+            lock (Sync)
+            {
+                var user = Users.FirstOrDefault(u => u.UserId == userId);
+                if (user == null)
+                {
+                    return;
+                }
+
+                user.RoleId = roleId;
+                user.Role = Roles.FirstOrDefault(r => r.RoleId == roleId)?.RoleName;
+            }
+        }
+
+        public void UpdateRolePermissions(int roleId, IEnumerable<string> permissionCodes)
+        {
+            lock (Sync)
+            {
+                RolePermissions[roleId] = new HashSet<string>(
+                    RolePermissionCatalog.Sanitize(permissionCodes),
+                    StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        public void RegisterUser(string loginName, string password, string fullName, int roleId)
+        {
+            lock (Sync)
+            {
+                if (Users.Any(u => string.Equals(u.Username, loginName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException("Пользователь с таким логином уже существует.");
+                }
+
+                AddSeedUser(loginName, password, fullName, roleId);
+            }
+        }
+
+        public void UpdateUser(int userId, string loginName, string password, string fullName, int roleId)
+        {
+            lock (Sync)
+            {
+                var user = Users.FirstOrDefault(u => u.UserId == userId);
+                if (user == null)
+                {
+                    return;
+                }
+
+                user.Username = loginName;
+                if (!string.IsNullOrWhiteSpace(password))
+                {
+                    user.Password = password;
+                }
+                user.FullName = fullName;
+                user.RoleId = roleId;
+                user.Role = Roles.FirstOrDefault(r => r.RoleId == roleId)?.RoleName;
+            }
+        }
+
+        public void DeleteUser(int userId)
+        {
+            lock (Sync)
+            {
+                Users.RemoveAll(u => u.UserId == userId);
+                foreach (var member in CrewMembers.Where(m => m.UserId == userId && m.LeftAt == null))
+                {
+                    member.LeftAt = DateTime.Now;
+                }
+            }
+        }
+
+        public void UpdateUserSettings(int userId, string newPassword, string preferredTheme, string accentColor)
+        {
+            lock (Sync)
+            {
+                var user = Users.FirstOrDefault(u => u.UserId == userId);
+                if (user == null)
+                {
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(newPassword))
+                {
+                    user.Password = newPassword;
+                }
+                user.PreferredTheme = AppThemeManager.NormalizeBaseTheme(preferredTheme);
+                user.AccentColor = AppThemeManager.NormalizeAccent(accentColor);
+            }
+        }
+
+        public bool CreateCrewEmployeeAndAddToCrew(int crewId, string fullName, DateTime joinedAt, out int createdUserId, out string errorMessage)
+        {
+            lock (Sync)
+            {
+                createdUserId = 0;
+                errorMessage = null;
+                var role = Roles.FirstOrDefault(r => string.Equals(r.RoleName, "worker", StringComparison.OrdinalIgnoreCase))
+                    ?? Roles.FirstOrDefault();
+                if (role == null)
+                {
+                    errorMessage = "Роль для сотрудника не найдена.";
+                    return false;
+                }
+
+                var baseLogin = string.Concat((fullName ?? "worker").Where(char.IsLetterOrDigit)).ToLowerInvariant();
+                if (string.IsNullOrWhiteSpace(baseLogin))
+                {
+                    baseLogin = "worker";
+                }
+
+                var login = baseLogin;
+                var suffix = 1;
+                while (Users.Any(u => string.Equals(u.Username, login, StringComparison.OrdinalIgnoreCase)))
+                {
+                    login = baseLogin + suffix++;
+                }
+
+                var user = AddSeedUser(login, "123", fullName, role.RoleId);
+                createdUserId = user.UserId;
+                return AddCrewMember(crewId, user.UserId, joinedAt, out errorMessage);
+            }
+        }
+
+        public List<TaskReport> GetTaskReports(int? taskId = null)
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return TaskReports
+                    .Where(r => !taskId.HasValue || r.TaskId == taskId.Value)
+                    .OrderByDescending(r => r.ReportedAt)
+                    .ToList();
+            }
+        }
+
+        public void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null, string attachmentUrl = null)
+        {
+            lock (Sync)
+            {
+                var report = new TaskReport
+                {
+                    ReportId = nextTaskReportId++,
+                    TaskId = taskId,
+                    ReportedByUserId = userId,
+                    ReportText = reportText,
+                    ProgressPercent = progressPercent,
+                    AttachmentUrl = attachmentUrl,
+                    ReportedAt = DateTime.Now
+                };
+                TaskReports.Add(report);
+                HydrateAll();
+            }
+        }
+
+        public List<MaterialCatalog> GetMaterialCatalog(bool activeOnly = true)
+        {
+            lock (Sync)
+            {
+                return Materials
+                    .Where(m => !activeOnly || m.IsActive)
+                    .OrderBy(m => m.Name)
+                    .ToList();
+            }
+        }
+
+        public List<MaterialRequest> GetMaterialRequests(int? taskId = null, int? requestId = null)
+        {
+            lock (Sync)
+            {
+                HydrateAll();
+                return MaterialRequests
+                    .Where(r => !taskId.HasValue || r.TaskId == taskId.Value)
+                    .Where(r => !requestId.HasValue || r.RequestId == requestId.Value)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList();
+            }
+        }
+
+        public List<MaterialRequestItem> GetMaterialRequestItems(int requestId)
+        {
+            lock (Sync)
+            {
+                var request = MaterialRequests.FirstOrDefault(r => r.RequestId == requestId);
+                HydrateMaterialRequest(request);
+                return request?.Items.ToList() ?? new List<MaterialRequestItem>();
+            }
+        }
+
+        public int CreateMaterialRequest(MaterialRequest request)
+        {
+            if (request == null)
+            {
+                return 0;
+            }
+
+            lock (Sync)
+            {
+                request.RequestId = request.RequestId == 0 ? nextMaterialRequestId++ : request.RequestId;
+                request.CreatedAt = request.CreatedAt == default(DateTime) ? DateTime.Now : request.CreatedAt;
+                request.Status = string.IsNullOrWhiteSpace(request.Status) ? "Draft" : request.Status;
+                foreach (var item in request.Items)
+                {
+                    item.RequestId = request.RequestId;
+                    item.RequestItemId = item.RequestItemId == 0 ? nextMaterialRequestItemId++ : item.RequestItemId;
+                }
+                MaterialRequests.Add(request);
+                HydrateMaterialRequest(request);
+                return request.RequestId;
+            }
+        }
+
+        public void UpdateMaterialRequest(MaterialRequest request)
+        {
+            if (request == null)
+            {
+                return;
+            }
+
+            lock (Sync)
+            {
+                var index = MaterialRequests.FindIndex(r => r.RequestId == request.RequestId);
+                if (index >= 0)
+                {
+                    MaterialRequests[index] = request;
+                }
+                else
+                {
+                    MaterialRequests.Add(request);
+                }
+                HydrateMaterialRequest(request);
+            }
+        }
+
+        public void ChangeMaterialRequestStatus(int requestId, string newStatus, int userId, string comment = null)
+        {
+            lock (Sync)
+            {
+                var request = MaterialRequests.FirstOrDefault(r => r.RequestId == requestId);
+                if (request == null)
+                {
+                    return;
+                }
+
+                request.Status = newStatus;
+                AddTaskReport(request.TaskId, userId, string.IsNullOrWhiteSpace(comment)
+                    ? $"Статус заявки изменен: {newStatus}"
+                    : comment);
+            }
+        }
+
+        public int? GetTaskLabelIdByCode(string code)
+        {
+            return null;
+        }
+
+        public void AddMaterialDeliveryDoc(int requestId, string eventType, string docNumber = null, string note = null)
+        {
+            lock (Sync)
+            {
+                var request = MaterialRequests.FirstOrDefault(r => r.RequestId == requestId);
+                if (request == null)
+                {
+                    return;
+                }
+
+                AddTaskReport(
+                    request.TaskId,
+                    request.CreatedByUserId,
+                    $"Документ по заявке #{requestId}: {eventType}; {docNumber}; {note}");
+            }
+        }
+
+        public DailyPlan GetDailyPlanByDate(DateTime date)
+        {
+            lock (Sync)
+            {
+                return DailyPlans.FirstOrDefault(p => p.PlanDate.Date == date.Date);
+            }
+        }
+
+        public int SaveDailyPlan(DailyPlan plan, int userId)
+        {
+            if (plan == null)
+            {
+                return 0;
+            }
+
+            lock (Sync)
+            {
+                var existing = DailyPlans.FirstOrDefault(p => p.PlanDate.Date == plan.PlanDate.Date);
+                if (existing != null)
+                {
+                    DailyPlans.Remove(existing);
+                    plan.PlanId = plan.PlanId == 0 ? existing.PlanId : plan.PlanId;
+                }
+
+                plan.PlanId = plan.PlanId == 0 ? nextDailyPlanId++ : plan.PlanId;
+                plan.CreatedByUserId = userId;
+                plan.CreatedAt = plan.CreatedAt == default(DateTime) ? DateTime.Now : plan.CreatedAt;
+                plan.Status = string.IsNullOrWhiteSpace(plan.Status) ? "Черновик" : plan.Status;
+                foreach (var item in plan.Items)
+                {
+                    item.PlanId = plan.PlanId;
+                    item.PlanItemId = item.PlanItemId == 0 ? nextDailyPlanItemId++ : item.PlanItemId;
+                }
+                DailyPlans.Add(plan);
+                return plan.PlanId;
+            }
+        }
+
+        public void ApproveDailyPlan(int planId)
+        {
+            lock (Sync)
+            {
+                var plan = DailyPlans.FirstOrDefault(p => p.PlanId == planId);
+                if (plan != null)
+                {
+                    plan.Status = "Утвержден";
+                }
+            }
+        }
+
+        public List<DailyPlanItem> GetApprovedPlanItemsForDate(DateTime date)
+        {
+            lock (Sync)
+            {
+                var plan = DailyPlans.FirstOrDefault(p =>
+                    p.PlanDate.Date == date.Date &&
+                    (string.Equals(p.Status, "Утвержден", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(p.Status, "Утверждён", StringComparison.OrdinalIgnoreCase)));
+                return plan?.Items.ToList() ?? new List<DailyPlanItem>();
+            }
+        }
+    }
+}
+#endif

@@ -1,0 +1,165 @@
+<Window x:Class="praktik.MaterialRequestEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Заявка на материалы"
+        Height="700"
+        Width="940"
+        MinHeight="620"
+        MinWidth="860"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource GlassWindowStyle}">
+    <Grid Style="{StaticResource GlassWindowRootStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource GlassToolbarStyle}">
+            <StackPanel>
+                <TextBlock Text="Заявка на материалы"
+                           Style="{StaticResource HeaderTextStyle}"
+                           Margin="0,0,0,10"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="18"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Статус" Style="{StaticResource GlassFieldLabelStyle}"/>
+                        <TextBlock x:Name="txtStatus"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppAccentBrush}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Требуется к" Style="{StaticResource GlassFieldLabelStyle}"/>
+                        <DatePicker x:Name="dpRequiredDate"
+                                    ToolTip="Укажите дату, к которой материалы должны быть доступны"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3">
+                        <TextBlock Text="Комментарий" Style="{StaticResource GlassFieldLabelStyle}"/>
+                        <TextBox x:Name="txtComment"
+                                 ToolTip="Введите общий комментарий к заявке при необходимости"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 Height="66"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Style="{StaticResource GlassDataGridHostStyle}">
+            <DataGrid x:Name="dgItems"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      SelectionChanged="DgItems_SelectionChanged">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Материал" Binding="{Binding Material.Name}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Ед. изм." Binding="{Binding Material.Unit}" Width="90" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Количество" Binding="{Binding Qty}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" Width="*"/>
+                    <DataGridTemplateColumn Header="Действия" Width="120" MinWidth="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Удалить"
+                                        Click="BtnDeleteItem_Click"
+                                        Style="{StaticResource GlassDangerButtonStyle}"
+                                        Padding="8,4"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <GroupBox Grid.Row="2"
+                  Header="Добавить позицию"
+                  Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                    <TextBlock Text="Материал *" Style="{StaticResource GlassFieldLabelStyle}"/>
+                    <ComboBox x:Name="cbMaterial"
+                              ToolTip="Выберите материал из справочника"
+                              SelectionChanged="CbMaterial_SelectionChanged">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Name}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <TextBlock Text="Выберите позицию, которую нужно заказать."
+                               FontSize="11"
+                               Foreground="{DynamicResource AppSubtleTextBrush}"
+                               Margin="2,6,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                    <TextBlock Text="Количество *" Style="{StaticResource GlassFieldLabelStyle}"/>
+                    <TextBox x:Name="txtQty"
+                             ToolTip="Введите количество материала больше нуля"/>
+                    <TextBlock x:Name="txtMaterialUnitHint"
+                               Text="Введите количество"
+                               FontSize="11"
+                               Foreground="{DynamicResource AppSubtleTextBrush}"
+                               Margin="2,6,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                    <TextBlock Text="Комментарий к позиции" Style="{StaticResource GlassFieldLabelStyle}"/>
+                    <TextBox x:Name="txtItemComment"
+                             ToolTip="Например: марка, размер, место применения"/>
+                    <TextBlock Text="Можно оставить пустым, если уточнений нет."
+                               FontSize="11"
+                               Foreground="{DynamicResource AppSubtleTextBrush}"
+                               Margin="2,6,0,0"/>
+                </StackPanel>
+                <Button x:Name="btnAddItem"
+                        Grid.Column="3"
+                        Content="Добавить"
+                        Click="BtnAddItem_Click"
+                        MinWidth="120"
+                        VerticalAlignment="Top"
+                        Margin="0,27,0,0"
+                        Style="{StaticResource AppRaisedButton}"/>
+            </Grid>
+        </GroupBox>
+
+        <Border Grid.Row="3" Style="{StaticResource GlassFooterBarStyle}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="btnSave"
+                        Content="Сохранить черновик"
+                        Click="BtnSave_Click"
+                        Style="{StaticResource AppRaisedButton}"
+                        Margin="0,0,10,0"/>
+                <Button x:Name="btnSubmit"
+                        Content="Отправить"
+                        Click="BtnSubmit_Click"
+                        Style="{StaticResource AppRaisedButton}"
+                        Margin="0,0,10,0"/>
+                <Button x:Name="btnCancel"
+                        Content="Отмена"
+                        Click="BtnCancel_Click"
+                        Style="{StaticResource AppOutlinedButton}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

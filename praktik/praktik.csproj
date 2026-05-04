@@ -16,6 +16,7 @@
     <Deterministic>true</Deterministic>
     <RuntimeIdentifier>win</RuntimeIdentifier>
     <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
+    <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -23,7 +24,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;USE_SQL_SERVER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -32,7 +33,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;USE_SQL_SERVER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -74,24 +75,14 @@
     <PackageReference Include="itext7">
       <Version>7.2.2</Version>
     </PackageReference>
-    <PackageReference Include="MaterialDesignThemes">
-      <Version>5.2.0</Version>
-    </PackageReference>
-    <PackageReference Include="MaterialDesignColors">
-      <Version>5.2.0</Version>
-    </PackageReference>
     <PackageReference Include="MahApps.Metro">
       <Version>2.4.10</Version>
     </PackageReference>
-    <PackageReference Include="MahApps.Metro.IconPacks">
+    <PackageReference Include="MahApps.Metro.IconPacks.Material">
       <Version>4.11.0</Version>
     </PackageReference>
-    <!-- Удаляем FontAwesome.WPF, так как используем MahApps.Metro.IconPacks -->
     <PackageReference Include="ControlzEx">
       <Version>5.0.2</Version>
-    </PackageReference>
-    <PackageReference Include="MaterialDesignThemes.MahApps">
-      <Version>5.2.0</Version>
     </PackageReference>
     <PackageReference Include="WPFAnimatedGif">
       <Version>2.0.2</Version>
@@ -105,87 +96,87 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Windows\Shell\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="AdminWindow.xaml">
+    <Page Include="Windows\Shell\AdminWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="DispatcherWindow.xaml">
+    <Page Include="Windows\Shell\DispatcherWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="BrigadierWindow.xaml">
+    <Page Include="Windows\Shell\BrigadierWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="CrewMembersWindow.xaml">
+    <Page Include="Windows\Crews\CrewMembersWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="CrewMemberCreateWindow.xaml">
+    <Page Include="Windows\Crews\CrewMemberCreateWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="LoginWindow.xaml">
+    <Page Include="Windows\Auth\LoginWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Tasks\TaskWindow.xaml">
+    <Page Include="Windows\Tasks\TaskWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Tasks\TaskStatusWindow.xaml">
+    <Page Include="Windows\Tasks\TaskStatusWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="RegisterWindow.xaml">
+    <Page Include="Windows\Auth\RegisterWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SettingsWindow.xaml">
+    <Page Include="Windows\Settings\SettingsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Materials\MaterialRequestEditWindow.xaml">
+    <Page Include="Windows\Materials\MaterialRequestEditWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Materials\MaterialRequestRegistryWindow.xaml">
+    <Page Include="Windows\Materials\MaterialRequestRegistryWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ReportsWindow.xaml">
+    <Page Include="Windows\Reports\ReportsWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Materials\MaterialRequestActionWindow.xaml">
+    <Page Include="Windows\Materials\MaterialRequestActionWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Tasks\TaskSelectionWindow.xaml">
+    <Page Include="Windows\Tasks\TaskSelectionWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Tasks\TaskPrintPreviewWindow.xaml">
+    <Page Include="Windows\Tasks\TaskPrintPreviewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="QRCodeScannerWindow.xaml">
+    <Page Include="Windows\Tools\QRCodeScannerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Tasks\TaskViewWindow.xaml">
+    <Page Include="Windows\Tasks\TaskViewWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="QuickNoteWindow.xaml">
+    <Page Include="Windows\Tools\QuickNoteWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Tasks\TaskQRCodeWindow.xaml">
+    <Page Include="Windows\Tasks\TaskQRCodeWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -193,91 +184,109 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="Windows\Shell\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="LoginWindow.xaml.cs">
+    <Compile Include="Windows\Auth\LoginWindow.xaml.cs">
       <DependentUpon>LoginWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tasks\TaskWindow.xaml.cs">
+    <Compile Include="Windows\Tasks\TaskWindow.xaml.cs">
       <DependentUpon>TaskWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tasks\TaskStatusWindow.xaml.cs">
+    <Compile Include="Windows\Tasks\TaskStatusWindow.xaml.cs">
       <DependentUpon>TaskStatusWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="RegisterWindow.xaml.cs">
+    <Compile Include="Windows\Auth\RegisterWindow.xaml.cs">
       <DependentUpon>RegisterWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SettingsWindow.xaml.cs">
+    <Compile Include="Windows\Settings\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Materials\MaterialRequestEditWindow.xaml.cs">
+    <Compile Include="Windows\Materials\MaterialRequestEditWindow.xaml.cs">
       <DependentUpon>MaterialRequestEditWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Materials\MaterialRequestRegistryWindow.xaml.cs">
+    <Compile Include="Windows\Materials\MaterialRequestRegistryWindow.xaml.cs">
       <DependentUpon>MaterialRequestRegistryWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Materials\MaterialRequestActionWindow.xaml.cs">
+    <Compile Include="Windows\Materials\MaterialRequestActionWindow.xaml.cs">
       <DependentUpon>MaterialRequestActionWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tasks\TaskSelectionWindow.xaml.cs">
+    <Compile Include="Windows\Tasks\TaskSelectionWindow.xaml.cs">
       <DependentUpon>TaskSelectionWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tasks\TaskPrintPreviewWindow.xaml.cs">
+    <Compile Include="Windows\Tasks\TaskPrintPreviewWindow.xaml.cs">
       <DependentUpon>TaskPrintPreviewWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="QRCodeScannerWindow.xaml.cs">
+    <Compile Include="Windows\Tools\QRCodeScannerWindow.xaml.cs">
       <DependentUpon>QRCodeScannerWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tasks\TaskViewWindow.xaml.cs">
+    <Compile Include="Windows\Tasks\TaskViewWindow.xaml.cs">
       <DependentUpon>TaskViewWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="QuickNoteWindow.xaml.cs">
+    <Compile Include="Windows\Tools\QuickNoteWindow.xaml.cs">
       <DependentUpon>QuickNoteWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Tasks\TaskQRCodeWindow.xaml.cs">
+    <Compile Include="Windows\Tasks\TaskQRCodeWindow.xaml.cs">
       <DependentUpon>TaskQRCodeWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AdminWindow.xaml.cs">
+    <Compile Include="Windows\Shell\AdminWindow.xaml.cs">
       <DependentUpon>AdminWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DispatcherWindow.xaml.cs">
+    <Compile Include="Windows\Shell\DispatcherWindow.xaml.cs">
       <DependentUpon>DispatcherWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BrigadierWindow.xaml.cs">
+    <Compile Include="Windows\Shell\BrigadierWindow.xaml.cs">
       <DependentUpon>BrigadierWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AppThemeManager.cs" />
+    <Compile Include="Services\Theme\AppThemeManager.cs" />
+    <Compile Include="Services\GlassBackdropService.cs" />
+    <Compile Include="Services\WindowCornerService.cs" />
     <Compile Include="Services\AnimationService.cs" />
     <Compile Include="Controls\AnimatedSpinner.cs" />
     <Compile Include="Controls\AnimatedHamburgerIcon.cs" />
+    <Compile Include="Controls\AnimatedCheckIcon.cs" />
+    <Compile Include="Controls\AnimatedBellIcon.cs" />
+    <Compile Include="Controls\AnimatedBatteryIcon.cs" />
+    <Compile Include="Controls\AnimatedCpuGauge.cs" />
+    <Compile Include="Controls\AnimatedRefreshIcon.cs" />
+    <Compile Include="Controls\AnimatedLockIcon.cs" />
+    <Compile Include="Controls\AnimatedSparkleIcon.cs" />
+    <Compile Include="Controls\IconGlyphs.cs" />
     <Page Include="Styles\AnimatedIcons.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="CrewMembersWindow.xaml.cs">
+    <Page Include="Styles\GlassDialogStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Styles\ModernGlassTheme.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="Windows\Crews\CrewMembersWindow.xaml.cs">
       <DependentUpon>CrewMembersWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="CrewMemberCreateWindow.xaml.cs">
+    <Compile Include="Windows\Crews\CrewMemberCreateWindow.xaml.cs">
       <DependentUpon>CrewMemberCreateWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
@@ -299,7 +308,7 @@
     <Compile Include="Models\Entities\MaterialRequestItem.cs" />
     <Compile Include="Models\Entities\MaterialRequestStatusLog.cs" />
     <Compile Include="Models\Entities\MaterialDeliveryDoc.cs" />
-    <Compile Include="ReportsWindow.xaml.cs">
+    <Compile Include="Windows\Reports\ReportsWindow.xaml.cs">
       <DependentUpon>ReportsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\Patterns\WorkPlannerFacade.cs" />
@@ -345,9 +354,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Icons\*.png" />
+  </ItemGroup>
   <Target Name="EnsureDesignTimeXamlFiles" AfterTargets="MarkupCompilePass1">
-    <Copy SourceFiles="$(IntermediateOutputPath)CrewMembersWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)CrewMembersWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)CrewMembersWindow.g.cs')" />
-    <Copy SourceFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)CrewMemberCreateWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)CrewMemberCreateWindow.g.cs')" />
+    <Copy SourceFiles="$(IntermediateOutputPath)Windows\Crews\CrewMembersWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)Windows\Crews\CrewMembersWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)Windows\Crews\CrewMembersWindow.g.cs')" />
+    <Copy SourceFiles="$(IntermediateOutputPath)Windows\Crews\CrewMemberCreateWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)Windows\Crews\CrewMemberCreateWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)Windows\Crews\CrewMemberCreateWindow.g.cs')" />
   </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

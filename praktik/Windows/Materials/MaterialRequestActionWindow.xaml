@@ -1,0 +1,67 @@
+<Window x:Class="praktik.MaterialRequestActionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Действие с заявкой"
+        Height="340"
+        Width="470"
+        MinHeight="340"
+        MinWidth="470"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Style="{StaticResource GlassWindowStyle}">
+    <Grid Style="{StaticResource GlassWindowRootStyle}">
+        <Border Style="{StaticResource GlassDialogCardStyle}">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Bottom"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,18,0,0">
+                    <Button x:Name="btnOk"
+                            Content="Подтвердить"
+                            Click="BtnOk_Click"
+                            Width="150"
+                            Margin="0,0,10,0"
+                            Style="{StaticResource AppRaisedButton}"/>
+                    <Button x:Name="btnCancel"
+                            Content="Отмена"
+                            Click="BtnCancel_Click"
+                            Width="140"
+                            Style="{StaticResource AppOutlinedButton}"/>
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock x:Name="txtTitle"
+                               Style="{StaticResource HeaderTextStyle}"
+                               Margin="0,0,0,8"/>
+                    <TextBlock Text="Заполните данные действия. Если номер документа не нужен, оставьте поле пустым."
+                               Foreground="{DynamicResource AppMutedTextBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="13"
+                               Margin="0,0,0,18"/>
+
+                    <TextBlock x:Name="lblDocNumber"
+                               Text="Номер документа:"
+                               Style="{StaticResource GlassFieldLabelStyle}"/>
+                    <TextBox x:Name="txtDocNumber"
+                             ToolTip="Введите номер документа при наличии"
+                             Margin="0,0,0,16"/>
+
+                    <TextBlock x:Name="lblNote"
+                               Text="Примечание:"
+                               Style="{StaticResource GlassFieldLabelStyle}"/>
+                    <TextBox x:Name="txtNote"
+                             ToolTip="Введите комментарий или причину действия"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             Height="72"/>
+                </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

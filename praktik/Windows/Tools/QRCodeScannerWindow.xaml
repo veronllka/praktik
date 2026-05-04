@@ -1,0 +1,75 @@
+﻿<Window x:Class="praktik.QRCodeScannerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Сканирование QR-кода" Height="380" Width="550" WindowStartupLocation="CenterScreen"
+        Style="{StaticResource GlassWindowStyle}">
+    <Grid Style="{StaticResource GlassWindowRootStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource GlassToolbarStyle}">
+            <TextBlock Text="Сканирование QR-кода задачи" 
+                       FontSize="18" FontWeight="SemiBold" 
+                       Foreground="{DynamicResource AppTextBrush}"
+                       HorizontalAlignment="Center"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="25,20">
+                
+                <Button Content="Выбрать изображение с QR-кодом" 
+                        Click="BtnSelectImage_Click"
+                        FontSize="14"
+                        FontWeight="Medium"
+                        Height="45"
+                        Padding="15,0"
+                        Margin="0,0,0,20"
+                        Style="{StaticResource ModernButtonStyle}"/>
+
+                <Border x:Name="statusBorder" 
+                        BorderBrush="{DynamicResource AppBorderBrush}" 
+                        BorderThickness="1" 
+                        CornerRadius="14"
+                        Padding="15"
+                        Background="{DynamicResource AppSurfaceAltBrush}"
+                        Visibility="Collapsed"
+                        Margin="0,0,0,0">
+                    <TextBlock x:Name="txtError" 
+                               Foreground="{DynamicResource AppDangerBrush}" 
+                               TextWrapping="Wrap"
+                               FontSize="13"
+                               FontWeight="Medium"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2" Style="{StaticResource GlassFooterBarStyle}">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Открыть задачу" 
+                        x:Name="btnOpenTask" 
+                        Click="BtnOpenTask_Click" 
+                        Width="150" 
+                        Height="40"
+                        FontSize="14"
+                        FontWeight="Medium"
+                        Margin="0,0,10,0"
+                        IsEnabled="False"
+                        Style="{StaticResource ModernButtonStyle}"/>
+                <Button Content="Отмена" 
+                        Click="BtnCancel_Click" 
+                        Width="120"
+                        Height="40"
+                        FontSize="14"
+                        FontWeight="Medium"
+                        Style="{StaticResource ModernOutlinedButtonStyle}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
+

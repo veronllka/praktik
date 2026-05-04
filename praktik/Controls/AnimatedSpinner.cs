@@ -93,8 +93,21 @@ namespace praktik.Controls
         private void UpdateSpinState()
         {
             if (!IsLoaded) return;
-            bool shouldSpin = IsVisible && AnimationService.Instance.AnimationsEnabled;
-            _rotation.BeginAnimation(RotateTransform.AngleProperty, shouldSpin ? _spinAnimation : null);
+            var svc = AnimationService.Instance;
+            bool shouldSpin = IsVisible && svc.AnimationsEnabled;
+
+            if (!shouldSpin)
+            {
+                _rotation.BeginAnimation(RotateTransform.AngleProperty, null);
+                return;
+            }
+
+            // Slow the spin slightly in reduced-motion mode
+            double mul = svc.DurationMultiplier;
+            var anim = new DoubleAnimation(0, 360,
+                new Duration(TimeSpan.FromMilliseconds(900 * (mul <= 0 ? 1 : (2 - mul)))))
+            { RepeatBehavior = RepeatBehavior.Forever };
+            _rotation.BeginAnimation(RotateTransform.AngleProperty, anim);
         }
     }
 }

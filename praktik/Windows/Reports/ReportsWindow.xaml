@@ -1,0 +1,170 @@
+<Window x:Class="praktik.ReportsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+        mc:Ignorable="d"
+        Title="Отчёты"
+        Height="640"
+        Width="980"
+        MinHeight="560"
+        MinWidth="920"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource GlassWindowStyle}">
+    <Grid Style="{StaticResource GlassWindowRootStyle}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="290"/>
+            <ColumnDefinition Width="18"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0"
+                Style="{StaticResource ModernCardStyle}"
+                Background="{DynamicResource AppSurfaceAltBrush}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Border Background="{DynamicResource AppPanelBrush}"
+                            BorderBrush="{DynamicResource AppBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="999"
+                            Padding="10,4"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,16">
+                        <TextBlock Text="REPORTS"
+                                   FontSize="11"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource AppAccentBrush}"/>
+                    </Border>
+
+                    <TextBlock Text="Аналитика"
+                               FontSize="26"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="Соберите диаграмму, проверьте срез и сразу экспортируйте результат без светлых экранов и лишнего визуального шума."
+                               Margin="0,10,0,20"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource AppMutedTextBrush}"/>
+
+                    <TextBlock Text="Тип отчёта"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AppMutedTextBrush}"/>
+                    <ComboBox x:Name="cbReportType"
+                              SelectedIndex="0"
+                              Margin="0,8,0,16">
+                        <ComboBoxItem Content="Пользователи по ролям"/>
+                        <ComboBoxItem Content="Задачи по объектам"/>
+                        <ComboBoxItem Content="Задачи по бригадам"/>
+                        <ComboBoxItem Content="Просроченные задачи"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Тип диаграммы"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AppMutedTextBrush}"/>
+                    <ComboBox x:Name="cbChartType"
+                              SelectedIndex="0"
+                              Margin="0,8,0,18">
+                        <ComboBoxItem Content="Гистограмма (горизонтальная)"/>
+                        <ComboBoxItem Content="Гистограмма (вертикальная)"/>
+                        <ComboBoxItem Content="Круговая"/>
+                    </ComboBox>
+
+                    <Button Content="Сгенерировать"
+                            Click="BtnGenerate_Click"
+                            Style="{StaticResource ModernButtonStyle}"
+                            Margin="0,0,0,22"/>
+
+                    <Border Background="{DynamicResource AppPanelBrush}"
+                            BorderBrush="{DynamicResource AppBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="18"
+                            Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Экспорт"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="Формат файла"
+                                       Margin="0,12,0,0"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
+                            <ComboBox x:Name="cbExportFormat"
+                                      SelectedIndex="0"
+                                      Margin="0,8,0,14">
+                                <ComboBoxItem Content="PNG"/>
+                                <ComboBoxItem Content="JPEG"/>
+                                <ComboBoxItem Content="CSV"/>
+                            </ComboBox>
+
+                            <Button Content="Экспортировать"
+                                    Click="BtnExport_Click"
+                                    Style="{StaticResource ModernOutlinedButtonStyle}"/>
+
+                            <TextBlock Text="Экспорт берёт именно текущий график справа."
+                                       Margin="0,14,0,0"
+                                       TextWrapping="Wrap"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource AppSubtleTextBrush}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="2"
+                Style="{StaticResource ModernCardStyle}"
+                Background="{DynamicResource AppSurfaceBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Предпросмотр"
+                               FontSize="13"
+                               FontWeight="SemiBold"
+                               Foreground="{DynamicResource AppAccentBrush}"/>
+                    <TextBlock x:Name="txtTitle"
+                               Text="Отображение отчёта"
+                               Margin="0,8,0,0"
+                               FontSize="28"
+                               FontWeight="Bold"/>
+                    <TextBlock Text="Визуальный срез обновляется автоматически после выбора отчёта и типа диаграммы."
+                               Margin="0,8,0,0"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource AppMutedTextBrush}"/>
+                </StackPanel>
+
+                <Border Grid.Row="1"
+                        x:Name="ChartBorder"
+                        Margin="0,22,0,0"
+                        Padding="18"
+                        Background="{DynamicResource AppSurfaceAltBrush}"
+                        BorderBrush="{DynamicResource AppBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="20">
+                    <Grid>
+                        <Canvas x:Name="ChartCanvas"/>
+                        <StackPanel x:Name="EmptyState"
+                                    Visibility="Collapsed"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <iconPacks:PackIconMaterial Kind="ChartBar"
+                                                        Width="58"
+                                                        Height="58"
+                                                        Foreground="{DynamicResource AppAccentBrush}"
+                                                        HorizontalAlignment="Center"/>
+                            <TextBlock Text="Нет данных для отображения"
+                                       Margin="0,12,0,6"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Выберите другой тип отчёта или добавьте данные в систему."
+                                       TextAlignment="Center"
+                                       Foreground="{DynamicResource AppMutedTextBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

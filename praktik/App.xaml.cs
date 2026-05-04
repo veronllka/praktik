@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using praktik.Services;
 
 namespace praktik
 {
@@ -15,6 +16,13 @@ namespace praktik
 
         private void Application_Startup(object sender, StartupEventArgs e)
         {
+            AppThemeManager.ApplyTheme(AppThemeManager.DefaultBaseTheme, AppThemeManager.DefaultAccentColor);
+
+            EventManager.RegisterClassHandler(
+                typeof(Window),
+                FrameworkElement.LoadedEvent,
+                new RoutedEventHandler((source, args) => WindowCornerService.Apply(source as Window)));
+
             if (e.Args.Length > 0)
             {
                 string arg = e.Args[0];
