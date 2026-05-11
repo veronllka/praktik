@@ -109,7 +109,11 @@ namespace praktik
             }
             
             var tasks = facade.GetTasks();
-            foreach (var req in filtered.ToList())
+            foreach (var req in filtered
+                .OrderBy(r => string.Equals(r.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .ThenBy(r => r.RequiredDate ?? DateTime.MaxValue)
+                .ThenByDescending(r => r.CreatedAt)
+                .ToList())
             {
                 var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId);
                 requests.Add(new MaterialRequestRegistryDisplay(req, task));
@@ -493,7 +497,12 @@ namespace praktik
             CreatedAtDisplay = request.CreatedAt.ToString("dd.MM.yyyy HH:mm");
             ItemsCount = request.Items?.Count ?? 0;
             
-            if (request.RequiredDate.HasValue)
+            if (string.Equals(request.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+            {
+                IndicatorText = "ЗАВЕРШЕНО";
+                IndicatorColor = "#43A047";
+            }
+            else if (request.RequiredDate.HasValue)
             {
                 var daysUntil = (request.RequiredDate.Value - DateTime.Today).Days;
                 if (daysUntil < 0)

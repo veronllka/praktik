@@ -100,11 +100,21 @@
                 <StackPanel Grid.Column="0" Margin="0,0,10,0">
                     <TextBlock Text="Материал *" Style="{StaticResource GlassFieldLabelStyle}"/>
                     <ComboBox x:Name="cbMaterial"
-                              ToolTip="Выберите материал из справочника"
+                              ToolTip="Выберите материал из справочника или пункт Добавить +"
                               SelectionChanged="CbMaterial_SelectionChanged">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding Name}"/>
+                                <Border Padding="10,6" CornerRadius="8" Background="{Binding Background}">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontWeight="{Binding FontWeight}"
+                                                   Foreground="{Binding Foreground}"/>
+                                        <TextBlock Text="{Binding UnitHint}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource AppSubtleTextBrush}"
+                                                   Visibility="{Binding UnitHintVisibility}"/>
+                                    </StackPanel>
+                                </Border>
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>

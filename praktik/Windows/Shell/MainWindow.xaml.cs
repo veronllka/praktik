@@ -548,7 +548,7 @@ namespace praktik
             SetMenuVisibility(MaterialRequestsMenuItem, canViewMaterialRequests);
             SetMenuVisibility(RolesMenuItem, isAdminRole);
             SetMenuVisibility(DailyPlanMenuItem, CanViewDailyPlan());
-            SetMenuVisibility(AppearanceSettingsMenuItem, true);
+            SetMenuVisibility(AppearanceSettingsMenuItem, false);
 
             SetHelpSectionsVisibility(
                 canViewDashboard,
@@ -1350,22 +1350,10 @@ namespace praktik
             EnsureBrigadierChecklistDateSync();
             var selectedDate = brigadierChecklistDate.Date;
             var weekStart = GetStartOfWeek(selectedDate);
-            var checklistTasks = BuildBrigadierChecklistTasks(selectedDate);
-
-            // Try to get approved plan for this date to show plan order in checklist
-            List<DailyPlanItem> approvedPlanItems;
-            try { approvedPlanItems = facade.GetApprovedPlanItemsForDate(selectedDate); }
-            catch { approvedPlanItems = new List<DailyPlanItem>(); }
-
-            // Get current user's crew (brigadier is foreman of their crew)
-            int currentUserId = LoginWindow.CurrentUser?.UserId ?? 0;
-            var userCrew = facade.GetCrews().FirstOrDefault(c => c.BrigadierId == currentUserId);
-            int myCrewId = userCrew?.CrewId ?? 0;
-
-            // Filter plan items for this brigadier's crew
-            var myPlanItems = approvedPlanItems
-                .Where(p => p.CrewId == myCrewId || myCrewId == 0)
-                .ToDictionary(p => p.TaskId, p => p);
+            var myPlanItems = GetApprovedPlanItemsForCurrentBrigadier(selectedDate)
+                .GroupBy(item => item.TaskId)
+                .ToDictionary(group => group.Key, group => group.OrderBy(item => item.SortOrder).First());
+            var checklistTasks = BuildBrigadierChecklistTasks(selectedDate, myPlanItems.Keys);
 
             // Sort: plan items first (by order), then remaining tasks
             List<Models.Task> orderedTasks;
@@ -1390,8 +1378,13 @@ namespace praktik
                 var item = CreateBrigadierChecklistItem(task, selectedDate);
                 if (myPlanItems.TryGetValue(task.TaskId, out var planItem))
                 {
-                    item.PlanOrderText = $"Пункт плана №{planItem.SortOrder}";
+                    item.PlanOrderText = selectedDate == DateTime.Today
+                        ? $"План на день №{planItem.SortOrder}"
+                        : $"Из утверждённого плана №{planItem.SortOrder}";
                     item.PlanNote = string.IsNullOrWhiteSpace(planItem.Note) ? null : planItem.Note;
+                    item.ChecklistStatusText = selectedDate == DateTime.Today
+                        ? "План на день"
+                        : "Из утверждённого плана";
                 }
                 brigadierChecklistItems.Add(item);
             }
@@ -1417,11 +1410,23 @@ namespace praktik
             }
         }
 
-        private List<Models.Task> BuildBrigadierChecklistTasks(DateTime selectedDate)
+        private List<Models.Task> BuildBrigadierChecklistTasks(DateTime selectedDate, IEnumerable<int> approvedPlanTaskIds)
         {
-            return (allTasks ?? new List<Models.Task>())
+            var planTaskIds = new HashSet<int>(approvedPlanTaskIds ?? Enumerable.Empty<int>());
+            var regularTasks = (allTasks ?? new List<Models.Task>())
                 .Where(task => IsTaskVisibleInBrigadierChecklist(task, selectedDate))
                 .Where(task => !IsTaskCompleted(task))
+                .ToList();
+            var planTasks = planTaskIds.Count == 0
+                ? new List<Models.Task>()
+                : facade.GetTasks()
+                    .Where(task => planTaskIds.Contains(task.TaskId))
+                    .ToList();
+
+            return regularTasks
+                .Concat(planTasks)
+                .GroupBy(task => task.TaskId)
+                .Select(group => group.First())
                 .OrderByDescending(task => task.EndDate.Date < selectedDate)
                 .ThenByDescending(task => task.PriorityId)
                 .ThenBy(task => task.EndDate)
@@ -1756,6 +1761,51 @@ namespace praktik
             }
 
             return crews;
+        }
+
+        private HashSet<int> GetCurrentBrigadierCrewIds()
+        {
+            var currentUser = LoginWindow.CurrentUser;
+            if (currentUser == null)
+            {
+                return new HashSet<int>();
+            }
+
+            return new HashSet<int>(
+                facade.GetCrews()
+                    .Where(c => c.BrigadierId.HasValue && c.BrigadierId.Value == currentUser.UserId)
+                    .Select(c => c.CrewId));
+        }
+
+        private List<DailyPlanItem> GetApprovedPlanItemsForCurrentBrigadier(DateTime date)
+        {
+            if (!IsBrigadierMode())
+            {
+                return new List<DailyPlanItem>();
+            }
+
+            var crewIds = GetCurrentBrigadierCrewIds();
+            if (crewIds.Count == 0)
+            {
+                return new List<DailyPlanItem>();
+            }
+
+            try
+            {
+                var tasksById = facade.GetTasks()
+                    .Where(task => task.CrewId.HasValue)
+                    .GroupBy(task => task.TaskId)
+                    .ToDictionary(group => group.Key, group => group.First().CrewId.Value);
+
+                return facade.GetApprovedPlanItemsForDate(date.Date)
+                    .Where(item => crewIds.Contains(item.CrewId)
+                        || (tasksById.TryGetValue(item.TaskId, out var taskCrewId) && crewIds.Contains(taskCrewId)))
+                    .ToList();
+            }
+            catch
+            {
+                return new List<DailyPlanItem>();
+            }
         }
 
         private List<Models.Task> GetTasksVisibleForCurrentUser(List<Models.Task> tasks)
@@ -2246,9 +2296,8 @@ namespace praktik
         private void LoadTasksForDate(DateTime date)
         {
             SelectedDateText.Text = $"Задачи на {date:dd.MM.yyyy}";
-            
-            var tasks = GetTasksVisibleForCurrentUser(facade.GetTasks()).Where(t => 
-                t.StartDate.Date <= date.Date && t.EndDate.Date >= date.Date).ToList();
+
+            var tasks = BuildCalendarTasksForDate(date);
 
              if (cbCalendarSiteFilter.SelectedItem != null)
             {
@@ -2263,6 +2312,57 @@ namespace praktik
             }
 
             dgCalendarTasks.ItemsSource = tasks;
+        }
+
+        private List<Models.Task> BuildCalendarTasksForDate(DateTime date)
+        {
+            var selectedDate = date.Date;
+            var tasks = GetTasksVisibleForCurrentUser(facade.GetTasks())
+                .Where(t => t.StartDate.Date <= selectedDate && t.EndDate.Date >= selectedDate)
+                .ToList();
+            var planTasks = GetApprovedPlanTasksForDate(selectedDate);
+
+            MarkApprovedPlanTasks(planTasks, selectedDate);
+            return tasks
+                .Concat(planTasks)
+                .GroupBy(task => task.TaskId)
+                .Select(group => group.OrderByDescending(task => task.IsInApprovedDailyPlan).First())
+                .OrderByDescending(task => task.IsInApprovedDailyPlan)
+                .ThenByDescending(task => task.PriorityId)
+                .ThenBy(task => task.EndDate)
+                .ThenBy(task => task.Title)
+                .ToList();
+        }
+
+        private List<Models.Task> GetApprovedPlanTasksForDate(DateTime date)
+        {
+            var planTaskIds = GetApprovedPlanItemsForCurrentBrigadier(date)
+                .Select(item => item.TaskId)
+                .Distinct()
+                .ToList();
+
+            if (planTaskIds.Count == 0)
+            {
+                return new List<Models.Task>();
+            }
+
+            var planTaskIdSet = new HashSet<int>(planTaskIds);
+            return facade.GetTasks()
+                .Where(task => planTaskIdSet.Contains(task.TaskId))
+                .ToList();
+        }
+
+        private static void MarkApprovedPlanTasks(IEnumerable<Models.Task> tasks, DateTime planDate)
+        {
+            var text = planDate.Date == DateTime.Today
+                ? "План на день"
+                : "Из утверждённого плана";
+
+            foreach (var task in tasks ?? Enumerable.Empty<Models.Task>())
+            {
+                task.IsInApprovedDailyPlan = true;
+                task.ApprovedDailyPlanText = text;
+            }
         }
 
         private void TaskCalendar_Loaded(object sender, RoutedEventArgs e)
@@ -2347,7 +2447,39 @@ namespace praktik
                 }
             }
 
+            var visibleRange = GetCalendarVisibleDateRange();
+            for (var day = visibleRange.start; day <= visibleRange.end; day = day.AddDays(1))
+            {
+                var planTasks = GetApprovedPlanTasksForDate(day);
+                if (planTasks.Count == 0)
+                {
+                    continue;
+                }
+
+                if (!map.TryGetValue(day, out var dayTasks))
+                {
+                    dayTasks = new List<Models.Task>();
+                    map[day] = dayTasks;
+                }
+
+                foreach (var planTask in planTasks)
+                {
+                    if (!dayTasks.Any(task => task.TaskId == planTask.TaskId))
+                    {
+                        dayTasks.Add(planTask);
+                    }
+                }
+            }
+
             return map;
+        }
+
+        private (DateTime start, DateTime end) GetCalendarVisibleDateRange()
+        {
+            var displayDate = TaskCalendar?.DisplayDate ?? DateTime.Today;
+            var start = new DateTime(displayDate.Year, displayDate.Month, 1);
+            var end = start.AddMonths(1).AddDays(-1);
+            return (start, end);
         }
 
         private static string BuildCalendarTooltip(DateTime date, List<Models.Task> tasks)
@@ -4822,7 +4954,11 @@ namespace praktik
             }
 
             var tasks = facade.GetTasks();
-            foreach (var req in filtered.ToList())
+            foreach (var req in filtered
+                .OrderBy(r => string.Equals(r.Status, "Closed", StringComparison.OrdinalIgnoreCase))
+                .ThenBy(r => r.RequiredDate ?? DateTime.MaxValue)
+                .ThenByDescending(r => r.CreatedAt)
+                .ToList())
             {
                 var task = tasks.FirstOrDefault(t => t.TaskId == req.TaskId) ?? req.Task;
                 materialRequests.Add(new MaterialRequestRegistryDisplay(req, task));
@@ -4881,6 +5017,7 @@ namespace praktik
                     cardMRDetailsPanel.Visibility = Visibility.Collapsed;
                 }
                 txtMRSelectedInfo.Text = "Выберите заявку для просмотра деталей";
+                dgMRItems.Height = double.NaN;
                 dgMRItems.Visibility = Visibility.Collapsed;
             }
         }
@@ -4912,7 +5049,31 @@ namespace praktik
                                     $"Требуется к: {request.RequiredDate?.ToString("dd.MM.yyyy") ?? "не указано"}";
 
             dgMRItems.ItemsSource = request.Items;
+            UpdateMaterialRequestItemsGridHeight(request.Items?.Count ?? 0);
             dgMRItems.Visibility = Visibility.Visible;
+        }
+
+        private void UpdateMaterialRequestItemsGridHeight(int itemCount)
+        {
+            if (dgMRItems == null)
+            {
+                return;
+            }
+
+            const int MaxVisibleRows = 5;
+            const double HeaderHeight = 40d;
+            const double RowHeight = 46d;
+            const double GridChromePadding = 8d;
+
+            var rowsToShow = Math.Max(1, Math.Min(itemCount, MaxVisibleRows));
+            var targetHeight = HeaderHeight + rowsToShow * RowHeight + GridChromePadding;
+
+            dgMRItems.Height = targetHeight;
+            dgMRItems.MinHeight = targetHeight;
+            dgMRItems.MaxHeight = HeaderHeight + MaxVisibleRows * RowHeight + GridChromePadding;
+            ScrollViewer.SetVerticalScrollBarVisibility(
+                dgMRItems,
+                itemCount > MaxVisibleRows ? ScrollBarVisibility.Auto : ScrollBarVisibility.Disabled);
         }
 
         private void UpdateMaterialRequestActionButtons()
@@ -5528,6 +5689,7 @@ namespace praktik
             try
             {
                 var plan = BuildPlanFromUI();
+                SyncTaskCrewAssignmentsWithPlan(plan);
                 int userId = LoginWindow.CurrentUser?.UserId ?? 0;
                 int planId = facade.SaveDailyPlan(plan, userId);
                 plan.PlanId = planId;
@@ -5572,6 +5734,7 @@ namespace praktik
                 // Сначала сохранить текущее состояние
                 var plan = BuildPlanFromUI();
                 plan.PlanId = currentDailyPlan.PlanId;
+                SyncTaskCrewAssignmentsWithPlan(plan);
                 int userId = LoginWindow.CurrentUser?.UserId ?? 0;
                 facade.SaveDailyPlan(plan, userId);
 
@@ -5615,6 +5778,36 @@ namespace praktik
             }
 
             return plan;
+        }
+
+        private void SyncTaskCrewAssignmentsWithPlan(DailyPlan plan)
+        {
+            if (plan?.Items == null || plan.Items.Count == 0)
+            {
+                return;
+            }
+
+            var tasksById = facade.GetTasks()
+                .GroupBy(task => task.TaskId)
+                .ToDictionary(group => group.Key, group => group.First());
+
+            foreach (var item in plan.Items)
+            {
+                if (!tasksById.TryGetValue(item.TaskId, out var task))
+                {
+                    continue;
+                }
+
+                if (task.CrewId.HasValue && task.CrewId.Value == item.CrewId)
+                {
+                    continue;
+                }
+
+                task.CrewId = item.CrewId;
+                facade.UpdateTask(task);
+            }
+
+            LoadTasks();
         }
 
         // =====================================================================

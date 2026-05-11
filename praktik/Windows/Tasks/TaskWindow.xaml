@@ -52,14 +52,15 @@
                                 </Grid>
                                 <TextBox x:Name="txtDescription"
                                          ToolTip="Опишите, что нужно выполнить. Можно оставить пустым."
-                                         Margin="0,0,0,8"
-                                         Height="70"
+                                         Margin="0"
+                                         Height="128"
                                          TextWrapping="Wrap"
                                          AcceptsReturn="True"/>
                                 <TextBlock x:Name="txtAiHint"
                                            Text="Генерация описания через LM Studio по названию задачи."
                                            Foreground="{DynamicResource AppSubtleTextBrush}"
-                                           FontSize="11"/>
+                                           FontSize="11"
+                                           Visibility="Collapsed"/>
                             </StackPanel>
                         </Border>
 

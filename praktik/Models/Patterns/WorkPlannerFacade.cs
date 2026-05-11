@@ -276,6 +276,11 @@ namespace praktik.Models.Patterns
             return db.GetMaterialCatalog(activeOnly);
         }
 
+        public int CreateMaterialCatalogItem(MaterialCatalog material)
+        {
+            return db.CreateMaterialCatalogItem(material);
+        }
+
         /// <summary>
         /// Создает заявку на материалы.
         /// </summary>

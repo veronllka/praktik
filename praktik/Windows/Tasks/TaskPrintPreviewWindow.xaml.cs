@@ -46,6 +46,7 @@ namespace praktik
             }
 
             txtTitle.Text = task.Title;
+            txtTaskMeta.Text = $"ID задачи: #{task.TaskId} · Шаблон: {templateName}";
 
             txtSite.Text = task.Site?.SiteName ?? string.Empty;
             if (!string.IsNullOrEmpty(task.Site?.Address))
@@ -74,8 +75,74 @@ namespace praktik
             }
 
             txtPeriod.Text = $"{task.StartDate:dd.MM.yyyy} — {task.EndDate:dd.MM.yyyy}";
+            txtScheduleStatus.Text = BuildScheduleStatusText();
             txtPriority.Text = task.Priority?.PriorityName ?? "—";
             txtStatus.Text = task.TaskStatus?.TaskStatusName ?? "—";
+            txtDescription.Text = !string.IsNullOrWhiteSpace(task.Description)
+                ? task.Description
+                : "Описание работ не заполнено.";
+            txtMaterials.Text = BuildMaterialsSummary();
+        }
+
+        private string BuildScheduleStatusText()
+        {
+            var today = DateTime.Today;
+            if (task.EndDate.Date < today)
+            {
+                return $"Просрочено на {(today - task.EndDate.Date).Days} дн.";
+            }
+
+            if (task.StartDate.Date > today)
+            {
+                return $"До начала: {(task.StartDate.Date - today).Days} дн.";
+            }
+
+            return $"В работе, до окончания: {Math.Max(0, (task.EndDate.Date - today).Days)} дн.";
+        }
+
+        private string BuildMaterialsSummary()
+        {
+            try
+            {
+                var requests = facade.GetMaterialRequests(task.TaskId);
+                if (requests == null || requests.Count == 0)
+                {
+                    return "Заявок на материалы по задаче нет.";
+                }
+
+                return string.Join(Environment.NewLine, requests.Select(request =>
+                {
+                    var requiredDate = request.RequiredDate.HasValue
+                        ? request.RequiredDate.Value.ToString("dd.MM.yyyy")
+                        : "не указана";
+                    var items = request.Items == null || request.Items.Count == 0
+                        ? "позиции не заполнены"
+                        : string.Join(", ", request.Items
+                            .Take(4)
+                            .Select(item => $"{item.Material?.Name ?? "Материал"} - {item.Qty:0.###} {item.Material?.Unit ?? string.Empty}".Trim()));
+
+                    return $"Заявка #{request.RequestId}: {GetMaterialRequestStatusName(request.Status)}, требуется к {requiredDate}; {items}.";
+                }));
+            }
+            catch
+            {
+                return "Не удалось загрузить заявки на материалы.";
+            }
+        }
+
+        private static string GetMaterialRequestStatusName(string status)
+        {
+            switch (status)
+            {
+                case "Draft": return "черновик";
+                case "Submitted": return "отправлена";
+                case "Approved": return "согласована";
+                case "Rejected": return "отклонена";
+                case "Issued": return "выдана";
+                case "Delivered": return "доставлена";
+                case "Closed": return "закрыта";
+                default: return string.IsNullOrWhiteSpace(status) ? "статус не указан" : status;
+            }
         }
 
         private void UpdatePrintAuditInfo(DateTime printedAt)

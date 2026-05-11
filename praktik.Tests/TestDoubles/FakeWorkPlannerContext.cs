@@ -8,6 +8,7 @@ namespace praktik.Tests.TestDoubles
     internal sealed class FakeWorkPlannerContext : IWorkPlannerContext
     {
         public List<Task> Tasks { get; } = new List<Task>();
+        public List<MaterialCatalog> Materials { get; } = new List<MaterialCatalog>();
         public List<MaterialRequest> MaterialRequests { get; } = new List<MaterialRequest>();
         public List<TaskReport> TaskReports { get; } = new List<TaskReport>();
         public List<TaskPrintLog> TaskPrintLogs { get; } = new List<TaskPrintLog>();
@@ -114,6 +115,29 @@ namespace praktik.Tests.TestDoubles
                 AttachmentUrl = attachmentUrl,
                 ReportedAt = DateTime.UtcNow
             });
+        }
+
+        public List<MaterialCatalog> GetMaterialCatalog(bool activeOnly = true)
+        {
+            return Materials
+                .Where(material => !activeOnly || material.IsActive)
+                .OrderBy(material => material.Name)
+                .ToList();
+        }
+
+        public int CreateMaterialCatalogItem(MaterialCatalog material)
+        {
+            if (material == null)
+            {
+                return 0;
+            }
+
+            material.MaterialId = material.MaterialId == 0
+                ? Materials.Count + 1
+                : material.MaterialId;
+            material.IsActive = true;
+            Materials.Add(material);
+            return material.MaterialId;
         }
 
         public List<MaterialRequest> GetMaterialRequests(int? taskId = null, int? requestId = null)

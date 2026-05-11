@@ -97,12 +97,6 @@
                             <Button Content="Экспортировать"
                                     Click="BtnExport_Click"
                                     Style="{StaticResource ModernOutlinedButtonStyle}"/>
-
-                            <TextBlock Text="Экспорт берёт именно текущий график справа."
-                                       Margin="0,14,0,0"
-                                       TextWrapping="Wrap"
-                                       FontSize="12"
-                                       Foreground="{DynamicResource AppSubtleTextBrush}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>

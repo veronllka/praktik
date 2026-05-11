@@ -12,6 +12,8 @@ namespace praktik.Models
         List<TaskPrintLog> GetTaskPrintLogs(int taskId);
         List<TaskReport> GetTaskReports(int? taskId = null);
         void AddTaskReport(int taskId, int userId, string reportText, int? progressPercent = null, string attachmentUrl = null);
+        List<MaterialCatalog> GetMaterialCatalog(bool activeOnly = true);
+        int CreateMaterialCatalogItem(MaterialCatalog material);
         List<MaterialRequest> GetMaterialRequests(int? taskId = null, int? requestId = null);
         void UpdateMaterialRequest(MaterialRequest request);
         DailyPlan GetDailyPlanByDate(DateTime date);

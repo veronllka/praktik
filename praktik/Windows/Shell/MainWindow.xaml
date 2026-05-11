@@ -241,7 +241,7 @@
                             <TextBlock Text="Роли и доступ" Margin="12,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem x:Name="AppearanceSettingsMenuItem">
+                    <ListBoxItem x:Name="AppearanceSettingsMenuItem" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <Border Style="{StaticResource ShellNavIconTileStyle}">
                                 <iconPacks:PackIconMaterial Kind="Palette" Style="{StaticResource ShellMaterialIconStyle}"/>
@@ -1364,14 +1364,14 @@
                                                             <TextBlock Text="{Binding ChecklistStatusText}" FontWeight="SemiBold"/>
                                                         </Border>
                                                         <!-- Значок из плана диспетчера -->
-                                                        <Border Background="#E3F2FD" CornerRadius="10" Padding="10,6"
+                                                        <Border Background="#E8F5E9" CornerRadius="10" Padding="10,6"
                                                                 Margin="0,0,8,8"
                                                                 Visibility="{Binding PlanOrderBadgeVisibility}">
                                                             <StackPanel Orientation="Horizontal">
                                                                 <Path Data="M 4 9 L 8 13 L 15 5"
                                                                       Width="14" Height="14"
                                                                       Stretch="Uniform"
-                                                                      Stroke="#1565C0"
+                                                                      Stroke="#2E7D32"
                                                                       StrokeThickness="2"
                                                                       StrokeStartLineCap="Round"
                                                                       StrokeEndLineCap="Round"
@@ -1379,7 +1379,7 @@
                                                                       VerticalAlignment="Center"
                                                                       Margin="0,0,4,0"/>
                                                                 <TextBlock Text="{Binding PlanOrderText}"
-                                                                           Foreground="#1565C0"
+                                                                           Foreground="#2E7D32"
                                                                            FontWeight="SemiBold"
                                                                            FontSize="12"/>
                                                             </StackPanel>
@@ -1521,6 +1521,7 @@
                                     <DataGridTextColumn Header="Бригада" Binding="{Binding Crew.CrewName}" Width="150"/>
                                     <DataGridTextColumn Header="Статус" Binding="{Binding TaskStatus.TaskStatusName}" Width="120"/>
                                     <DataGridTextColumn Header="Приоритет" Binding="{Binding Priority.PriorityName}" Width="100"/>
+                                    <DataGridTextColumn Header="План" Binding="{Binding ApprovedDailyPlanText}" Width="150"/>
                                     <DataGridTextColumn Header="Начало" Binding="{Binding StartDate, StringFormat=dd.MM.yyyy}" Width="100"/>
                                     <DataGridTextColumn Header="Окончание" Binding="{Binding EndDate, StringFormat=dd.MM.yyyy}" Width="100"/>
                                 </DataGrid.Columns>
@@ -1691,12 +1692,6 @@
                                                     Height="38"
                                                     Margin="0,16,0,0"
                                                     Style="{StaticResource ModernOutlinedButtonStyle}"/>
-
-                                            <TextBlock Text="Справа показывается текущий график по выбранному срезу. Экспорт сохраняет именно эту выборку."
-                                                       Margin="0,18,0,0"
-                                                       TextWrapping="Wrap"
-                                                       FontSize="11"
-                                                        Foreground="{DynamicResource AppSubtleTextBrush}"/>
                                         </StackPanel>
                                     </Border>
                                 </Grid>
@@ -1969,8 +1964,8 @@
                 <Grid x:Name="MaterialRequestsContent" Visibility="Collapsed" Grid.ColumnSpan="2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="2*" MinHeight="200"/>
-                        <RowDefinition Height="Auto" MinHeight="350" MaxHeight="400"/>
+                        <RowDefinition Height="*" MinHeight="160"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                             <Border Style="{StaticResource ModernCardStyle}" Margin="0,0,0,12">
@@ -2100,8 +2095,8 @@
                         </Border>
                     </Grid>
 
-                    <Border x:Name="cardMRDetailsPanel" Grid.Row="2" Margin="16,0,16,16" Visibility="Collapsed" Style="{StaticResource ModernCardStyle}">
-                        <Grid Margin="16">
+                    <Border x:Name="cardMRDetailsPanel" Grid.Row="2" Margin="16,0,16,8" Visibility="Collapsed" Style="{StaticResource ModernCardStyle}">
+                        <Grid Margin="14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -2109,9 +2104,16 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,16,0">
                                 <TextBlock x:Name="txtMRSelectedInfo" Text="Выберите заявку для просмотра деталей"
-                                          TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                          TextWrapping="Wrap" Margin="0,0,0,6"/>
                                 <DataGrid x:Name="dgMRItems" AutoGenerateColumns="False" IsReadOnly="True"
-                                         MaxHeight="80" Visibility="Collapsed">
+                                         MinHeight="0"
+                                         ColumnHeaderHeight="40"
+                                         RowHeight="46"
+                                         CanUserAddRows="False"
+                                         CanUserResizeRows="False"
+                                         HeadersVisibility="Column"
+                                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                         Visibility="Collapsed">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Материал" Binding="{Binding Material.Name}" Width="*"/>
                                         <DataGridTextColumn Header="Ед. изм." Binding="{Binding Material.Unit}" Width="80"/>
@@ -2121,29 +2123,29 @@
                                 </DataGrid>
                             </StackPanel>
 
-                            <StackPanel Grid.Column="1" Orientation="Vertical">
+                            <UniformGrid Grid.Column="1" Columns="1" Rows="7">
                                 <Button x:Name="btnMRApprove" Content="Согласовать"
                                        Click="BtnMRApprove_Click" Style="{StaticResource AppRaisedButton}"
-                                       Margin="0,0,0,8" Width="200" Height="40"/>
+                                       Margin="0,0,0,5" Width="190" Height="32"/>
                                 <Button x:Name="btnMRReject" Content="Отклонить"
                                        Click="BtnMRReject_Click" Style="{StaticResource GlassDangerButtonStyle}"
-                                       Margin="0,0,0,8" Width="200" Height="40"/>
+                                       Margin="0,0,0,5" Width="190" Height="32"/>
                                 <Button x:Name="btnMRIssue" Content="Отметить выдачу"
                                        Click="BtnMRIssue_Click" Style="{StaticResource AppRaisedButton}"
-                                       Margin="0,0,0,8" Width="200" Height="40"/>
+                                       Margin="0,0,0,5" Width="190" Height="32"/>
                                 <Button x:Name="btnMRDeliver" Content="Отметить доставку"
                                        Click="BtnMRDeliver_Click" Style="{StaticResource AppRaisedButton}"
-                                       Margin="0,0,0,8" Width="200" Height="40"/>
+                                       Margin="0,0,0,5" Width="190" Height="32"/>
                                 <Button x:Name="btnMRClose" Content="Закрыть заявку"
                                        Click="BtnMRClose_Click" Style="{StaticResource AppOutlinedButton}"
-                                       Margin="0,0,0,8" Width="200" Height="40"/>
+                                       Margin="0,0,0,5" Width="190" Height="32"/>
                                 <Button x:Name="btnMREdit" Content="Редактировать"
                                        Click="BtnMREdit_Click" Style="{StaticResource AppOutlinedButton}"
-                                       Margin="0,0,0,8" Width="200" Height="40"/>
+                                       Margin="0,0,0,5" Width="190" Height="32"/>
                                 <Button x:Name="btnMRExport" Content="Экспорт"
                                        Click="BtnMRExport_Click" Style="{StaticResource AppRaisedButton}"
-                                       Width="200" Height="40"/>
-                            </StackPanel>
+                                       Margin="0" Width="190" Height="32"/>
+                            </UniformGrid>
                         </Grid>
                     </Border>
                 </Grid>

@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using MahApps.Metro.IconPacks;
 using praktik.Models;
 using praktik.Models.Patterns;
 using praktik.Models.Patterns.Factories;
@@ -393,7 +394,7 @@ namespace praktik
                 txtPasswordVisible.Text = currentPassword;
                 txtPasswordVisible.Visibility = Visibility.Visible;
                 txtPassword.Visibility = Visibility.Collapsed;
-                IconPasswordEye.Text = "\uE890";
+                IconPasswordEye.Kind = PackIconMaterialKind.Eye;
                 btnTogglePassword.ToolTip = "Скрыть пароль";
             }
             else
@@ -401,7 +402,7 @@ namespace praktik
                 txtPassword.Password = currentPassword;
                 txtPassword.Visibility = Visibility.Visible;
                 txtPasswordVisible.Visibility = Visibility.Collapsed;
-                IconPasswordEye.Text = "\uE8F5";
+                IconPasswordEye.Kind = PackIconMaterialKind.EyeOff;
                 btnTogglePassword.ToolTip = "Показать пароль";
             }
 

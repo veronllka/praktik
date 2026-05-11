@@ -1453,6 +1453,55 @@ namespace praktik.Models
             return materials;
         }
 
+        public int CreateMaterialCatalogItem(MaterialCatalog material)
+        {
+            if (material == null)
+            {
+                throw new ArgumentNullException(nameof(material));
+            }
+
+            string name = (material.Name ?? string.Empty).Trim();
+            string unit = (material.Unit ?? string.Empty).Trim();
+            string code = string.IsNullOrWhiteSpace(material.Code)
+                ? null
+                : material.Code.Trim();
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new InvalidOperationException("Укажите название материала.");
+            }
+
+            if (string.IsNullOrWhiteSpace(unit))
+            {
+                throw new InvalidOperationException("Укажите единицу измерения.");
+            }
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var duplicateCommand = new SqlCommand(@"
+                    SELECT COUNT(1)
+                    FROM MaterialCatalog
+                    WHERE IsActive = 1 AND LOWER(Name) = LOWER(@name)", connection);
+                duplicateCommand.Parameters.AddWithValue("@name", name);
+                if (Convert.ToInt32(duplicateCommand.ExecuteScalar()) > 0)
+                {
+                    throw new InvalidOperationException("Материал с таким названием уже есть в справочнике.");
+                }
+
+                var command = new SqlCommand(@"
+                    INSERT INTO MaterialCatalog (Name, Unit, Code, IsActive, CreatedAt)
+                    OUTPUT INSERTED.MaterialId
+                    VALUES (@name, @unit, @code, 1, @createdAt)", connection);
+                command.Parameters.AddWithValue("@name", name);
+                command.Parameters.AddWithValue("@unit", unit);
+                command.Parameters.AddWithValue("@code", (object)code ?? DBNull.Value);
+                command.Parameters.AddWithValue("@createdAt", DateTime.Now);
+                return Convert.ToInt32(command.ExecuteScalar());
+            }
+        }
+
         public List<MaterialRequest> GetMaterialRequests(int? taskId = null, int? requestId = null)
         {
             var requests = new List<MaterialRequest>();
@@ -2903,6 +2952,38 @@ namespace praktik.Models
                     .Where(m => !activeOnly || m.IsActive)
                     .OrderBy(m => m.Name)
                     .ToList();
+            }
+        }
+
+        public int CreateMaterialCatalogItem(MaterialCatalog material)
+        {
+            if (material == null)
+            {
+                return 0;
+            }
+
+            string name = (material.Name ?? string.Empty).Trim();
+            string unit = (material.Unit ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(unit))
+            {
+                return 0;
+            }
+
+            lock (Sync)
+            {
+                if (Materials.Any(m => m.IsActive && string.Equals(m.Name, name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException("Материал с таким названием уже есть в справочнике.");
+                }
+
+                material.MaterialId = material.MaterialId == 0 ? nextMaterialId++ : material.MaterialId;
+                material.Name = name;
+                material.Unit = unit;
+                material.Code = string.IsNullOrWhiteSpace(material.Code) ? null : material.Code.Trim();
+                material.IsActive = true;
+                material.CreatedAt = material.CreatedAt == default(DateTime) ? DateTime.Now : material.CreatedAt;
+                Materials.Add(material);
+                return material.MaterialId;
             }
         }
 

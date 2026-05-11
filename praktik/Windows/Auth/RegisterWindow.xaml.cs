@@ -7,6 +7,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using MahApps.Metro.IconPacks;
 using praktik.Models;
 using praktik.Models.Patterns;
 using praktik.Controls;
@@ -215,44 +216,10 @@ namespace praktik
             var roles = facade.GetRoles();
             cbRoles.SelectedValuePath = "RoleId";
             cbRoles.ItemsSource = roles;
-
-            var normalizedCurrentRole = RolePermissionCatalog.NormalizeRoleName(LoginWindow.CurrentUser?.Role);
-            var isAdminSession = normalizedCurrentRole == "администратор"
-                || normalizedCurrentRole == "админ"
-                || normalizedCurrentRole == "admin"
-                || normalizedCurrentRole == "administrator";
-
-            if (isAdminSession)
-            {
-                cbRoles.IsEnabled = true;
-                cbRoles.SelectedItem = roles.FirstOrDefault();
-                return;
-            }
-
-            var defaultRole = roles.FirstOrDefault(role =>
-            {
-                var normalizedRole = RolePermissionCatalog.NormalizeRoleName(role.RoleName);
-                return normalizedRole != "администратор"
-                    && normalizedRole != "админ"
-                    && normalizedRole != "admin"
-                    && normalizedRole != "administrator"
-                    && normalizedRole != "диспетчер"
-                    && normalizedRole != "dispatcher";
-            })
-            ?? roles.FirstOrDefault(role =>
-            {
-                var normalizedRole = RolePermissionCatalog.NormalizeRoleName(role.RoleName);
-                return normalizedRole != "администратор"
-                    && normalizedRole != "админ"
-                    && normalizedRole != "admin"
-                    && normalizedRole != "administrator";
-            })
-            ?? roles.FirstOrDefault();
-
-            cbRoles.SelectedItem = defaultRole;
-            cbRoles.IsEnabled = false;
-            txtRoleHint.Text = defaultRole != null
-                ? $"Роль при регистрации назначается автоматически: {defaultRole.RoleName}."
+            cbRoles.IsEnabled = true;
+            cbRoles.SelectedIndex = -1;
+            txtRoleHint.Text = roles.Any()
+                ? "Выберите роль нового пользователя."
                 : "Нет доступных ролей для регистрации.";
         }
 
@@ -402,7 +369,7 @@ namespace praktik
                 txtPasswordVisible.Text = currentPassword;
                 txtPasswordVisible.Visibility = Visibility.Visible;
                 txtPassword.Visibility = Visibility.Collapsed;
-                IconPasswordEye.Text = "\uE890";
+                IconPasswordEye.Kind = PackIconMaterialKind.Eye;
                 btnTogglePassword.ToolTip = "Скрыть пароль";
             }
             else
@@ -410,7 +377,7 @@ namespace praktik
                 txtPassword.Password = currentPassword;
                 txtPassword.Visibility = Visibility.Visible;
                 txtPasswordVisible.Visibility = Visibility.Collapsed;
-                IconPasswordEye.Text = "\uE8F5";
+                IconPasswordEye.Kind = PackIconMaterialKind.EyeOff;
                 btnTogglePassword.ToolTip = "Показать пароль";
             }
 

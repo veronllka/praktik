@@ -17,6 +17,7 @@
     <RuntimeIdentifier>win</RuntimeIdentifier>
     <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
     <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(USERPROFILE)\.nuget\packages\</NuGetPackageRoot>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -360,6 +361,18 @@
   <Target Name="EnsureDesignTimeXamlFiles" AfterTargets="MarkupCompilePass1">
     <Copy SourceFiles="$(IntermediateOutputPath)Windows\Crews\CrewMembersWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)Windows\Crews\CrewMembersWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)Windows\Crews\CrewMembersWindow.g.cs')" />
     <Copy SourceFiles="$(IntermediateOutputPath)Windows\Crews\CrewMemberCreateWindow.g.cs" DestinationFiles="$(IntermediateOutputPath)Windows\Crews\CrewMemberCreateWindow.g.i.cs" SkipUnchangedFiles="true" Condition="Exists('$(IntermediateOutputPath)Windows\Crews\CrewMemberCreateWindow.g.cs')" />
+  </Target>
+  <ItemGroup>
+    <NuGetRuntimeAssembly Include="$(NuGetPackageRoot)mahapps.metro\2.4.10\lib\net47\MahApps.Metro.dll" />
+    <NuGetRuntimeAssembly Include="$(NuGetPackageRoot)controlzex\5.0.2\lib\net462\ControlzEx.dll" />
+    <NuGetRuntimeAssembly Include="$(NuGetPackageRoot)mahapps.metro.iconpacks.material\4.11.0\lib\net47\MahApps.Metro.IconPacks.Core.dll" />
+    <NuGetRuntimeAssembly Include="$(NuGetPackageRoot)mahapps.metro.iconpacks.material\4.11.0\lib\net47\MahApps.Metro.IconPacks.Material.dll" />
+  </ItemGroup>
+  <Target Name="CopyNuGetRuntimeAssemblies" AfterTargets="Build">
+    <Copy SourceFiles="@(NuGetRuntimeAssembly)"
+          DestinationFolder="$(TargetDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('%(NuGetRuntimeAssembly.Identity)')" />
   </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -89,7 +89,7 @@ namespace praktik
                     duplicatedLabel.Visibility = Visibility.Collapsed;
                 }
             }
-            txtAiHint.Visibility = canGenerate ? Visibility.Visible : Visibility.Collapsed;
+            txtAiHint.Visibility = Visibility.Collapsed;
             txtAiHint.Text = GenerateDescriptionHintText;
         }
 

@@ -2,9 +2,9 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Новый сотрудник"
-        Height="380"
+        Height="460"
         Width="580"
-        MinHeight="360"
+        MinHeight="440"
         MinWidth="540"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
@@ -16,7 +16,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
@@ -41,22 +41,12 @@
                                 ToolTip="Дата включения в бригаду"/>
                 </StackPanel>
 
-                <Border Grid.Row="3"
-                        Background="{DynamicResource AppGlassSoftBrush}"
-                        BorderBrush="{DynamicResource AppGlassBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="14"
-                        Padding="14">
-                    <TextBlock Text="Логин и пароль для сотрудника создаются автоматически."
-                               Foreground="{DynamicResource AppMutedTextBrush}"
-                               FontSize="13"
-                               TextWrapping="Wrap"/>
-                </Border>
+               
 
                 <StackPanel Grid.Row="4"
                             Orientation="Horizontal"
                             HorizontalAlignment="Right"
-                            Margin="0,18,0,0">
+                            Margin="0,16,0,0">
                     <Button Content="Отмена"
                             Width="132"
                             Margin="0,0,10,0"

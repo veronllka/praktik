@@ -98,5 +98,7 @@ namespace praktik.Models
 
         public string LastNoteText { get; set; }
         public string LastNoteTooltip { get; set; }
+        public bool IsInApprovedDailyPlan { get; set; }
+        public string ApprovedDailyPlanText { get; set; }
     }
 }
